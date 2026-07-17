@@ -125,6 +125,54 @@ export default function ResultsPage() {
         </div>
       )}
 
+      {/* Panel Nguồn gốc kết quả (Provenance Panel) — Task F2-09 */}
+      <div className="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-5 space-y-3 shadow-sm">
+        <details className="group">
+          <summary className="flex justify-between items-center font-serif font-bold text-sm text-[var(--cc-ink)] cursor-pointer list-none focus-visible:outline-none focus:text-[var(--cc-primary)]">
+            <span className="flex items-center gap-1.5 select-none">
+              🔍 Giải mã kết quả: "Dựa trên gì?" (Result Provenance)
+            </span>
+            <span className="transition-transform duration-200 group-open:rotate-180 text-xs text-[var(--cc-primary)]">▼</span>
+          </summary>
+          <div className="mt-4 pt-4 border-t border-[var(--cc-border)]/50 space-y-4 text-xs text-[var(--cc-ink)] leading-relaxed">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <p className="font-bold text-[var(--cc-primary)] font-serif">1. Các nhân tố tính điểm tương thích</p>
+                <ul className="list-inside list-disc space-y-1 text-[var(--cc-muted)]">
+                  <li><b>50% Đặc điểm con người:</b> Khớp phổ sở thích và năng lực (Cosine similarity).</li>
+                  <li><b>30% Trùng khớp kỹ năng:</b> So khớp kĩ năng bạn có và thị trường cần.</li>
+                  <li><b>20% Tín hiệu thị trường:</b> Trọng số nhu cầu tuyển dụng tại vùng ưu tiên.</li>
+                </ul>
+              </div>
+              <div className="space-y-1.5">
+                <p className="font-bold text-[var(--cc-primary)] font-serif">2. Nguồn dữ liệu thị trường</p>
+                <p className="text-[var(--cc-muted)]">
+                  Mức lương phổ biến và số lượng tin tuyển dụng được đối chiếu trực tiếp từ cơ sở dữ liệu tin tuyển dụng CareerCompass quét tại Việt Nam trong 90 ngày gần nhất.
+                </p>
+                <p className="text-[var(--cc-muted)] italic font-semibold">
+                  ℹ {data.recommendations[0]?.market.source_note || "Dữ liệu tin tuyển dụng mẫu."}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4 pt-3.5 border-t border-dashed border-[var(--cc-border)]/50">
+              <div className="space-y-1.5">
+                <p className="font-bold text-[var(--cc-primary)] font-serif">3. Quy tắc gợi ý mở rộng (Stretch)</p>
+                <p className="text-[var(--cc-muted)]">
+                  Gợi ý Stretch Card được hệ thống lựa chọn có chủ đích nằm ngoài cụm sở thích chính của bạn, nhằm kích thích tính tự học và mở rộng cơ hội định hướng thay vì bị đóng khung định kiến.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <p className="font-bold text-[var(--cc-primary)] font-serif">4. Cam kết bảo mật & Chống bias</p>
+                <p className="text-[var(--cc-muted)]">
+                  Hệ thống không thu thập hay sử dụng thông tin giới tính hay tên trường để xếp hạng. Dữ liệu trò chuyện được mã hóa theo UUID phiên. Bạn có toàn quyền click "Xóa phiên" để xóa sạch dữ liệu.
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
       {/* Khung Footer ghi chú miễn trừ trách nhiệm */}
       <div className="rounded-xl bg-[var(--cc-primary-soft)]/40 border border-[var(--cc-border)]/50 p-5 text-center text-xs text-[var(--cc-muted)] leading-relaxed font-serif shadow-sm">
         <p className="font-bold text-[var(--cc-ink)] mb-1">✍ Ghi chú Định hướng Quan trọng</p>
