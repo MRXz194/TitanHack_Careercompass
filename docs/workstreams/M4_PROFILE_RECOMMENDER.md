@@ -296,6 +296,17 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Risk/fallback:** graph spike fail → plain Python bounded orchestrator dùng cùng LangChain gateway/tool contracts. Planner lỗi hoặc policy deny hai lần → deterministic question/template, không loop.
 - **Handoff:** tool schemas + policy matrix + sample observation cho M3/M5/M6/M1.
 
+#### Status (M4)
+- **State:** DONE (spike gate PASS; `/api/chat` still profiler path until PR-13)
+- **Code:** `agent_schemas.py`, `agent_policy.py`, `agent_tools.py` (10 tools), `agent_graph.py`
+- **Handoff:** `docs/handoffs/M4_PR-12_AGENT_RUNTIME_HANDOFF.md`
+- **Default:** `AGENT_MODE=deterministic` (no graph compile)
+
+#### Verify evidence
+- `pytest -q tests/unit/test_agent_policy.py tests/unit/test_agent_tools.py tests/unit/test_agent_graph.py tests/contract/test_agent_tool_contract.py` → PASS
+- full unit/contract/integration → PASS
+- overhead p95 &lt;100ms on 100 plain-orchestrator turns
+
 ### PR-13 — LangChain/LangGraph chat agent orchestrator + degradation (H+16→22)
 - **Problem:** Tool registry chỉ có giá trị nếu request path ghép được plan → policy → observation → response một cách có giới hạn.
 - **Actions:** tích hợp custom StateGraph vào `/api/chat` chỉ ở `discover/confirm_profile`; planner/composer gọi LangChain gateway, tool dùng typed registry; tối đa 2 agent-selected tools/turn; truyền deadline 8s qua nodes; sanitize trace; map stage về `phase`; recommendation deterministic; không expose CoT.
