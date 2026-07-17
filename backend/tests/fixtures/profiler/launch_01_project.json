@@ -1,0 +1,101 @@
+{
+  "contract_version": "v1",
+  "prompt_version": "profiler-v2",
+  "fictional": true,
+  "journey_mode": "launch",
+  "persona_id": "launch_bao_data",
+  "turns": [
+    {
+      "phase": "warmup",
+      "user": "Em năm cuối, muốn tìm việc liên quan dữ liệu.",
+      "assistant": {
+        "reply": "Bạn từng làm project, thực tập hay việc làm thêm nào đụng tới dữ liệu chưa?",
+        "profile_delta": {
+          "education_stage": "final_year",
+          "job_goal": "việc liên quan dữ liệu entry-level",
+          "interests": [],
+          "skills": [],
+          "experiences": [],
+          "dimensions": {"phan_tich": 0.3},
+          "evidence_quotes": [
+            {
+              "turn": 1,
+              "quote": "muốn tìm việc liên quan dữ liệu",
+              "mapped_to": "job_goal"
+            }
+          ]
+        },
+        "phase_done": true
+      }
+    },
+    {
+      "phase": "interests",
+      "user": "Em làm dashboard bán hàng từ file CSV mở.",
+      "assistant": {
+        "reply": "Trong dashboard đó, bạn trực tiếp làm phần nào và dùng công cụ gì?",
+        "profile_delta": {
+          "interests": ["phân tích dữ liệu bán hàng"],
+          "dimensions": {"phan_tich": 0.55},
+          "experiences": [
+            {
+              "title": "Dashboard bán hàng",
+              "kind": "project",
+              "description": "dashboard từ CSV mở",
+              "skills": [],
+              "source_quote": "Em làm dashboard bán hàng từ file CSV mở"
+            }
+          ],
+          "skills": [],
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em làm dashboard bán hàng từ file CSV mở",
+              "mapped_to": "phan_tich"
+            }
+          ]
+        },
+        "phase_done": false
+      }
+    },
+    {
+      "phase": "abilities",
+      "user": "Em tự clean data và vẽ biểu đồ bằng Excel.",
+      "assistant": {
+        "reply": "Bạn muốn tìm việc ở khu vực nào hoặc khoảng thời gian nào sau tốt nghiệp?",
+        "profile_delta": {
+          "skills": [
+            {
+              "name": "Excel",
+              "level": "đã dùng trong project",
+              "source_quote": "Em tự clean data và vẽ biểu đồ bằng Excel"
+            },
+            {
+              "name": "data cleaning",
+              "level": "đã làm trên CSV",
+              "source_quote": "Em tự clean data và vẽ biểu đồ bằng Excel"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Dashboard bán hàng",
+              "kind": "project",
+              "description": "clean data và biểu đồ Excel",
+              "skills": ["Excel", "data cleaning"],
+              "source_quote": "Em tự clean data và vẽ biểu đồ bằng Excel"
+            }
+          ],
+          "dimensions": {"phan_tich": 0.7, "ky_thuat": 0.35},
+          "interests": [],
+          "evidence_quotes": [
+            {
+              "turn": 3,
+              "quote": "Em tự clean data và vẽ biểu đồ bằng Excel",
+              "mapped_to": "Excel"
+            }
+          ]
+        },
+        "phase_done": true
+      }
+    }
+  ]
+}
