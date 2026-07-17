@@ -39,6 +39,8 @@ SCHEMA_VERSION = "market-stats-v1-stub"
 WINDOW_DAYS = 90
 MIN_SALARY_SAMPLES = 5
 MIN_TREND_POSTINGS = 10
+DEMAND_WEIGHT = 0.6
+TREND_WEIGHT = 0.4
 DEFAULT_INPUT = ROOT_DIR / "data" / "processed" / "postings_mapped.jsonl"
 DEFAULT_OUTPUT = ROOT_DIR / "backend" / "market.db"
 DEFAULT_KB = ROOT_DIR / "data" / "seed" / "careers_seed.json"
@@ -248,7 +250,103 @@ def aggregate_career_stats(
     return output, meta
 
 
-def build_database(output: Path, rows: list[dict[str, Any]], meta: dict[str, Any]) -> None:
+def aggregate_skill_stats(
+    postings: list[dict[str, Any]], *, window_end: date
+) -> list[dict[str, Any]]:
+    """Build confidence-aware hiring-demand proxy rows per skill and region."""
+    window_start = window_end - timedelta(days=WINDOW_DAYS - 1)
+    seen: set[str] = set()
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for index, raw in enumerate(postings):
+        posting_id = raw.get("id")
+        if not isinstance(posting_id, str) or not posting_id or posting_id in seen:
+            raise MarketStatsError(
+                f"invalid or duplicate posting id at index {index}: {posting_id}"
+            )
+        seen.add(posting_id)
+        skills = raw.get("skills")
+        if (
+            not isinstance(skills, list)
+            or any(not isinstance(skill, str) or not skill for skill in skills)
+            or len(skills) != len(set(skills))
+        ):
+            raise MarketStatsError(f"posting {posting_id} has invalid skills[]")
+        try:
+            posted_date = date.fromisoformat(raw["posted_date"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise MarketStatsError(f"posting {posting_id} has invalid posted_date") from exc
+        if not window_start <= posted_date <= window_end:
+            continue
+        posting = dict(raw)
+        posting["_posted_date"] = posted_date
+        region = str(posting.get("region") or "other")
+        for skill in skills:
+            groups[(skill, "all")].append(posting)
+            groups[(skill, region)].append(posting)
+
+    raw_rows: list[dict[str, Any]] = []
+    late_start = window_end - timedelta(days=44)
+    for (skill, region), rows in sorted(groups.items()):
+        early = sum(row["_posted_date"] < late_start for row in rows)
+        late = sum(row["_posted_date"] >= late_start for row in rows)
+        trend_ready = len(rows) >= MIN_TREND_POSTINGS and early > 0 and late > 0
+        trend = (
+            round((late - early) / max(early, 5) * 100, 2)
+            if trend_ready
+            else None
+        )
+        related_counts = Counter(
+            row["career_id"]
+            for row in rows
+            if row.get("career_id") not in (None, UNMAPPED)
+        )
+        raw_rows.append(
+            {
+                "skill": skill,
+                "region": region,
+                "demand_count": len(rows),
+                "trend_pct": trend,
+                "low_confidence": not trend_ready,
+                "related_careers_json": _json(
+                    [
+                        career_id
+                        for career_id, _ in sorted(
+                            related_counts.items(),
+                            key=lambda item: (-item[1], item[0]),
+                        )[:5]
+                    ]
+                ),
+                "posting_ids_json": _json(sorted(row["id"] for row in rows)),
+            }
+        )
+
+    by_region: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in raw_rows:
+        by_region[row["region"]].append(row)
+    for rows in by_region.values():
+        max_demand = max(row["demand_count"] for row in rows)
+        demand_ceiling = max(max_demand, MIN_TREND_POSTINGS)
+        max_trend = max(
+            (max(row["trend_pct"] or 0, 0) for row in rows if not row["low_confidence"]),
+            default=0,
+        )
+        for row in rows:
+            demand_norm = row["demand_count"] / demand_ceiling
+            if row["low_confidence"]:
+                score = demand_norm
+            else:
+                trend_norm = max(row["trend_pct"] or 0, 0) / max_trend if max_trend else 0
+                score = DEMAND_WEIGHT * demand_norm + TREND_WEIGHT * trend_norm
+            row["gap_score"] = round(min(max(score, 0), 1), 4)
+    return raw_rows
+
+
+def build_database(
+    output: Path,
+    rows: list[dict[str, Any]],
+    meta: dict[str, Any],
+    skill_rows: list[dict[str, Any]] | None = None,
+) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(f"sqlite:///{output}")
     metadata.drop_all(engine)
@@ -256,6 +354,8 @@ def build_database(output: Path, rows: list[dict[str, Any]], meta: dict[str, Any
     with engine.begin() as connection:
         if rows:
             connection.execute(career_stats.insert(), rows)
+        if skill_rows:
+            connection.execute(skill_stats.insert(), skill_rows)
         connection.execute(
             market_meta.insert(),
             [
@@ -295,14 +395,23 @@ def main(argv: list[str] | None = None) -> int:
         rows, meta = aggregate_career_stats(
             postings, _load_titles(args.kb), window_end=args.window_end or inferred_end
         )
+        skill_rows = aggregate_skill_stats(
+            postings, window_end=args.window_end or inferred_end
+        )
         meta.update(
             {
                 "input_content_hash": input_hash,
                 "snapshot_id": args.snapshot_id,
                 "snapshot_sha256": args.snapshot_sha256,
+                "skill_row_count": len(skill_rows),
+                "gap_score_formula": (
+                    "0.6*norm(demand)+0.4*norm(max(trend,0)); "
+                    "demand-only when low-confidence"
+                ),
+                "demand_normalization": "demand/max(region_max_demand,10)",
             }
         )
-        build_database(args.output, rows, meta)
+        build_database(args.output, rows, meta, skill_rows)
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

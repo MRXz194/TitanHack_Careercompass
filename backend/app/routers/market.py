@@ -36,7 +36,13 @@ def _seed_overview(region: str) -> MarketOverview:
 
 @router.get("/skills", response_model=SkillGapResponse)
 def skill_gaps(region: str = Query("all")) -> SkillGapResponse:
-    # STUB: derive pseudo gap scores from seed careers. MI-05 replaces with skill_stats table.
+    try:
+        return market_service.get_skill_gaps(region)
+    except market_service.MarketDataUnavailable:
+        return _seed_skill_gaps(region)
+
+
+def _seed_skill_gaps(region: str) -> SkillGapResponse:
     items: dict[str, SkillGapItem] = {}
     for c in load_careers():
         m = c["seed_market"]

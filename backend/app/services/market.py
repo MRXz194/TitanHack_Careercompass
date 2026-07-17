@@ -13,6 +13,7 @@ from app.models.schemas import (
     MarketOverview,
     MarketStats,
     RisingCareer,
+    SkillGapItem,
     SkillGapResponse,
     TopPayingCareer,
 )
@@ -30,6 +31,13 @@ def _tables(engine: Engine) -> tuple[Table, Table]:
     except Exception as exc:
         raise MarketDataUnavailable("market aggregate tables are unavailable") from exc
     return stats, meta
+
+
+def _skill_table(engine: Engine) -> Table:
+    try:
+        return Table("skill_stats", MetaData(), autoload_with=engine)
+    except Exception as exc:
+        raise MarketDataUnavailable("skill aggregate table is unavailable") from exc
 
 
 def _meta_values(connection: Any, table: Table) -> dict[str, Any]:
@@ -144,5 +152,44 @@ def get_career_market(
     )
 
 
-def get_skill_gaps(region: str) -> SkillGapResponse:
-    raise NotImplementedError("Task MI-05 — read skill_stats table")
+def get_skill_gaps(
+    region: str, *, engine: Engine | None = None
+) -> SkillGapResponse:
+    engine = engine or db_module.market_engine
+    skill_table = _skill_table(engine)
+    _, meta_table = _tables(engine)
+    with engine.connect() as connection:
+        meta = _meta_values(connection, meta_table)
+        rows = connection.execute(
+            select(skill_table)
+            .where(skill_table.c.region == region)
+            .order_by(
+                skill_table.c.gap_score.desc(),
+                skill_table.c.demand_count.desc(),
+                skill_table.c.skill.asc(),
+            )
+            .limit(20)
+        ).mappings().all()
+    if "skill_row_count" not in meta:
+        raise MarketDataUnavailable("MI-05 skill metadata is unavailable")
+    region_counts = meta.get("region_counts", {})
+    postings_count = int(
+        meta.get("postings_count", 0)
+        if region == "all"
+        else region_counts.get(region, 0)
+    )
+    return SkillGapResponse(
+        region=region,
+        skills=[
+            SkillGapItem(
+                skill=row["skill"],
+                gap_score=row["gap_score"],
+                demand_count=row["demand_count"],
+                trend_pct=row["trend_pct"],
+                low_confidence=bool(row["low_confidence"]),
+                related_careers=json.loads(row["related_careers_json"]),
+            )
+            for row in rows
+        ],
+        source_note=_source_note(postings_count, meta),
+    )
