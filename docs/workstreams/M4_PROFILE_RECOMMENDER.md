@@ -18,6 +18,39 @@ ethics invariant vẫn do deterministic code sở hữu.
 - **Tests:** schema examples parse; old Explore request still works; no forbidden fields.
 - **Handoff:** contract v1 → M5/M1.
 
+#### Status (M4)
+- **State:** DONE (freeze locked by tests)
+- **Commit:** 928737a (tests: 36c64ab unit, 15fa92e contract, 928737a integration) + docs handoff tip on branch
+- **Contract version label:** Profile/Launch v1 (API_CONTRACT Profile schema)
+
+#### Verify evidence
+- `python -m compileall app scripts tests` → PASS
+- `pytest -q tests/unit/test_profile_contract.py` → PASS (12)
+- `pytest -q tests/contract/test_schema_contract.py` → PASS (3)
+- `pytest -q tests/integration/test_api_smoke.py` → PASS (7)
+- full unit+contract+integration → 27 passed
+- `npm run typecheck` (frontend) → PASS
+
+#### Handoff → M5 / M1
+```md
+[HANDOFF] PR-01 — M4 → M5/M1
+- Artifact/PR: feat/PR-01-profile-contract-freeze; schemas.py + types/index.ts + mocks + tests
+- Contract/version: API_CONTRACT Profile v1 frozen (journey_mode, education_stage, job_goal, experiences; no gender)
+- Chạy thử:
+  - backend: `cd backend && python -m pytest -q tests/unit/test_profile_contract.py tests/contract/test_schema_contract.py tests/integration/test_api_smoke.py`
+  - frontend: `cd frontend && npm run typecheck`
+- Test evidence: unit/contract/integration = PASS (27); typecheck = PASS
+- Input → output mẫu: ChatRequest omit journey_mode → profile.journey_mode=explore; Launch opening keeps education_stage/job_goal null
+- Known limitations:
+  1. PATCH not SQLite-persistent across process restart (PR-03)
+  2. No real adaptive profiler/LLM (PR-02/PR-03)
+  3. Stub may not persist multi-step patch chains in memory beyond single response (PR-03)
+- Người nhận đã chạy và phản hồi: ⬜
+```
+
+#### Cannot do in PR-01 / deferred
+- PR-02 prompts, PR-03 session engine, PR-05+ matching/evidence/readiness logic, PR-12+ agent runtime
+
 ### PR-02 — Adaptive prompts for two modes (H+2→8)
 - **Actions:** shared tone/safety; Explore asks activities/abilities/constraints; Launch asks projects/internships/tools/job goal; one question/turn.
 - **Expected:** versioned prompts + 3 Explore/3 Launch transcripts; structured delta.
