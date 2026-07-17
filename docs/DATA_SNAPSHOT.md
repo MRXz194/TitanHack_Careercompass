@@ -2,6 +2,13 @@
 
 > Status: `BUILT`. Dữ liệu snapshot hiring thực tế được xử lý thành công.
 
+## Go/no-go decision (L-06, M1) — 2026-07-17
+
+- **Quyết định: Plan A — tiếp tục crawl nguồn hiện tại (topcv/vietnamworks/itviec).** Snapshot hiện tại (298/298 normalized, raw_count đúng 100/nguồn) là batch test, chưa phải giới hạn thật của nguồn; chưa tới mốc H+10 nên còn thời gian để đạt ≥1k. Plan B (dataset mở/Kaggle) không cần kích hoạt lúc này.
+- **Action cho M2**: gỡ giới hạn 100 posting/nguồn, chạy full crawl D-02/D-03 theo `docs/DATA_PIPELINE.md`, target tổng ≥3k theo `TASKS.md` D-03.
+- **Re-check**: M1 xem lại `data/processed/manifest.json` tại H+10; nếu vẫn <1k hoặc nguồn bị block (403/429), chuyển Plan B ngay, không cố gắng bypass.
+- **Watch item (không chặn quyết định go/no-go)**: phân bố vùng hiện lệch — HCM 12.8% (< 15% target của D-06), Đà Nẵng 0.7%. Chưa cần hành động ở H+0→5, nhưng D-06 (H+20→26) cần crawl bù nếu vẫn lệch.
+
 | Field | Value |
 |---|---|
 | Snapshot ID / SHA-256 | `real_jobs_snapshot_20260717` / `192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430` |
