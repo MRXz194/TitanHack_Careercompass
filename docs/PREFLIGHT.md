@@ -20,10 +20,11 @@
 ## C. Repo/environment
 
 - [ ] Python 3.11 + Node 20 trên ít nhất 4 máy; 6/6 chạy FE mock.
-- [ ] Backend install + smoke tests pass trên ít nhất 2 máy.
-- [ ] CI test PR pass; branch protection/review active.
-- [ ] `.env` không tracked; dev/demo env matrix và key owner rõ.
-- [ ] Mock/live/replay flags được giải thích và thử.
+- [x] Backend install + smoke tests pass trên 1 máy (2026-07-17, M1 dry-run): `compileall`, `pytest tests/unit tests/contract` (10 passed), `pytest tests/integration` (5 passed), `scripts.check_routes` (OK) đều xanh. Cần thêm ≥1 máy khác để tick đủ điều kiện.
+- [x] Frontend `npm run typecheck` + `npm run build` pass (2026-07-17, Next.js 15.5.20, 6 routes build tĩnh OK).
+- [ ] CI test PR pass; branch protection/review active — **chưa bấm**: cần leader làm theo `docs/DEPLOY.md` §A (branch protection rule + labels), CI (`ci.yml`) mới chỉ chạy trên push/PR chứ chưa được xác nhận pass trên PR thật.
+- [x] `.env` không tracked (`git ls-files` chỉ thấy `.env.example`, `.gitignore` có `.env`/`.env.local`; không tìm thấy secret lỡ commit qua `git grep`). Dev/demo env matrix ghi ở `docs/DEPLOY.md`; key owner = M1 (chưa gán tên thật).
+- [ ] Mock/live/replay flags được giải thích và thử — `DEMO_MODE`/mode table đã ghi trong `scripts/dev.md` §4, nhưng **replay short-circuit chưa wired trong code** (chat router `backend/app/routers/chat.py` vẫn là stub PR-03/04 chưa tới, chưa đọc `settings.demo_mode` ở đâu cả) — L-08 chờ PR-04 xong mới capture fixture thật.
 
 ## D. Contract/fixtures
 
@@ -39,7 +40,7 @@
 - [ ] LLM/embedding keys test bằng call tối thiểu, không paste key vào chat/issue.
 - [ ] Cache/artifact/replay directories và hash/version rule rõ.
 - [ ] M4/M1 cài đúng pinned LangChain/LangGraph từ `requirements.txt`; gateway import smoke pass; chốt spike 90 phút, `/api/chat` only, no `create_agent`/prebuilt/checkpointer/LangSmith service; `AGENT_MODE=deterministic` fallback chạy được.
-- [ ] M1 chạy test gates theo `TESTING.md`: compile; unit; contract; integration; route invariant. E2E folder/owner đã chốt, chưa có test thì ghi `NOT_IMPLEMENTED`.
+- [x] M1 chạy test gates theo `TESTING.md`: compile; unit; contract; integration; route invariant — tất cả xanh (chạy 2026-07-17: `compileall` OK, `pytest tests/unit tests/contract` 10 passed, `pytest tests/integration` 5 passed, `scripts.check_routes` OK). E2E folder tồn tại (`backend/tests/e2e`) nhưng rỗng → `NOT_IMPLEMENTED`, chưa có owner/status thật, cần L-07 gán khi core sẵn sàng.
 
 ## F. Ethics/security/evaluation
 

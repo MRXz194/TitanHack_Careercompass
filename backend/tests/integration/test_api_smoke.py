@@ -50,3 +50,47 @@ def test_launch_opening_preserves_mode_without_inference(client: TestClient) -> 
     assert all(value == 0.0 for value in profile["dimensions"].values())
     assert profile["experiences"] == []
 
+
+def test_chat_omitting_journey_mode_defaults_to_explore(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"session_id": "explore-compat", "message": None},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["profile"]["journey_mode"] == "explore"
+    assert "gender" not in body["profile"]
+
+
+def test_patch_null_clears_launch_optional_fields(client: TestClient) -> None:
+    # Opening launch has nulls; second turn mock may fill stage/goal — clear them via PATCH.
+    open_resp = client.post(
+        "/api/chat",
+        json={
+            "session_id": "patch-clear",
+            "message": None,
+            "journey_mode": "launch",
+        },
+    )
+    assert open_resp.status_code == 200
+
+    # Advance one turn so stub may populate education_stage/job_goal (turn >= 2).
+    client.post(
+        "/api/chat",
+        json={
+            "session_id": "patch-clear",
+            "message": "Em năm cuối, muốn làm data entry-level",
+            "journey_mode": "launch",
+        },
+    )
+
+    patch_resp = client.patch(
+        "/api/profile/patch-clear",
+        json={"education_stage": None, "job_goal": None},
+    )
+    assert patch_resp.status_code == 200
+    profile = patch_resp.json()["profile"]
+    assert profile["education_stage"] is None
+    assert profile["job_goal"] is None
+    assert profile["journey_mode"] == "launch"
+
