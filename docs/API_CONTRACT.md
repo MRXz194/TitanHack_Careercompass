@@ -42,6 +42,10 @@ Response:
 
 ### `GET /api/profile/{session_id}` → `{ "profile": Profile }`
 
+### `DELETE /api/profile/{session_id}` → `{ "ok": true }`
+
+Xóa phiên server-side (privacy). 404 nếu session không tồn tại. FE nên xóa luôn `localStorage` key `cc_session_id`.
+
 ### `PATCH /api/profile/{session_id}` — học sinh sửa tay profile (autonomy)
 
 Request (gửi phần muốn sửa):

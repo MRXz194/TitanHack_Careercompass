@@ -121,14 +121,31 @@ ethics invariant vẫn do deterministic code sở hữu.
 ```
 
 #### Cannot do / deferred
-- PR-04 formal chat handoff package + replay capture (M1)
 - Live LLM quality transcripts (needs keys + PR-02 prompts already wired)
 - LangGraph agent (PR-12/13)
+- Formal M5/M1 consumer ack (see PR-04 handoff doc)
 
 ### PR-04 — Chat handoff (H+16)
 - **Actions:** deploy sample Explore/Launch, request/response, latency/error/fallback notes.
 - **Expected:** M5 integrates; M1 records replay immediately.
 - **Verify:** consumer runs both modes and patch; contract/OpenAPI matches.
+
+#### Status (M4)
+- **State:** DONE
+- **Handoff doc:** `docs/handoffs/PR-04_CHAT_HANDOFF.md`
+- **Samples:** `backend/app/data/replay/explore_sample_session.json`, `launch_sample_session.json`
+
+#### Verify evidence
+- `pytest -q tests/contract/test_chat_handoff_samples.py` → PASS
+- full unit/contract/integration suite → PASS
+- Capture: `PYTHONPATH=. python scripts/capture_chat_samples.py`
+
+#### Handoff → M5 / M1
+See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, errors, fallback, consumer checklist).
+
+#### Cannot do / deferred
+- Full `DEMO_MODE=replay` router short-circuit (M1 L-08 uses samples as seed)
+- Live LLM persona polish (needs keys; quality PR-10/11)
 
 ### PR-05 — Explainable matching (H+20→26)
 - **Actions:** cosine candidate retrieval; weighted skill overlap; capped market signal; deterministic diversity/stretch; config thresholds.

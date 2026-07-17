@@ -1,0 +1,617 @@
+{
+  "contract_version": "v1",
+  "prompt_version": "profiler-v2",
+  "fictional": true,
+  "journey_mode": "explore",
+  "session_id": "handoff-explore-sample",
+  "source": "deterministic_profiler_pr04",
+  "notes": {
+    "llm": "not used (no CHAT_API_KEY / deterministic path)",
+    "fallback": "question bank + keyword extractor (PR-03)",
+    "latency_ms": {
+      "per_turn": [
+        19.34,
+        5.27,
+        4.5,
+        4.62,
+        4.81,
+        5.83,
+        5.66,
+        4.6
+      ],
+      "p50_approx": 5.27,
+      "max": 19.34,
+      "patch": 7.35
+    },
+    "errors": {
+      "422": {
+        "error": {
+          "code": "422",
+          "message": "Dữ liệu gửi lên không hợp lệ"
+        }
+      },
+      "404_profile": {
+        "error": {
+          "code": "404",
+          "message": "session not found"
+        }
+      },
+      "500": {
+        "error": {
+          "code": "500",
+          "message": "Có lỗi xảy ra, vui lòng thử lại"
+        }
+      }
+    }
+  },
+  "turns": [
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": null,
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Bạn đang học lớp mấy, và điều gì khiến bạn nghĩ đến chuyện chọn nghề lúc này?",
+        "phase": "warmup",
+        "turn": 1,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": null,
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.0,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [],
+          "constraints": {
+            "region_pref": null,
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [],
+          "experiences": [],
+          "completeness": 0.0
+        }
+      },
+      "latency_ms": 19.34
+    },
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Trong tuần vừa rồi, hoạt động nào bạn thấy hứng thú nhất?",
+        "phase": "interests",
+        "turn": 2,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": "high_school",
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.0,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+              "mapped_to": "interests"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.38
+        }
+      },
+      "latency_ms": 5.27
+    },
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": "Em hay sửa quạt và đồ điện trong nhà",
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Môn nào hoặc việc nào bạn học/làm thấy nhẹ nhàng hơn mọi người xung quanh?",
+        "phase": "abilities",
+        "turn": 3,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": "high_school",
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…",
+            "Em hay sửa quạt và đồ điện trong nhà"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em hay sửa quạt và đồ điện trong nhà",
+              "mapped_to": "ky_thuat"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.62
+        }
+      },
+      "latency_ms": 4.5
+    },
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": "Thích lúc tìm ra chỗ hỏng",
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Có công cụ hay kỹ năng nào bạn đã từng dùng để hoàn thành một việc cụ thể không?",
+        "phase": "abilities",
+        "turn": 4,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": "high_school",
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…",
+            "Em hay sửa quạt và đồ điện trong nhà",
+            "Thích lúc tìm ra chỗ hỏng"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em hay sửa quạt và đồ điện trong nhà",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Thích lúc tìm ra chỗ hỏng",
+              "mapped_to": "interests"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.62
+        }
+      },
+      "latency_ms": 4.62
+    },
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": "Mọi người khen em hàn dây cẩn thận",
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Bạn bè hay thầy cô thường khen bạn làm tốt việc gì?",
+        "phase": "abilities",
+        "turn": 5,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": "high_school",
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…",
+            "Em hay sửa quạt và đồ điện trong nhà",
+            "Thích lúc tìm ra chỗ hỏng",
+            "Mọi người khen em hàn dây cẩn thận"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em hay sửa quạt và đồ điện trong nhà",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Thích lúc tìm ra chỗ hỏng",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 5,
+              "quote": "Mọi người khen em hàn dây cẩn thận",
+              "mapped_to": "ky_thuat"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.62
+        }
+      },
+      "latency_ms": 4.81
+    },
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": "Em dùng mỏ hàn và đồng hồ vạn năng",
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Môn nào hoặc việc nào bạn học/làm thấy nhẹ nhàng hơn mọi người xung quanh?",
+        "phase": "wrapup",
+        "turn": 6,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": "high_school",
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…",
+            "Em hay sửa quạt và đồ điện trong nhà",
+            "Thích lúc tìm ra chỗ hỏng",
+            "Mọi người khen em hàn dây cẩn thận",
+            "Em dùng mỏ hàn và đồng hồ vạn năng"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em hay sửa quạt và đồ điện trong nhà",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Thích lúc tìm ra chỗ hỏng",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 5,
+              "quote": "Mọi người khen em hàn dây cẩn thận",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 6,
+              "quote": "Em dùng mỏ hàn và đồng hồ vạn năng",
+              "mapped_to": "ky_thuat"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.62
+        }
+      },
+      "latency_ms": 5.83
+    },
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": "Gia đình muốn em học gần nhà, ngân sách hạn chế",
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Bạn xem hồ sơ bên cạnh có đúng là bạn không? Muốn sửa gì cứ chỉnh nhé — mình sẵn sàng khi bạn muốn xem các hướng đi.",
+        "phase": "wrapup",
+        "turn": 7,
+        "done": true,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": "high_school",
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…",
+            "Em hay sửa quạt và đồ điện trong nhà",
+            "Thích lúc tìm ra chỗ hỏng",
+            "Mọi người khen em hàn dây cẩn thận",
+            "Em dùng mỏ hàn và đồng hồ vạn năng",
+            "Gia đình muốn em học gần nhà, ngân sách hạn chế"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em hay sửa quạt và đồ điện trong nhà",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Thích lúc tìm ra chỗ hỏng",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 5,
+              "quote": "Mọi người khen em hàn dây cẩn thận",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 6,
+              "quote": "Em dùng mỏ hàn và đồng hồ vạn năng",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 7,
+              "quote": "Gia đình muốn em học gần nhà, ngân sách hạn chế",
+              "mapped_to": "interests"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.62
+        }
+      },
+      "latency_ms": 5.66
+    },
+    {
+      "request": {
+        "session_id": "handoff-explore-sample",
+        "message": "Hồ sơ ổn, em sẵn sàng xem hướng đi",
+        "journey_mode": "explore"
+      },
+      "response": {
+        "reply": "Còn điểm nào trên hồ sơ mình hiểu chưa đúng không? Nếu ổn, mình có thể gợi ý vài hướng để bạn tham khảo.",
+        "phase": "wrapup",
+        "turn": 8,
+        "done": true,
+        "profile": {
+          "session_id": "handoff-explore-sample",
+          "journey_mode": "explore",
+          "education_stage": "high_school",
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…",
+            "Em hay sửa quạt và đồ điện trong nhà",
+            "Thích lúc tìm ra chỗ hỏng",
+            "Mọi người khen em hàn dây cẩn thận",
+            "Em dùng mỏ hàn và đồng hồ vạn năng",
+            "Gia đình muốn em học gần nhà, ngân sách hạn chế",
+            "Hồ sơ ổn, em sẵn sàng xem hướng đi"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em hay sửa quạt và đồ điện trong nhà",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Thích lúc tìm ra chỗ hỏng",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 5,
+              "quote": "Mọi người khen em hàn dây cẩn thận",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 6,
+              "quote": "Em dùng mỏ hàn và đồng hồ vạn năng",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 7,
+              "quote": "Gia đình muốn em học gần nhà, ngân sách hạn chế",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 8,
+              "quote": "Hồ sơ ổn, em sẵn sàng xem hướng đi",
+              "mapped_to": "interests"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.62
+        }
+      },
+      "latency_ms": 4.6
+    }
+  ],
+  "patch_sample": {
+    "request": {
+      "dimensions": {
+        "ky_thuat": 0.85
+      },
+      "add_interests": [
+        "sample-interest-from-patch"
+      ]
+    },
+    "response": {
+      "profile": {
+        "session_id": "handoff-explore-sample",
+        "journey_mode": "explore",
+        "education_stage": "high_school",
+        "job_goal": null,
+        "dimensions": {
+          "ky_thuat": 0.85,
+          "phan_tich": 0.0,
+          "sang_tao": 0.0,
+          "xa_hoi": 0.0,
+          "quan_ly": 0.0
+        },
+        "skills": [],
+        "interests": [
+          "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn n…",
+          "Em hay sửa quạt và đồ điện trong nhà",
+          "Thích lúc tìm ra chỗ hỏng",
+          "Mọi người khen em hàn dây cẩn thận",
+          "Em dùng mỏ hàn và đồng hồ vạn năng",
+          "Gia đình muốn em học gần nhà, ngân sách hạn chế",
+          "Hồ sơ ổn, em sẵn sàng xem hướng đi",
+          "sample-interest-from-patch"
+        ],
+        "constraints": {
+          "region_pref": "danang",
+          "study_budget": null,
+          "study_duration_pref": null,
+          "notes": ""
+        },
+        "evidence_quotes": [
+          {
+            "turn": 2,
+            "quote": "Em học lớp 12 ở Đà Nẵng, đang phân vân chọn ngành",
+            "mapped_to": "interests"
+          },
+          {
+            "turn": 3,
+            "quote": "Em hay sửa quạt và đồ điện trong nhà",
+            "mapped_to": "ky_thuat"
+          },
+          {
+            "turn": 4,
+            "quote": "Thích lúc tìm ra chỗ hỏng",
+            "mapped_to": "interests"
+          },
+          {
+            "turn": 5,
+            "quote": "Mọi người khen em hàn dây cẩn thận",
+            "mapped_to": "ky_thuat"
+          },
+          {
+            "turn": 6,
+            "quote": "Em dùng mỏ hàn và đồng hồ vạn năng",
+            "mapped_to": "ky_thuat"
+          },
+          {
+            "turn": 7,
+            "quote": "Gia đình muốn em học gần nhà, ngân sách hạn chế",
+            "mapped_to": "interests"
+          },
+          {
+            "turn": 8,
+            "quote": "Hồ sơ ổn, em sẵn sàng xem hướng đi",
+            "mapped_to": "interests"
+          }
+        ],
+        "experiences": [],
+        "completeness": 0.62
+      }
+    },
+    "latency_ms": 7.35
+  }
+}
