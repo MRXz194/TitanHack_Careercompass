@@ -22,11 +22,14 @@ Read root `CLAUDE.md` first. Frontend = Next.js 15 App Router + TypeScript stric
 - `gap_score` is a hiring-demand proxy, not proof of labor shortage. UI label is “Radar nhu cầu kỹ năng”; show low-confidence state and never say “thiếu người” from postings alone.
 - Client components only where interactivity requires it; keep pages server-rendered otherwise.
 - No new dependencies without asking the team lead (M1). Recharts is the only chart lib.
+- Baseline gates are `npm run typecheck` and `npm run build`. Add a frontend test framework only for a concrete F1/F2 acceptance risk and place tests under the layout reserved in `docs/TESTING.md`; do not add it just for coverage.
 
 ## Run
 
 ```
 npm install
 npm run dev            # http://localhost:3000
+npm run typecheck
+npm run build
 # .env.local: NEXT_PUBLIC_API_BASE=http://localhost:8000, NEXT_PUBLIC_USE_MOCK=1|0
 ```

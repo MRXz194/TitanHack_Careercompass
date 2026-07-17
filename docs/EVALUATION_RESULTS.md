@@ -11,7 +11,7 @@
 | Postings / sources / regions | TBD |
 | Career KB / taxonomy version | TBD |
 | Chat model / embed model | `deepseek-v4-flash` / `text-embedding-3-small` |
-| Agent engine / LangGraph version | `deterministic|langgraph` / TBD after PR-12 spike |
+| Agent engine / versions | `deterministic|langgraph`; LC Core `1.4.9`, LC OpenAI `1.3.5`, LangGraph `1.2.9` |
 
 ## Metrics
 
@@ -22,7 +22,7 @@
 | Profiler valid JSON after retry | ≥99% | NOT_RUN | ⬜ | |
 | Agent stage/tool allowlist + ≤2 tools/turn | 100% | NOT_RUN | ⬜ | PR-12/14 fixtures |
 | Agent deny/timeout → fallback, session preserved | 100% | NOT_RUN | ⬜ | PR-13 failure matrix |
-| LangGraph overhead p95 (no LLM, n=100) | <100ms | NOT_RUN | ⬜ | |
+| LangGraph overhead p95 (no model, n=100) | <100ms | NOT_RUN | ⬜ | |
 | Recommendation rubric (n=12) | ≥3.5/5 | NOT_RUN | ⬜ | |
 | Launch readiness invariants (n=4) | 100% | NOT_RUN | ⬜ | |
 | Evidence number grounding | 100% | NOT_RUN | ⬜ | |

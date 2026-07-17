@@ -25,7 +25,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 - `docs/ARCHITECTURE.md` — component layout; put new files where §4 says.
 - `docs/AI_FOCUS.md` — why this is an AI-centered hackathon product, what AI claims are allowed, and where the product applies.
 - `docs/AGENTIC_RUNTIME.md` — bounded ReAct agent, tool allowlist, policy gates, budgets and agent evaluation. Read before touching profiler, LLM, matching or agent UI.
-- `docs/ADR_AGENT_ORCHESTRATION.md` — accepted minimal LangGraph boundary + 90-minute go/no-go gate. Read before adding any agent dependency/import.
+- `docs/ADR_AGENT_ORCHESTRATION.md` — accepted LangChain + minimal LangGraph boundary and 90-minute go/no-go gate. Read before adding any agent dependency/import.
 - `docs/AI_DESIGN.md` — prompt/scoring/bias design. Do not invent alternative scoring or prompt schemes.
 - `docs/TASKS.md` — task IDs; the user will tell you which task (e.g. PR-05) they're on.
 - `docs/HANDOFF.md` — required handoff template and artifact versions.
@@ -34,6 +34,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 - `docs/BUSINESS_CASE.md` — users/buyers, real workflow and pilot KPIs.
 - `docs/GRADUATE_LAUNCH.md` — exact Launch scope/invariants; do not expand into recruitment automation.
 - `docs/AGENT_WORKFLOW.md` — mandatory AI-assisted development workflow and cost controls.
+- `docs/TESTING.md` — canonical test pyramid, folders, markers, CI and fixture rules.
 - `docs/workstreams/M*.md` — detailed task cards by owner; read the matching member file.
 - `docs/FEATURE_ROADMAP.md` — features allowed only after P0/P1 gates pass.
 - `docs/PREFLIGHT.md` — kickoff readiness gate; docs alone never imply runtime READY.
@@ -42,8 +43,9 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 
 - Frontend: Next.js 15 (App Router) + TypeScript + Tailwind v4 + Recharts. API calls only via `frontend/lib/api.ts` (has mock mode `NEXT_PUBLIC_USE_MOCK=1`).
 - Backend: FastAPI + Pydantic v2 + SQLAlchemy + SQLite. Python 3.11.
-- Agent orchestration: minimal LangGraph `StateGraph` for `/api/chat` only, behind `AGENT_MODE`; no LangChain prebuilt agent, LangSmith, checkpointer or graph-based recommendation.
-- LLM: OpenAI-compatible client ONLY via `backend/app/services/llm.py` (chat = DeepSeek via env `CHAT_*`, embeddings = OpenAI `text-embedding-3-small` via env `EMBED_*`). Never import an LLM SDK elsewhere. Never hardcode model names or API keys.
+- AI application layer: LangChain Core + `langchain-openai` for model adapters, typed tools and structured output; ONLY `backend/app/services/llm.py` may instantiate `ChatOpenAI`/`OpenAIEmbeddings`.
+- Agent orchestration: minimal LangGraph `StateGraph` for `/api/chat` only, behind `AGENT_MODE`; use custom nodes/edges and CareerCompass policy, not LangChain `create_agent`, LangGraph prebuilt ReAct, LangSmith service, checkpointer or graph-based recommendation.
+- Providers: DeepSeek chat via OpenAI-compatible `CHAT_*`; OpenAI `text-embedding-3-small` via `EMBED_*`. Never import provider SDK/model adapters outside `llm.py`; never hardcode model names or API keys.
 - Vector search: NumPy cosine in-process. Do NOT add a vector DB.
 - All prompts live in `backend/app/prompts/` with a version comment.
 
@@ -66,6 +68,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 
 - Branches `feat/<TASK-ID>-slug`, commits `type(scope): message`, PRs < 400 lines, squash merge.
 - Python: type hints, Pydantic models mirror the contract, black-ish formatting. TS: strict mode, types in `frontend/types/index.ts` mirror the contract.
+- Backend tests follow `tests/unit|contract|integration|e2e|fixtures` and pytest markers from `docs/TESTING.md`; no network/model live by default.
 - Errors: API returns `{"error": {"code", "message"}}`; FE shows friendly Vietnamese fallback, never a raw stack.
 - LLM calls: always structured output + Pydantic validation + retry ≤2 + non-LLM fallback so the flow never dies mid-demo. In agent mode, LLM may plan from the fixed tool allowlist and phrase grounded evidence; it never directly selects careers, changes config/KB, calls arbitrary tools or bypasses policy.
 

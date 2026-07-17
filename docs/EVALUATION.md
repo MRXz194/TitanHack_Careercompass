@@ -4,12 +4,13 @@
 
 ## 0. Test/verify workflow cho mọi task
 
-Mỗi PR phải ghi bốn lớp, dùng `NOT_APPLICABLE` có lý do thay vì bỏ trống:
+Mỗi PR phải ghi năm lớp theo `TESTING.md`, dùng `NOT_APPLICABLE` có lý do thay vì bỏ trống:
 
-1. **Static/contract:** type/schema/import/JSON/link/secret checks.
-2. **Unit/fixture:** pure parser/scoring/transform/component states.
-3. **Integration:** producer→consumer interface, DB/API/mock/live/replay tương ứng.
-4. **Acceptance:** DoD/task card và user-visible outcome.
+1. **Static:** type/import/compile/JSON/link/secret checks.
+2. **Unit:** pure parser/scoring/policy/transform/component states.
+3. **Contract:** Pydantic/OpenAPI/FE fixture shape, enum và unit parity.
+4. **Integration:** producer→consumer interface, DB/API/mock/live/replay tương ứng.
+5. **E2E/Acceptance:** journey quan trọng, DoD/task card và user-visible outcome.
 
 Kết quả ghi `command | environment | commit | PASS/FAIL/NOT_RUN | evidence`. “AI đã review” không phải evidence. Test fail không được xóa/skip để merge; phải fix, fallback hoặc M1 chấp nhận limitation và bỏ claim/feature.
 
@@ -20,7 +21,7 @@ Kết quả ghi `command | environment | commit | PASS/FAIL/NOT_RUN | evidence`.
 | Crawl/normalize | parser fixtures/idempotence | M3 sample read/hash | M1 source/data go-no-go |
 | Extraction/stats | gold + aggregate fixtures | M2 trace raw→stat | M1 metric/claim audit |
 | Profiler/matching | state/scoring/invariants | M3 persona/number grounding | M1 E2E/bias/replay |
-| LangGraph chat runtime | M4 graph/policy/tool/deadline fixtures | M1 deterministic-mode + privacy review | M1 CI/E2E/kill switch |
+| LangChain/LangGraph chat runtime | M4 gateway/graph/policy/tool/deadline fixtures | M1 deterministic-mode + privacy review | M1 CI/E2E/kill switch |
 | FE explore/results | component states + typecheck | M5↔M6 browser task | M1 usability/demo run |
 | Contract/deploy | smoke/OpenAPI/CI | affected consumer | M1 merge/deploy |
 
@@ -91,7 +92,7 @@ Pass: trung bình mỗi tiêu chí ≥3.5/5, không output nào vi phạm hard r
 | Replay mode không gọi mạng LLM | 100% |
 | Agent tool calls / chat turn | ≤2; 100% tool thuộc stage allowlist |
 | Policy deny/invalid JSON/timeout fixtures | 100% về deterministic fallback, session không mất |
-| LangGraph overhead không LLM (100 fixtures) | <100ms p95; ghi version đã pin |
+| LangGraph overhead không model (100 fixtures) | <100ms p95; ghi LangChain/LangGraph versions đã pin |
 | `AGENT_MODE=deterministic` | cùng API contract; không invoke graph/LLM planner |
 | Chi phí 1 full session | ghi số thật; cảnh báo nếu vượt budget M1 chốt |
 

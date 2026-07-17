@@ -18,7 +18,7 @@ File này là master schedule/dependency. Trước khi làm, mỗi member phải
 - M5: [workstreams/M5_FRONTEND_EXPLORE.md](workstreams/M5_FRONTEND_EXPLORE.md)
 - M6: [workstreams/M6_FRONTEND_RESULTS_MARKET.md](workstreams/M6_FRONTEND_RESULTS_MARKET.md)
 
-Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một task chỉ `DONE` khi acceptance tests đã chạy và consumer handoff xác nhận.
+Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Test layout/gates: [TESTING.md](TESTING.md). Một task chỉ `DONE` khi targeted + required layer tests đã chạy và consumer handoff xác nhận.
 
 ---
 
@@ -40,6 +40,7 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | L-10 | Rehearse: điều phối 2 lần chạy thử có bấm giờ, phân vai ai nói phần nào, in demo script | H+44→46 | L-09 | 2 lần chạy dưới thời gian quy định, không vấp |
 | L-11 | **User testing THẬT**: tuyển từ H+20 tối thiểu 5 học sinh + 1–2 giáo viên/tư vấn viên; test bản P0 từ H+31→38 theo EVALUATION.md; thu consent dùng quote, điểm hữu ích, task completion và 1 chỗ họ chê | H+20 tuyển; H+31→38 test | M3a | Ghi đúng `x/y`, ≥3 quote ẩn danh; ≥1 fix trước freeze; không gọi mẫu nhỏ là đại diện |
 | L-12 | Data/privacy go-no-go: cùng M2 kiểm tra quyền dùng từng nguồn, source manifest; cùng M5/M4 kiểm tra PII/log/session delete/TTL theo `SECURITY_PRIVACY.md` | H+2→4 và H+38 | D-01 | Không crawl nguồn cấm; release checklist privacy pass hoặc limitation hiện rõ |
+| L-13 | **Test/AI-stack baseline:** verify pinned LangChain/LangGraph install, giữ `tests/unit|contract|integration|e2e|fixtures`, CI tách gate và no-network fixtures theo `TESTING.md` | H+1→4; duy trì | L-02 | Import smoke + unit/contract/integration + route check xanh; E2E có owner/status thật, không placeholder pass |
 
 **Handoff nhận:** PR-04 (contract chat để làm replay), tất cả PR của mọi người.
 **Handoff giao:** L-03 → cả team (URL + env); L-06 → M2/M3 (quyết định nguồn data).
@@ -106,8 +107,8 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | PR-09 | Trang "Cách hệ thống hoạt động" — nội dung dữ liệu, scoring, giới hạn, autonomy | H+35→36 | PR-08 | ≤300 từ; M6 thay copy draft không đổi layout |
 | PR-10 | Tune chất lượng theo feedback test E2E của M1 (câu hỏi lặp, gợi ý nhạt, evidence sai...) | H+34→40 | L-07 | Các bug label `ai-quality` đóng hết |
 | PR-11 | Tổng hợp AI evaluation: profiler, 12 personas, grounding, latency/cost, paired bias; gửi số thật cho M1 | H+35→38 | PR-06,08 | Phần AI trong `EVALUATION_RESULTS.md` có pass/fail + limitations |
-| PR-12 | **LangGraph spike + bounded policy/tool registry:** trong 90' compile/invoke StateGraph fake planner và gate theo ADR; pass mới pin dependency. Định nghĩa 10 typed tools, stage allowlist, planner schema, privacy/provenance/budget; không browser/shell/side effect | H+4→12 | PR-01 | Spike gate + tool contracts + policy matrix pass; `AGENT_MODE=deterministic` không import graph; invalid tool/args deny/repair |
-| PR-13 | **LangGraph chat orchestrator + degradation:** nối StateGraph planner → policy → tool → composer vào `/api/chat`; recommendation deterministic; tối đa 2 agent-selected tools/turn, deadline tổng 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent pass; timeout/LLM/tool failure không 5xx; deterministic mode cùng contract; không LangSmith/checkpointer |
+| PR-12 | **LangChain tool layer + LangGraph spike + bounded policy registry:** verify pinned install/gateway, trong 90' compile/invoke StateGraph với fake LangChain structured planner; tạo 10 `@tool` Pydantic contracts, stage allowlist, privacy/provenance/budget; không browser/shell/side effect | H+4→12 | PR-01 | Unit/contract graph/tool tests + policy matrix pass; `AGENT_MODE=deterministic` không compile/invoke graph; invalid tool/args deny/repair |
+| PR-13 | **LangChain/LangGraph chat orchestrator + degradation:** nối custom StateGraph planner → policy → typed tool → composer vào `/api/chat`; recommendation deterministic; tối đa 2 agent-selected tools/turn, deadline 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent integration pass; timeout/model/tool failure không 5xx; deterministic mode cùng contract; không `create_agent`/LangSmith/checkpointer |
 | PR-14 | **Agent evaluation/red-team:** tool-selection fixtures, injection, paired bias, provenance, budget/latency/replay; ghi pass/fail thật | H+31→38 | PR-05,06,08,13 | `EVALUATION_RESULTS.md` có agent metrics + failures/fix; không claim autonomous khi gate fail |
 
 **Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render).
@@ -184,7 +185,7 @@ graph LR
 
 - H+10 data <1k hoặc source không hợp lệ → Plan B, không cố bypass.
 - H+18 chat chưa stable → khóa prompt, dùng deterministic phase fallback + replay; không thêm conversational flourish.
-- H+5.5 LangGraph spike chưa pass CI/fallback/overhead → dừng framework, dùng plain Python bounded orchestrator; không kéo dài spike.
+- H+5.5 custom LangGraph spike chưa pass CI/fallback/overhead → không bật graph, dùng plain Python bounded orchestrator với cùng LangChain gateway/tool contracts; không kéo dài spike.
 - H+22 agent chưa pass tool/policy tests → đặt `AGENT_MODE=deterministic`, giữ profiler/replay; không trì hoãn recommendation hoặc UI core.
 - H+26 matching chưa pass unit test → bỏ market weight tạm thời, dùng cosine + skill overlap; không hardcode kết quả persona.
 - H+32 live evidence/radar chưa ready → demo P0 bằng grounded template + snapshot đã validate; cắt mini-chart/animation.

@@ -13,7 +13,8 @@
 | [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) | Product/Pitch | Bài toán tổ chức, buyer, KPI pilot, value proposition |
 | [docs/AI_FOCUS.md](docs/AI_FOCUS.md) | Cả team/Pitch | AI dùng ở đâu, chứng minh chất lượng bằng gì, ứng dụng sản phẩm vào đâu |
 | [docs/AGENTIC_RUNTIME.md](docs/AGENTIC_RUNTIME.md) | AI/Backend/FE | Bounded ReAct: tool typed, policy gate, budget, fallback và red-team evaluation |
-| [docs/ADR_AGENT_ORCHESTRATION.md](docs/ADR_AGENT_ORCHESTRATION.md) | M1/M4 | Quyết định LangGraph tối giản, ranh giới sử dụng và spike go/no-go 90 phút |
+| [docs/ADR_AGENT_ORCHESTRATION.md](docs/ADR_AGENT_ORCHESTRATION.md) | M1/M4 | Quyết định LangChain + LangGraph tối giản, ranh giới sử dụng và spike go/no-go 90 phút |
+| [docs/TESTING.md](docs/TESTING.md) | Cả team | Test pyramid, folder/marker chuẩn, CI/release gates và fixture governance |
 | [docs/EVALUATION.md](docs/EVALUATION.md) | AI/Data/Lead | Quality gates định lượng và report bắt buộc |
 | [docs/SECURITY_PRIVACY.md](docs/SECURITY_PRIVACY.md) | Cả team | Dữ liệu học sinh, nguồn crawl, release checklist |
 | [docs/GRADUATE_LAUNCH.md](docs/GRADUATE_LAUNCH.md) | Product/AI/FE | Scope sinh viên sắp/đã tốt nghiệp tìm hướng việc làm |
@@ -41,6 +42,21 @@ copy ..\.env.example .env        # rồi điền API keys
 uvicorn app.main:app --reload --port 8000
 # → http://localhost:8000/docs (Swagger UI, có sẵn mock data)
 ```
+
+AI stack đã chốt: LangChain Core/`langchain-openai` cho model, embedding, structured
+output và tool schemas; custom LangGraph `StateGraph` chỉ orchestration `/api/chat`.
+
+### Test baseline
+
+```bash
+cd backend
+python -m compileall app scripts tests
+python -m pytest -q tests/unit tests/contract
+python -m pytest -q tests/integration
+python -m scripts.check_routes
+```
+
+Chi tiết markers, E2E và fixture rules: [docs/TESTING.md](docs/TESTING.md).
 
 ### Frontend (Next.js — Node 20+)
 ```bash

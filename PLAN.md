@@ -1,6 +1,6 @@
 # 📋 PLAN — CareerCompass, Hackathon 48h
 
-> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) · [docs/AI_FOCUS.md](docs/AI_FOCUS.md) · [docs/AGENTIC_RUNTIME.md](docs/AGENTIC_RUNTIME.md) · [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) · [docs/EVALUATION.md](docs/EVALUATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
+> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) · [docs/AI_FOCUS.md](docs/AI_FOCUS.md) · [docs/AGENTIC_RUNTIME.md](docs/AGENTIC_RUNTIME.md) · [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) · [docs/EVALUATION.md](docs/EVALUATION.md) · [docs/TESTING.md](docs/TESTING.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
 >
 > Trước khi bấm giờ: cả team pass [docs/PREFLIGHT.md](docs/PREFLIGHT.md). Trạng thái repo/docs tốt không đồng nghĩa runtime đã sẵn sàng.
 
@@ -228,16 +228,17 @@ Master schedule/dependency nằm ở `docs/TASKS.md`; mỗi member dùng task ca
 | Backend | FastAPI (Python 3.11) + Pydantic v2 | Python mạnh nhất cho data/NLP; Swagger tự động = FE tự tra API |
 | DB | SQLite (qua SQLAlchemy) | Zero-setup, đủ cho scale hackathon; đường lên Postgres đã thiết kế sẵn |
 | Vector search | NumPy cosine in-process | ~200 careers, không cần vector DB — đừng over-engineer |
-| LLM chat | DeepSeek `deepseek-v4-flash` (OpenAI-compatible) — cấu hình qua env | Nhanh/rẻ; JSON mode; đổi provider qua gateway |
-| Agent runtime | LangGraph `StateGraph` tối giản + FastAPI/Pydantic; chỉ `/api/chat` | Conditional flow rõ để demo; policy/tool/session vẫn do code sở hữu; có `AGENT_MODE=deterministic` fallback |
-| Embeddings | OpenAI `text-embedding-3-small` | Rẻ, multilingual đủ tốt cho tiếng Việt |
+| AI model/tool layer | LangChain Core + `langchain-openai`, chỉ qua `services/llm.py` | Một gateway cho provider adapters, typed tools, structured output; fake/test được |
+| LLM chat | DeepSeek `deepseek-v4-flash` qua LangChain `ChatOpenAI` + OpenAI-compatible env | Nhanh/rẻ; JSON mode; đổi provider qua gateway |
+| Agent runtime | LangGraph `StateGraph` custom tối giản; chỉ `/api/chat` | Conditional flow rõ; policy/tool/session do code sở hữu; có `AGENT_MODE=deterministic` fallback |
+| Embeddings | OpenAI `text-embedding-3-small` qua LangChain `OpenAIEmbeddings` | Rẻ, multilingual đủ tốt cho tiếng Việt |
 | Crawl | httpx + BeautifulSoup/selectolax (+ Playwright chỉ khi bắt buộc) | Nhẹ, nhanh |
 | Deploy | Vercel (FE) + Render/Railway (BE) | Free tier, nhanh |
 | Charts | Recharts | Đơn giản, đẹp đủ dùng |
 
 Chi tiết kiến trúc & scalability: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-LangGraph boundary và spike gate: [docs/ADR_AGENT_ORCHESTRATION.md](docs/ADR_AGENT_ORCHESTRATION.md). Không thêm LangChain prebuilt agent, LangSmith, checkpointer hoặc graph cho recommendation trong 48h.
+Stack đã chốt: **LangChain cho model/tool/structured output; LangGraph cho custom StateGraph orchestration**. Boundary, version pins và spike gate: [docs/ADR_AGENT_ORCHESTRATION.md](docs/ADR_AGENT_ORCHESTRATION.md). Không thêm `create_agent`, prebuilt ReAct, LangSmith service, checkpointer hoặc graph cho recommendation trong 48h.
 
 ---
 
@@ -247,7 +248,7 @@ LangGraph boundary và spike gate: [docs/ADR_AGENT_ORCHESTRATION.md](docs/ADR_AG
 2. **Task source:** `TASKS.md` quyết định lịch/dependency; `docs/workstreams/M*.md` quyết định cách làm và acceptance.
 3. **AI context:** mỗi member mở root/package CLAUDE + task card + đúng source docs; dùng task packet trong `AGENT_WORKFLOW.md`.
 4. **Build:** mock/fixture trước để unblock; vertical slice nhỏ; không hai builder cùng file.
-5. **Verify:** static → unit → integration → acceptance; ghi command/evidence trong PR. Chưa chạy = `NOT_VERIFIED`.
+5. **Verify:** static → unit → contract → integration → acceptance theo [docs/TESTING.md](docs/TESTING.md); ghi command/evidence trong PR. Chưa chạy = `NOT_VERIFIED`.
 6. **Review:** buddy review + chạy ít nhất một lệnh; M1 gate contract/security/deploy/claims.
 7. **Handoff:** artifact/version/hash/command/sample/limitation; consumer chạy và thả ✅.
 8. **Integrate:** M1 merge critical path, smoke Explore/Launch, cập nhật blocker/kill switch.

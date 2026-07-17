@@ -68,19 +68,19 @@
 - **Expected:** actual metrics + commit/model/prompt/artifact versions in `EVALUATION_RESULTS.md`.
 - **Verify:** M3/M1 reproduce sample; no cherry-pick.
 
-### PR-12 — LangGraph spike + bounded policy/tool registry (H+4→12)
+### PR-12 — LangChain tool layer + LangGraph spike + bounded policy registry (H+4→12)
 - **Problem:** Flow hỏi đáp không được hard-code kịch bản, nhưng agent tự do sẽ không test/replay/bảo vệ được ethics.
-- **Actions:** đọc ADR; timebox 90' tạo StateGraph fake planner → policy → fake tool → fallback. Pass gate mới pin version đã test; sau đó tạo `agent_graph.py`/`agent_policy.py`/`agent_tools.py`, tool Pydantic, stage allowlist, planner JSON, pre/post policy privacy/provenance/autonomy/cost.
-- **Expected:** LangGraph chỉ orchestration chat; registry 10 local typed tools; policy decision/reason code; không prebuilt agent/LangSmith/checkpointer/browser/shell/arbitrary HTTP/config/KB write.
-- **Tests:** graph compile/invoke offline; overhead <100ms/100 fixtures; deterministic mode không import graph; tool stage matrix; unknown tool/invalid args; gender/school strip; budget/deadline; provenance; correction precedence.
-- **Risk/fallback:** spike fail → plain Python bounded orchestrator dùng cùng contracts. Planner lỗi hoặc policy deny hai lần → deterministic question/template, không loop.
+- **Actions:** đọc ADR/TESTING; verify pinned LangChain/LangGraph install và `llm.py` gateway; timebox 90' tạo custom StateGraph fake structured planner → policy → fake LangChain tool → fallback. Sau đó tạo `agent_graph.py`/`agent_policy.py`/`agent_tools.py`, `@tool(args_schema=PydanticModel)`, stage allowlist, planner schema, pre/post policy privacy/provenance/autonomy/cost.
+- **Expected:** LangChain chỉ model/tool/structured contracts; LangGraph chỉ orchestration chat; registry 10 local typed tools; policy decision/reason code; không `create_agent`, prebuilt ReAct, LangSmith service/checkpointer/browser/shell/arbitrary HTTP/config/KB write.
+- **Tests:** gateway fake structured-output; tool JSON schema; graph compile/invoke offline; overhead <100ms p95/100 fixtures; deterministic mode không compile/invoke graph; tool stage matrix; unknown tool/invalid args; gender/school strip; budget/deadline; provenance; correction precedence. Đặt đúng `tests/unit|contract|integration`.
+- **Risk/fallback:** graph spike fail → plain Python bounded orchestrator dùng cùng LangChain gateway/tool contracts. Planner lỗi hoặc policy deny hai lần → deterministic question/template, không loop.
 - **Handoff:** tool schemas + policy matrix + sample observation cho M3/M5/M6/M1.
 
-### PR-13 — LangGraph chat agent orchestrator + degradation (H+16→22)
+### PR-13 — LangChain/LangGraph chat agent orchestrator + degradation (H+16→22)
 - **Problem:** Tool registry chỉ có giá trị nếu request path ghép được plan → policy → observation → response một cách có giới hạn.
-- **Actions:** tích hợp StateGraph vào `/api/chat` chỉ ở `discover/confirm_profile`; tối đa 2 agent-selected tools/turn; truyền deadline tổng 8s qua nodes; sanitize trace; map stage về `phase`; recommendation deterministic; không expose CoT.
+- **Actions:** tích hợp custom StateGraph vào `/api/chat` chỉ ở `discover/confirm_profile`; planner/composer gọi LangChain gateway, tool dùng typed registry; tối đa 2 agent-selected tools/turn; truyền deadline 8s qua nodes; sanitize trace; map stage về `phase`; recommendation deterministic; không expose CoT.
 - **Expected:** Explore/Launch chat dùng chung graph; API không đổi; `DEMO_MODE=replay` không network/key; session canonical ở SQLAlchemy, không graph checkpointer.
-- **Tests:** 10-turn mỗi mode; deadline/timeout/invalid JSON/tool exception; contract fixture; deterministic mode; no raw transcript/CoT; trace versions/latency/fallback; recommendation has no planner.
+- **Tests:** unit node routing/deadline; contract tool/API shapes; integration 10-turn mỗi mode; timeout/invalid structured output/tool exception; deterministic mode; no raw transcript/CoT; trace versions/latency/fallback; recommendation has no planner; E2E replay do M1 nhận.
 - **Risk/fallback:** `AGENT_MODE=deterministic` quay về question bank; retrieval/ranking luôn deterministic PR-05.
 - **Handoff:** endpoint behavior + replay trace fixture cho M1/M5/M6.
 

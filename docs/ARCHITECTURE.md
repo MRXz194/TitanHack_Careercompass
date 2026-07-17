@@ -15,10 +15,10 @@ graph TB
   subgraph "Backend — FastAPI :8000"
     E --> H[/api/market/*<br/>stats, skill gap/]
     G --> I[Matching Engine<br/>cosine + skill overlap + market signal]
-    J[/api/chat<br/>Bounded ReAct Profiler/] --> R[LangGraph StateGraph<br/>policy + typed tools + budget]
+    J[/api/chat<br/>Bounded ReAct Profiler/] --> R[LangGraph StateGraph<br/>custom nodes + policy + budget]
     R --> K[(SQLite<br/>sessions.db)]
     I --> L[/api/recommendations<br/>top5 + stretch + evidence + pathway/]
-    R -.->|structured planner/composer| M[LLM Gateway<br/>OpenAI-compatible client<br/>DeepSeek chat + OpenAI embed]
+    R -.->|structured planner/composer| M[LangChain Gateway<br/>ChatOpenAI + OpenAIEmbeddings<br/>provider config via env]
     L -.->|evidence gen| M
   end
 
@@ -67,7 +67,26 @@ FE POST /api/chat {session_id, message, journey_mode}
  → trả {reply, profile, phase, done}
 ```
 
-Agent không có shell/browser/write tool tổng quát. Matching, routes, readiness và mọi market number vẫn qua deterministic typed tools; xem `AGENTIC_RUNTIME.md`.
+Agent không có shell/browser/write tool tổng quát. LangChain chuẩn hóa model calls, structured output và typed tool schemas; LangGraph chỉ route state. Matching, routes, readiness và mọi market number vẫn qua deterministic domain functions; xem `AGENTIC_RUNTIME.md`.
+
+```mermaid
+stateDiagram-v2
+  [*] --> LoadSession
+  LoadSession --> Plan: sanitized state
+  Plan --> PrePolicy: structured AgentPlan
+  PrePolicy --> ExecuteTool: ALLOW
+  PrePolicy --> Fallback: DENY / invalid / deadline
+  ExecuteTool --> PostPolicy: typed observation
+  PostPolicy --> Compose: valid + grounded
+  PostPolicy --> Fallback: invalid provenance / budget
+  Compose --> Validate
+  Fallback --> Validate
+  Validate --> Persist: contract + ethics pass
+  Validate --> Fallback: repair exhausted
+  Persist --> [*]
+```
+
+Node `Plan`/`Compose` gọi LangChain gateway; node policy/tool/validate là CareerCompass code. Graph không persist private state và không chạy trên recommendation path.
 
 **Ranh giới bắt buộc:** agent chỉ chạy trong `/api/chat` để chọn tool thu thập/xác nhận evidence. `/api/recommendations` không có planner; toàn bộ candidate retrieval, score, stretch, route, readiness và validation chạy deterministic như flow bên dưới.
 
@@ -111,7 +130,7 @@ flowchart LR
 | Agent orchestrator/policy | choose allowlisted tool order, validate budget/privacy/provenance, produce safe observations | arbitrary tool/URL/code execution, ranking verdict, hidden reasoning persistence |
 | Matching service | retrieve/score/diversify/readiness inputs | call crawler, invent evidence |
 | Market service | read typed stats/meta | scan raw JSON or call LLM |
-| LLM gateway | provider call/log/retry/timeout | business decisions/session persistence |
+| LangChain LLM gateway | instantiate provider adapters; structured call/embed/log/retry/timeout | business decisions/session persistence or exposing provider classes |
 | Presenter/evidence | validated wording/template | choose candidates or create numbers |
 | FE API client | network/mock/error normalization | render/component state |
 | Components | render/accessibility/interactions | direct fetch or contract transformation scattered across UI |
@@ -129,7 +148,7 @@ flowchart LR
 | 7 | Profile schema KHÔNG có field giới tính | Anti-bias by design — không thể leak thứ không tồn tại | Không cá nhân hóa xưng hô — dùng "em/bạn" trung tính |
 | 8 | Explore/Launch dùng shared core | Bám cả chọn ngành và thất nghiệp sau tốt nghiệp mà không nhân đôi architecture | Launch MVP không match vacancy/công ty cụ thể |
 | 9 | Readiness dùng 3 band deterministic, không xác suất | Giải thích/test được; tránh false precision và hiring prediction | Ít “wow” hơn % score nhưng đáng tin hơn |
-| 10 | LangGraph `StateGraph` tối giản cho bounded chat agent | Conditional edge/policy/fallback rõ, vẫn replay/test được | Dependency mới; spike 90 phút, không prebuilt/multi-agent/checkpointer |
+| 10 | LangChain model/tool contracts + custom LangGraph `StateGraph` cho bounded chat agent | Provider/tool schema thống nhất; conditional policy/fallback rõ, replay/test được | Pinned dependencies; không `create_agent`/prebuilt/multi-agent/checkpointer |
 
 ## 4. Cấu trúc thư mục (chuẩn — đặt file mới đúng chỗ)
 
@@ -147,15 +166,22 @@ backend/
 │   │   ├── recommend.py      # POST /api/recommendations
 │   │   └── market.py         # GET /api/market/*
 │   ├── services/
-│   │   ├── llm.py            # LLM Gateway — MỌI call LLM/embedding đi qua đây
+│   │   ├── llm.py            # LangChain Gateway — MỌI model/embedding instance ở đây
 │   │   ├── profiler.py       # state machine hội thoại
-│   │   ├── agent_graph.py    # minimal LangGraph StateGraph for /api/chat only
-│   │   ├── agent_policy.py   # allowlist, privacy/provenance/budget decisions
-│   │   ├── agent_tools.py    # typed local tools, no external side effects
+│   │   ├── agent_graph.py    # PR-12 planned: LangGraph StateGraph, /api/chat only
+│   │   ├── agent_policy.py   # PR-12 planned: privacy/provenance/budget decisions
+│   │   ├── agent_tools.py    # PR-12 planned: LangChain typed local tools
 │   │   ├── matching.py       # scoring engine
 │   │   └── market.py         # đọc market.db
 │   ├── prompts/              # MỌI prompt ở đây, có version comment
 │   └── data/seed_loader.py   # load seed khi chưa có data thật
+├── tests/
+│   ├── unit/                 # pure domain/policy/parser/scoring tests
+│   ├── contract/             # Pydantic/OpenAPI/fixture parity
+│   ├── integration/          # FastAPI + services + seed/temp storage
+│   ├── e2e/                  # Explore/Launch/replay journeys
+│   └── fixtures/             # fictional, sanitized, versioned artifacts
+├── pytest.ini                # strict markers; canonical testpaths
 ├── scripts/test_chat.py      # test hội thoại từ terminal, không cần FE
 └── requirements.txt
 
@@ -187,8 +213,8 @@ Thiết kế hiện tại cố tình để mỗi thành phần có "đường th
 | Crawl | Chạy tay 1 lần | Scheduler (Airflow/cron) crawl mỗi ngày, incremental theo posted_date | Pipeline đã idempotent + từng bước độc lập → chỉ thêm orchestrator |
 | Skill extraction | Batch script + cache | Queue worker (Celery), chỉ xử lý posting mới | Logic giữ nguyên, bọc vào worker |
 | Market stats | Build lại toàn bộ | Materialized views, refresh theo lịch | Query giữ nguyên |
-| LLM | Gọi trực tiếp | Thêm cache layer theo (prompt-hash), rate limit, fallback model tự động | Gateway đã là 1 module — chèn middleware |
-| Agent | LangGraph StateGraph, no checkpointer; session in SQLAlchemy | optional durable execution/HITL only after privacy review | Keep policy/tool contracts; never expose arbitrary execution |
+| LLM | LangChain gateway gọi provider | cache theo prompt/input hash, rate limit, provider fallback | Gateway là 1 module; domain không đổi |
+| Agent | Custom LangGraph StateGraph, no checkpointer; session in SQLAlchemy | optional durable execution/HITL only after privacy review | Giữ policy/tool contracts; viết ADR mới trước khi mở authority |
 | Serving | 1 instance Render | Backend stateless → scale ngang sau load balancer; session sang Redis | Đổi session store |
 | FE | Vercel | Vercel (giữ nguyên) + ISR cho trang market | — |
 | Mới | — | Counselor dashboard, school integration, API cho trường học | Feature mới trên nền data đã có |
