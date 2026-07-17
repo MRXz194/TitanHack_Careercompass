@@ -32,7 +32,7 @@ def test_api_reads_aggregate_db_and_handles_empty_region(
     postings = [
         {
             "id": f"api-fixture-{index}",
-            "source": "fixture",
+            "source": f"fixture-{index % 2}",
             "career_id": "data-analyst",
             "region": "hanoi",
             "posted_date": (window_end - timedelta(days=day)).isoformat(),

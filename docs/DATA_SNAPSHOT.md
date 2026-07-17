@@ -34,3 +34,16 @@
 - Nguồn/region coverage không đại diện hoàn bộ thị trường Việt Nam (phần lớn tập trung ở Hà Nội/HCM, thiếu các tỉnh lẻ).
 - Salary chỉ phản ánh tin có công khai lương (hơn 50% tin ghi Thỏa thuận).
 - Trend chỉ có ý nghĩa khi đủ cửa sổ thời gian và số lượng mẫu lớn hơn.
+
+## MI-08 aggregate display guardrails
+
+> Áp dụng khi rebuild `market.db` bằng `market-stats-v1.1-guardrails-stub`;
+> snapshot hiện tại vẫn cần rebuild sau khi D-05 được sửa duplicate/hash.
+
+- Lương quan sát `<= 0` hoặc `> 200` triệu VND/tháng bị loại khỏi percentile và
+  được đếm trong `market_meta.guardrail_exclusions`; không clamp thành một số khác.
+- Trend có raw magnitude `> 500%`, thiếu một cửa sổ, dưới 10 mẫu, hoặc một nguồn
+  chiếm `>= 80%` bị ẩn (`trend_pct=null`, `low_confidence=true`); `raw_trend_pct`
+  và source share vẫn được giữ trong aggregate để audit.
+- Metadata ghi denominator salary coverage và so sánh từng nguồn. Đây là guardrail
+  hiển thị, không biến snapshot thành đại diện cho toàn thị trường lao động.

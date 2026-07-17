@@ -30,6 +30,7 @@ def _posting(
 ) -> dict:
     return {
         "id": posting_id,
+        "source": f"fixture-{sum(ord(char) for char in posting_id) % 2}",
         "career_id": career_id,
         "region": region,
         "posted_date": (WINDOW_END - timedelta(days=days_ago)).isoformat(),
@@ -103,4 +104,3 @@ def test_proxy_rejects_duplicate_skills_within_posting() -> None:
             [_posting("duplicate-skills", days_ago=1, skills=["SQL", "SQL"])],
             window_end=WINDOW_END,
         )
-

@@ -35,7 +35,7 @@ def _posting(
 ) -> dict:
     return {
         "id": f"fixture-{career_id}-{index}",
-        "source": "fixture",
+        "source": f"fixture-{index % 2}",
         "career_id": career_id,
         "region": region,
         "posted_date": (WINDOW_END - timedelta(days=days_ago)).isoformat(),

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from collections import Counter, defaultdict
 from datetime import date, timedelta
@@ -35,10 +36,13 @@ from data.pipeline.extract_skills import read_jsonl, records_hash  # noqa: E402
 from data.pipeline.map_careers import UNMAPPED  # noqa: E402
 
 
-SCHEMA_VERSION = "market-stats-v1-stub"
+SCHEMA_VERSION = "market-stats-v1.1-guardrails-stub"
 WINDOW_DAYS = 90
 MIN_SALARY_SAMPLES = 5
 MIN_TREND_POSTINGS = 10
+MAX_SALARY_TRIEU = 200.0
+MAX_ABS_TREND_PCT = 500.0
+MAX_SOURCE_SHARE = 0.8
 DEMAND_WEIGHT = 0.6
 TREND_WEIGHT = 0.4
 DEFAULT_INPUT = ROOT_DIR / "data" / "processed" / "postings_mapped.jsonl"
@@ -58,8 +62,13 @@ career_stats = Table(
     Column("salary_p50_trieu", Float),
     Column("salary_p75_trieu", Float),
     Column("salary_sample_count", Integer, nullable=False),
+    Column("salary_observed_count", Integer, nullable=False),
+    Column("salary_excluded_count", Integer, nullable=False),
     Column("trend_pct", Float),
+    Column("raw_trend_pct", Float),
     Column("low_confidence", Boolean, nullable=False),
+    Column("source_dominance_ratio", Float, nullable=False),
+    Column("source_dominant", Boolean, nullable=False),
     Column("top_skills_json", Text, nullable=False),
     Column("top_regions_json", Text, nullable=False),
     Column("source_counts_json", Text, nullable=False),
@@ -73,7 +82,10 @@ skill_stats = Table(
     Column("gap_score", Float, nullable=False),
     Column("demand_count", Integer, nullable=False),
     Column("trend_pct", Float),
+    Column("raw_trend_pct", Float),
     Column("low_confidence", Boolean, nullable=False),
+    Column("source_dominance_ratio", Float, nullable=False),
+    Column("source_dominant", Boolean, nullable=False),
     Column("related_careers_json", Text, nullable=False),
     Column("posting_ids_json", Text, nullable=False),
 )
@@ -101,13 +113,49 @@ def percentile(values: list[float], quantile: float) -> float:
     return round(value, 2)
 
 
-def _salary_value(posting: dict[str, Any]) -> float | None:
+def _salary_observation(posting: dict[str, Any]) -> tuple[float | None, str]:
     low = posting.get("salary_min_trieu")
     high = posting.get("salary_max_trieu")
-    values = [float(value) for value in (low, high) if value is not None]
-    if not values or any(value < 0 for value in values):
-        return None
-    return sum(values) / len(values)
+    raw_values = [value for value in (low, high) if value is not None]
+    if not raw_values:
+        return None, "missing"
+    try:
+        values = [float(value) for value in raw_values]
+    except (TypeError, ValueError):
+        return None, "invalid_nonpositive_or_nonfinite"
+    if any(not math.isfinite(value) or value <= 0 for value in values):
+        return None, "invalid_nonpositive_or_nonfinite"
+    if any(value > MAX_SALARY_TRIEU for value in values):
+        return None, "above_display_guardrail"
+    return sum(values) / len(values), "valid"
+
+
+def _trend_guard(
+    rows: list[dict[str, Any]], window_end: date
+) -> tuple[float | None, float | None, bool, float, bool]:
+    early_start = window_end - timedelta(days=WINDOW_DAYS - 1)
+    late_start = window_end - timedelta(days=44)
+    early = sum(early_start <= row["_posted_date"] < late_start for row in rows)
+    late = sum(late_start <= row["_posted_date"] <= window_end for row in rows)
+    trend_ready = len(rows) >= MIN_TREND_POSTINGS and early > 0 and late > 0
+    raw_trend = (
+        round((late - early) / max(early, 5) * 100, 2)
+        if trend_ready
+        else None
+    )
+    source_counts = Counter(str(row.get("source") or "unknown") for row in rows)
+    dominance_ratio = max(source_counts.values(), default=0) / len(rows) if rows else 0
+    source_dominant = dominance_ratio >= MAX_SOURCE_SHARE
+    extreme = raw_trend is not None and abs(raw_trend) > MAX_ABS_TREND_PCT
+    display_trend = raw_trend if trend_ready and not extreme and not source_dominant else None
+    low_confidence = not trend_ready or extreme or source_dominant
+    return (
+        display_trend,
+        raw_trend,
+        low_confidence,
+        round(dominance_ratio, 4),
+        source_dominant,
+    )
 
 
 def _json(value: Any) -> str:
@@ -123,13 +171,15 @@ def _aggregate_group(
     window_end: date,
     top_regions: list[str],
 ) -> dict[str, Any]:
-    salaries = [value for row in rows if (value := _salary_value(row)) is not None]
-    early_start = window_end - timedelta(days=WINDOW_DAYS - 1)
-    late_start = window_end - timedelta(days=44)
-    early = sum(early_start <= row["_posted_date"] < late_start for row in rows)
-    late = sum(late_start <= row["_posted_date"] <= window_end for row in rows)
-    trend_ready = len(rows) >= MIN_TREND_POSTINGS and early > 0 and late > 0
-    trend = round((late - early) / max(early, 5) * 100, 2) if trend_ready else None
+    salary_observations = [_salary_observation(row) for row in rows]
+    salaries = [value for value, status in salary_observations if status == "valid" and value is not None]
+    salary_observed_count = sum(status != "missing" for _, status in salary_observations)
+    salary_excluded_count = sum(
+        status not in ("missing", "valid") for _, status in salary_observations
+    )
+    trend, raw_trend, low_confidence, dominance_ratio, source_dominant = (
+        _trend_guard(rows, window_end)
+    )
     salary_ready = len(salaries) >= MIN_SALARY_SAMPLES
     skill_counts = Counter(skill for row in rows for skill in row["skills"])
     source_counts = Counter(str(row.get("source") or "unknown") for row in rows)
@@ -143,8 +193,13 @@ def _aggregate_group(
         "salary_p50_trieu": percentile(salaries, 0.5) if salary_ready else None,
         "salary_p75_trieu": percentile(salaries, 0.75) if salary_ready else None,
         "salary_sample_count": len(salaries),
+        "salary_observed_count": salary_observed_count,
+        "salary_excluded_count": salary_excluded_count,
         "trend_pct": trend,
-        "low_confidence": not trend_ready,
+        "raw_trend_pct": raw_trend,
+        "low_confidence": low_confidence,
+        "source_dominance_ratio": dominance_ratio,
+        "source_dominant": source_dominant,
         "top_skills_json": _json(
             [
                 skill
@@ -242,9 +297,12 @@ def aggregate_career_stats(
         "career_row_count": len(output),
         "salary_min_samples": MIN_SALARY_SAMPLES,
         "trend_formula": "(late45-early45)/max(early45,5)*100",
+        "guardrail_version": "market-display-guardrails-v1",
         "limitations": [
             "Observed posting demand is not labor-supply shortage.",
             "Unmapped postings are excluded from career aggregates but counted in metadata.",
+            "Salary/trend values outside display guardrails are hidden, never silently clamped.",
+            "Source-dominant aggregates hide trend and remain available as demand-only context.",
         ],
     }
     return output, meta
@@ -285,15 +343,9 @@ def aggregate_skill_stats(
             groups[(skill, region)].append(posting)
 
     raw_rows: list[dict[str, Any]] = []
-    late_start = window_end - timedelta(days=44)
     for (skill, region), rows in sorted(groups.items()):
-        early = sum(row["_posted_date"] < late_start for row in rows)
-        late = sum(row["_posted_date"] >= late_start for row in rows)
-        trend_ready = len(rows) >= MIN_TREND_POSTINGS and early > 0 and late > 0
-        trend = (
-            round((late - early) / max(early, 5) * 100, 2)
-            if trend_ready
-            else None
+        trend, raw_trend, low_confidence, dominance_ratio, source_dominant = (
+            _trend_guard(rows, window_end)
         )
         related_counts = Counter(
             row["career_id"]
@@ -306,7 +358,10 @@ def aggregate_skill_stats(
                 "region": region,
                 "demand_count": len(rows),
                 "trend_pct": trend,
-                "low_confidence": not trend_ready,
+                "raw_trend_pct": raw_trend,
+                "low_confidence": low_confidence,
+                "source_dominance_ratio": dominance_ratio,
+                "source_dominant": source_dominant,
                 "related_careers_json": _json(
                     [
                         career_id
@@ -339,6 +394,92 @@ def aggregate_skill_stats(
                 score = DEMAND_WEIGHT * demand_norm + TREND_WEIGHT * trend_norm
             row["gap_score"] = round(min(max(score, 0), 1), 4)
     return raw_rows
+
+
+def build_guardrail_report(
+    postings: list[dict[str, Any]],
+    career_rows: list[dict[str, Any]],
+    skill_rows: list[dict[str, Any]],
+    *,
+    window_end: date,
+) -> dict[str, Any]:
+    window_start = window_end - timedelta(days=WINDOW_DAYS - 1)
+    eligible = [
+        row
+        for row in postings
+        if window_start <= date.fromisoformat(row["posted_date"]) <= window_end
+    ]
+    salary_statuses = Counter(_salary_observation(row)[1] for row in eligible)
+    source_counts = Counter(str(row.get("source") or "unknown") for row in eligible)
+    source_only: dict[str, dict[str, Any]] = {}
+    for source, count in sorted(source_counts.items()):
+        subset = [
+            row
+            for row in eligible
+            if str(row.get("source") or "unknown") == source
+        ]
+        statuses = Counter(_salary_observation(row)[1] for row in subset)
+        source_only[source] = {
+            "postings": count,
+            "share": round(count / len(eligible), 4) if eligible else 0,
+            "mapped_postings": sum(
+                isinstance(row.get("career_id"), str)
+                and row.get("career_id") != UNMAPPED
+                for row in subset
+            ),
+            "career_count": len(
+                {
+                    row["career_id"]
+                    for row in subset
+                    if isinstance(row.get("career_id"), str)
+                    and row["career_id"] != UNMAPPED
+                }
+            ),
+            "salary_valid_count": statuses["valid"],
+            "salary_excluded_count": sum(
+                statuses[key]
+                for key in (
+                    "invalid_nonpositive_or_nonfinite",
+                    "above_display_guardrail",
+                )
+            ),
+        }
+    duplicate_count = len(eligible) - len({row.get("id") for row in eligible})
+    return {
+        "guardrail_thresholds": {
+            "salary_max_trieu": MAX_SALARY_TRIEU,
+            "trend_max_abs_pct": MAX_ABS_TREND_PCT,
+            "source_dominance_share": MAX_SOURCE_SHARE,
+        },
+        "guardrail_exclusions": {
+            "duplicate_postings": duplicate_count,
+            "salary_nonpositive_or_nonfinite": salary_statuses[
+                "invalid_nonpositive_or_nonfinite"
+            ],
+            "salary_above_guardrail": salary_statuses["above_display_guardrail"],
+            "career_extreme_trends_hidden": sum(
+                row["raw_trend_pct"] is not None
+                and abs(row["raw_trend_pct"]) > MAX_ABS_TREND_PCT
+                for row in career_rows
+            ),
+            "skill_extreme_trends_hidden": sum(
+                row["raw_trend_pct"] is not None
+                and abs(row["raw_trend_pct"]) > MAX_ABS_TREND_PCT
+                for row in skill_rows
+            ),
+        },
+        "salary_coverage": {
+            "posting_denominator": len(eligible),
+            "observed_count": len(eligible) - salary_statuses["missing"],
+            "valid_count": salary_statuses["valid"],
+            "excluded_count": len(eligible)
+            - salary_statuses["missing"]
+            - salary_statuses["valid"],
+        },
+        "source_only_comparison": source_only,
+        "source_dominant_career_rows": sum(row["source_dominant"] for row in career_rows),
+        "source_dominant_skill_rows": sum(row["source_dominant"] for row in skill_rows),
+    }
 
 
 def build_database(
@@ -398,6 +539,12 @@ def main(argv: list[str] | None = None) -> int:
         skill_rows = aggregate_skill_stats(
             postings, window_end=args.window_end or inferred_end
         )
+        guardrail_report = build_guardrail_report(
+            postings,
+            rows,
+            skill_rows,
+            window_end=args.window_end or inferred_end,
+        )
         meta.update(
             {
                 "input_content_hash": input_hash,
@@ -409,6 +556,7 @@ def main(argv: list[str] | None = None) -> int:
                     "demand-only when low-confidence"
                 ),
                 "demand_normalization": "demand/max(region_max_demand,10)",
+                **guardrail_report,
             }
         )
         build_database(args.output, rows, meta, skill_rows)

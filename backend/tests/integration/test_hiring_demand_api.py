@@ -34,7 +34,7 @@ def test_skill_radar_reads_live_rows_limits_top_20_and_handles_empty_region(
     postings = [
         {
             "id": f"skill-api-{index}",
-            "source": "fixture",
+            "source": f"fixture-{index % 2}",
             "career_id": "data-analyst",
             "region": "hanoi",
             "posted_date": (window_end - timedelta(days=day)).isoformat(),
@@ -74,4 +74,3 @@ def test_skill_radar_reads_live_rows_limits_top_20_and_handles_empty_region(
     empty = market_router.skill_gaps("danang")
     assert empty.skills == []
     engine.dispose()
-
