@@ -185,6 +185,21 @@ See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, error
 - **Tests:** route script; missing∩matched empty; missing⊆role top skills; matched evidence trace; actions weeks 1–4 + deliverable.
 - **Fallback:** deterministic roadmap from KB; no course/company names without source.
 
+#### Status (M4)
+- **State:** DONE
+- **Code:** `backend/app/services/pathways.py` (wired from `matching.build_recommendation`)
+- **Handoff:** `docs/handoffs/M4_PR-07_PATHWAYS_LAUNCH_HANDOFF.md`
+- **Branch:** `feat/PR-07-pathways-launch-readiness` → merge `kaguya`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_pathways.py tests/integration/test_launch_pathways.py` → PASS
+- full unit/contract/integration → PASS
+- `python scripts/check_routes.py` → PASS
+
+#### Invariants locked
+- Explore `job_readiness=null`; Launch matched evidence; missing⊆top_skills; 4 actions w/ deliverable
+- Region does not change readiness band; market demand cannot inflate low-evidence band
+
 ### PR-08 — Bias/opportunity audit (H+31→35)
 - **Actions:** gender paired, region paired, school-prestige mention ignored, route/stretch coverage, prompt audit.
 - **Expected:** real `BIAS_AUDIT.md`, failures/fixes/retest.
