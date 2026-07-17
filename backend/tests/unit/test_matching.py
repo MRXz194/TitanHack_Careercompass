@@ -84,11 +84,12 @@ def test_region_does_not_change_candidate_set() -> None:
     p1.constraints.region_pref = "hanoi"
     p2 = _tech_profile(session_id="r2")
     p2.constraints.region_pref = "danang"
-    set1 = {cid for cid, _, _ in matching.top_k_careers(p1, k=20)}
-    set2 = {cid for cid, _, _ in matching.top_k_careers(p2, k=20)}
-    # Same KB → same candidate universe
+    n = len(load_careers())
+    # Rank full KB — region may reorder but must not drop any career.
+    set1 = {cid for cid, _, _ in matching.top_k_careers(p1, k=n)}
+    set2 = {cid for cid, _, _ in matching.top_k_careers(p2, k=n)}
     assert set1 == set2
-    assert len(set1) == len(load_careers())
+    assert len(set1) == n
 
 
 def test_recommend_returns_top5_and_stretch() -> None:
