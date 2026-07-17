@@ -55,8 +55,11 @@ export default function MarketPage() {
                     style={{ width: `${s.gap_score * 100}%` }}
                   />
                 </div>
-                <span className="w-24 text-right text-xs text-[var(--cc-muted)]">
-                  {s.demand_count} tin {!s.low_confidence && s.trend_pct != null && s.trend_pct > 0 ? `· ▲${s.trend_pct}%` : ""}
+                <span className="w-32 text-right text-xs text-[var(--cc-muted)]">
+                  {s.demand_count} tin
+                  {s.low_confidence
+                    ? " · dữ liệu hạn chế"
+                    : s.trend_pct != null && s.trend_pct > 0 ? ` · ▲${s.trend_pct}%` : ""}
                 </span>
               </div>
             ))}
@@ -69,13 +72,14 @@ export default function MarketPage() {
 
       {overview && (
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 font-semibold">Nghề đang tăng trưởng</h2>
+          <h2 className="mb-3 font-semibold">Nghề có tín hiệu tuyển dụng cao</h2>
           <div className="grid gap-2 md:grid-cols-2">
             {overview.rising_careers.map((c) => (
               <div key={c.career_id} className="flex justify-between rounded-xl border border-slate-100 p-3 text-sm">
                 <span>{c.title}</span>
-                <span className="font-semibold text-[var(--cc-success)]">
-                  {c.low_confidence ? "Dữ liệu còn hạn chế" : `▲ ${c.trend_pct}%`}
+                <span className={`font-semibold ${c.low_confidence ? "text-[var(--cc-muted)]" : "text-[var(--cc-success)]"}`}>
+                  {c.demand_count} tin
+                  {!c.low_confidence && c.trend_pct !== 0 ? ` · ▲${c.trend_pct}%` : ""}
                 </span>
               </div>
             ))}
@@ -84,6 +88,21 @@ export default function MarketPage() {
             Từ {overview.postings_count.toLocaleString("vi-VN")} tin tuyển dụng · {overview.window_days} ngày gần nhất
             · cập nhật: {overview.updated_at}{overview.source_note ? ` · ${overview.source_note}` : ""}
           </p>
+        </section>
+      )}
+
+      {overview && overview.top_paying.length > 0 && (
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 font-semibold">Nghề lương cao nhất</h2>
+          <div className="grid gap-2 md:grid-cols-2">
+            {overview.top_paying.map((c) => (
+              <div key={c.career_id} className="flex justify-between rounded-xl border border-slate-100 p-3 text-sm">
+                <span>{c.title}</span>
+                <span className="font-semibold">{c.salary_p50_trieu} triệu/tháng</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-[var(--cc-muted)]">Lương trung vị (P50) theo dữ liệu tuyển dụng.</p>
         </section>
       )}
     </main>

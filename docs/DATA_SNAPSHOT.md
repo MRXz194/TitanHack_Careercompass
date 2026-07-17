@@ -7,13 +7,13 @@
 | Snapshot ID / SHA-256 | `real_jobs_snapshot_20260717` / `192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430` |
 | Built at / window | 2026-07-17T13:46:45.860780+00:00 / 90 days |
 | Sources + terms/license URLs | TopCV ([dieu-khoan](https://www.topcv.vn/dieu-khoan-bao-mat)), VietnamWorks ([chinh-sach](https://www.vietnamworks.com/chinh-sach-bao-mat)), ITViec ([privacy](https://itviec.com/privacy-policy)) |
-| Raw / normalized / enriched count | Raw: 300 | Normalized: 298 | Enriched: TBD |
+| Raw / normalized / enriched count | Raw: 300 | Normalized: 298 | Enriched (has skills[]): 234/298 (78.5%) |
 | Count theo source và region | Nguồn: itviec: 99 (33.2%), topcv: 100 (33.6%), vietnamworks: 99 (33.2%) <br> Vùng: hanoi: 158 (53.0%), hcm: 38 (12.8%), other: 100 (33.6%), danang: 2 (0.7%) |
 | Salary coverage | 127/298 (42.6%) |
 | Experience/seniority coverage + entry-level count | Exp: 199/298 (66.8%) <br> Seniority: {"entry": 76, "mid": 59, "senior": 86, "unknown": 77} <br> Entry-level: 76 |
 | Dedupe/drop rate | Deduped: 2 (0.67%) |
 | Skill extraction version | skills_vi_v1.0 |
-| Career mapping coverage | TBD (filled in MI-03) |
+| Career mapping coverage | 89/298 (29.9%) — rule-based title_patterns match against 25-career KB (`data/pipeline/build_market_stats.py`); LLM catch-up tier (MI-02/03 tầng 2) not run, so titles outside the current KB stay unmapped |
 
 ## Allowed use và attribution
 
@@ -26,4 +26,9 @@
 - Posting count không bằng vacancy count (một tin có thể tuyển nhiều người hoặc đã đóng).
 - Nguồn/region coverage không đại diện hoàn bộ thị trường Việt Nam (phần lớn tập trung ở Hà Nội/HCM, thiếu các tỉnh lẻ).
 - Salary chỉ phản ánh tin có công khai lương (hơn 50% tin ghi Thỏa thuận).
-- Trend chỉ có ý nghĩa khi đủ cửa sổ thời gian và số lượng mẫu lớn hơn.
+- Trend chỉ có ý nghĩa khi đủ cửa sổ thời gian và số lượng mẫu lớn hơn — dataset hiện tại là
+  **1 lần crawl duy nhất** (98% postings cùng ngày 2026-07-17), nên `build_market_stats.py`
+  cố ý ghi `trend_pct = NULL` cho mọi career/skill thay vì tính một con số artifact. `market.db`
+  đã được build và wire vào `/api/market/*` (fallback về seed khi 1 vùng/nghề chưa đủ dữ liệu).
+- Career mapping mới đạt 29.9% (rule-based only) — 70% postings không rơi vào 25 career hiện có
+  trong KB; mở rộng KB hoặc chạy tầng LLM catch-up (MI-02/03) sẽ nâng coverage này.
