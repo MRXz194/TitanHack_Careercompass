@@ -94,6 +94,37 @@ ethics invariant vẫn do deterministic code sở hữu.
 - **Tests:** unit merge/completeness; 10-turn E2E each mode; retry≤2; model timeout fallback; restart persistence; delete.
 - **Risk:** LLM overwrites evidence → code merge allowlist; preserve user corrections.
 
+#### Status (M4)
+- **State:** DONE (deterministic path + SQLite sessions; LLM optional when `CHAT_API_KEY` set)
+- **Branch:** `feat/PR-03-profiler-session-engine` (merge into `kaguya`)
+
+#### Verify evidence
+- `python -m compileall app tests` → PASS
+- `pytest -q tests/unit tests/contract tests/integration` → PASS (76)
+- Unit: merge/corrections/completeness/phase/injection (`test_profiler_engine.py`)
+- Integration: mode lock, patch persist, delete, 10-turn Explore/Launch, correction precedence
+
+#### Handoff → M5 / M1 (PR-04 prep)
+```md
+[HANDOFF] PR-03 — M4 → M5/M1
+- Artifact: services/profiler.py, session_store.py, session_orm.py, routers/chat.py (wired)
+- Sessions: SQLite `sessions.db` via SESSIONS_DB_URL
+- Chạy thử:
+  - `cd backend && uvicorn app.main:app --reload --port 8000`
+  - `cd backend && python -m pytest -q tests/integration/test_profiler_session.py`
+- Behavior: mode locked on open; PATCH/GET persist; DELETE /api/profile/{id}; no LLM required for demo (deterministic extractor + question bank)
+- Known limitations:
+  1. Deterministic extractor is keyword-based (quality << live LLM)
+  2. DELETE /api/profile is additive (not yet in API_CONTRACT.md prose — M1 may document)
+  3. Agent graph still PR-12/13; this is deterministic profiler core
+- Người nhận: ⬜
+```
+
+#### Cannot do / deferred
+- PR-04 formal chat handoff package + replay capture (M1)
+- Live LLM quality transcripts (needs keys + PR-02 prompts already wired)
+- LangGraph agent (PR-12/13)
+
 ### PR-04 — Chat handoff (H+16)
 - **Actions:** deploy sample Explore/Launch, request/response, latency/error/fallback notes.
 - **Expected:** M5 integrates; M1 records replay immediately.
