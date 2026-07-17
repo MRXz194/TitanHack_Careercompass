@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { Recommendation } from "@/types";
+import Tooltip from "@/components/ui/Tooltip";
+import { TOOLTIPS } from "@/lib/copy/transparency";
 
 const ROUTE_BADGE: Record<string, string> = {
   university: "🎓 Đại học",
@@ -68,7 +70,9 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
 
         <div className="flex flex-col sm:items-end shrink-0">
           <span className="rounded-full bg-[var(--cc-primary-soft)] border border-[var(--cc-primary)]/10 px-4 py-1.5 text-xs sm:text-sm font-bold text-[var(--cc-primary)] shadow-sm font-serif">
-            {Math.round(rec.match_score * 100)}% mức tương thích tham khảo
+            <Tooltip content={TOOLTIPS.match_score.text}>
+              {Math.round(rec.match_score * 100)}% mức tương thích tham khảo
+            </Tooltip>
           </span>
         </div>
       </div>
@@ -97,14 +101,18 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                 : "bg-red-50/40 text-[var(--cc-danger)] border-red-200/40"
             }`}
           >
-            {trendVal >= 0 ? "▲" : "▼"} {Math.abs(trendVal)}% xu hướng
+            <Tooltip content={TOOLTIPS.demand_proxy.text}>
+              {trendVal >= 0 ? "▲" : "▼"} {Math.abs(trendVal)}% xu hướng
+            </Tooltip>
           </span>
         )}
       </div>
 
       <div className="mt-4 flex justify-between items-center flex-wrap gap-2">
         <span className="text-[10px] text-[var(--cc-muted)] italic font-serif">
-          {market.source_note}
+          <Tooltip content={TOOLTIPS.source_note.text}>
+            {market.source_note}
+          </Tooltip>
         </span>
         <button
           onClick={() => {
@@ -278,9 +286,11 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                         ? "bg-blue-100 text-blue-800 border border-blue-200"
                         : "bg-amber-100 text-amber-800 border border-amber-200"
                     }`}>
-                      {job_readiness.band === "ready_now" && "Sẵn sàng ứng tuyển (Ready Now)"}
-                      {job_readiness.band === "near_ready" && "Gần sẵn sàng (Near Ready)"}
-                      {job_readiness.band === "build_foundation" && "Cần xây thêm nền tảng (Build Foundation)"}
+                      <Tooltip content={TOOLTIPS.readiness_band.text}>
+                        {job_readiness.band === "ready_now" && "Sẵn sàng ứng tuyển (Ready Now)"}
+                        {job_readiness.band === "near_ready" && "Gần sẵn sàng (Near Ready)"}
+                        {job_readiness.band === "build_foundation" && "Cần xây thêm nền tảng (Build Foundation)"}
+                      </Tooltip>
                     </span>
                   </div>
                   <p className="text-xs text-[var(--cc-ink)] leading-relaxed font-serif italic">

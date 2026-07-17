@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { Recommendation } from "@/types";
+import Tooltip from "@/components/ui/Tooltip";
+import { TOOLTIPS } from "@/lib/copy/transparency";
 
 const ROUTE_BADGE: Record<string, string> = {
   university: "🎓 Đại học",
@@ -32,7 +34,9 @@ export default function StretchCard({ rec }: StretchCardProps) {
 
       <div className="space-y-3">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/60 border border-[var(--cc-accent)] px-3.5 py-1 text-xs font-bold text-amber-800 font-serif shadow-sm">
-          ✨ Gợi ý mở rộng (Stretch Recommendation)
+          <Tooltip content={TOOLTIPS.stretch.text}>
+            ✨ Gợi ý mở rộng (Stretch Recommendation)
+          </Tooltip>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -75,14 +79,18 @@ export default function StretchCard({ rec }: StretchCardProps) {
 
           {showTrend && (
             <span className="flex items-center gap-1 bg-white/60 text-[var(--cc-success)] px-2.5 py-1 rounded-md border border-[var(--cc-border)]/50">
-              ▲ {Math.abs(trendVal)}% xu hướng
+              <Tooltip content={TOOLTIPS.demand_proxy.text}>
+                ▲ {Math.abs(trendVal)}% xu hướng
+              </Tooltip>
             </span>
           )}
         </div>
 
         <div className="flex justify-between items-center pt-2 flex-wrap gap-2">
           <span className="text-[10px] text-[var(--cc-muted)] italic font-serif">
-            {market.source_note}
+            <Tooltip content={TOOLTIPS.source_note.text}>
+              {market.source_note}
+            </Tooltip>
           </span>
           <button
             onClick={() => setOpen(!open)}
