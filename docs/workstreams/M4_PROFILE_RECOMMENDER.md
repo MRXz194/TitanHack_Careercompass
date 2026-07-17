@@ -179,6 +179,24 @@ See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, error
 - **Tests:** 100% number grounding; quote belongs session; null/low-confidence; injection; timeout.
 - **Fallback:** deterministic Vietnamese templates.
 
+#### Status (M4)
+- **State:** DONE
+- **Code:** `services/evidence.py`, `prompts/evidence.py` (v1); wired in `matching.build_recommendation`
+- **Handoff:** `docs/handoffs/PR-06_EVIDENCE_HANDOFF.md`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_evidence.py tests/integration/test_evidence_grounding.py` → PASS
+- full unit/contract/integration → PASS
+
+#### Notes
+- Digit grounding enforced on market stats text; salary/trend omitted when null/low-confidence/sample&lt;5
+- Counterfactual from re-score (PR-05), not free prose
+- LLM optional; template always safe for demo
+
+#### Deferred
+- PR-07 pathways/readiness polish
+- Live market.db numbers (MI-04)
+
 ### PR-07 — Study pathways + Graduate Launch readiness (H+26→31)
 - **Actions:** ≥2 study routes; Launch matched/missing skills, readiness band, search queries, 4 deliverable actions.
 - **Expected:** Explore `job_readiness=null`; Launch object follows GRADUATE_LAUNCH.
