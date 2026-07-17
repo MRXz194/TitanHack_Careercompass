@@ -24,7 +24,8 @@ Request:
 ```json
 {
   "session_id": "uuid-do-FE-tu-sinh-va-giu-trong-localStorage",
-  "message": "Em thích vẽ và hay sửa đồ điện trong nhà"   // null cho lượt mở đầu
+  "message": "Em thích vẽ và hay sửa đồ điện trong nhà",  // null cho lượt mở đầu
+  "journey_mode": "explore"                               // explore | launch; gửi từ opening turn
 }
 ```
 
@@ -48,16 +49,27 @@ Request (gửi phần muốn sửa):
 {
   "dimensions": { "ky_thuat": 0.9 },
   "remove_skills": ["python"],
-  "add_interests": ["thiết kế nội thất"]
+  "add_interests": ["thiết kế nội thất"],
+  "education_stage": "final_year",
+  "job_goal": "tìm vai trò dữ liệu entry-level",
+  "add_experiences": [
+    { "title": "Dashboard bán hàng", "kind": "project", "description": "…", "skills": ["Excel"], "source_quote": "em đã làm dashboard…" }
+  ],
+  "remove_experience_titles": []
 }
 ```
 Response: `{ "profile": Profile }`
+
+PATCH semantics: field bị bỏ qua = giữ nguyên; gửi `education_stage`/`job_goal: null` = xóa giá trị; add/remove experience được áp dụng theo title trong MVP. PR-03 phải lưu correction vào session để không bị LLM ghi đè ở lượt sau.
 
 ### Schema `Profile`
 
 ```json
 {
   "session_id": "…",
+  "journey_mode": "explore",      // explore | launch
+  "education_stage": "high_school", // high_school | vocational_student | college_student | university_student | final_year | recent_graduate | other | null
+  "job_goal": null,                // mô tả mục tiêu việc làm nếu journey_mode=launch
   "dimensions": {                 // 0..1 — 5 chiều năng lực-sở thích
     "ky_thuat": 0.7,              // thực hành-kỹ thuật (làm với máy móc, công cụ)
     "phan_tich": 0.4,             // phân tích-dữ liệu-logic
@@ -74,6 +86,9 @@ Response: `{ "profile": Profile }`
     "notes": "gia đình muốn em học gần nhà"
   },
   "evidence_quotes": [ { "turn": 3, "quote": "em hay sửa đồ điện trong nhà", "mapped_to": "ky_thuat" } ],
+  "experiences": [
+    { "title": "Dashboard bán hàng", "kind": "project", "description": "dashboard từ dữ liệu mở", "skills": ["Excel"], "source_quote": "em đã làm dashboard…" }
+  ],
   "completeness": 0.6              // 0..1 — FE dùng cho progress indicator
 }
 ```
@@ -112,19 +127,20 @@ Response:
     ],
     "from_market": [
       { "stat": "412 tin tuyển trong 90 ngày tại Đà Nẵng", "stat_key": "demand_count" },
-      { "stat": "Lương phổ biến 9–15 triệu, thợ giỏi 20+ triệu", "stat_key": "salary" }
+      { "stat": "Khoảng lương quan sát 9–15 triệu, trung vị 12 triệu", "stat_key": "salary" }
     ],
     "counterfactual": "Nếu em thiên về sáng tạo hơn thực hành, gợi ý đầu bảng sẽ là Thiết kế nội thất."
   },
   "market": {
     "demand_count_90d": 412,
+    "entry_level_count_90d": 96,              // posting được rule-label entry/fresher; 0 nếu chưa build được
     "salary_p25_trieu": 9, "salary_p50_trieu": 12, "salary_p75_trieu": 15,
     "trend_pct": 23,                          // % thay đổi demand 45 ngày sau vs 45 ngày trước
     "salary_sample_count": 86,                // số posting có lương dùng tính percentile
     "low_confidence": false,                  // true → FE phải hiện cảnh báo/ẩn claim trend
     "top_regions": ["danang", "hcm"],
     "top_skills": ["điện lạnh dân dụng", "đọc sơ đồ mạch", "kỹ năng khách hàng"],
-    "source_note": "Từ 3.412 tin tuyển dụng TopCV + VietnamWorks, 90 ngày gần nhất"
+    "source_note": "Từ 3.412 tin tuyển dụng trong snapshot nguồn đã duyệt, 90 ngày gần nhất"
   },
   "routes": [
     {
@@ -138,9 +154,32 @@ Response:
   "skill_roadmap": [
     { "skill": "điện cơ bản", "status": "nen-hoc-truoc" },
     { "skill": "điện lạnh dân dụng", "status": "hoc-trong-truong" }
+  ],
+  "job_readiness": null            // object bên dưới khi Profile.journey_mode=launch
+}
+```
+
+### Schema `JobReadiness` (chỉ cho Launch mode)
+
+```json
+{
+  "band": "near_ready",            // ready_now | near_ready | build_foundation; KHÔNG phải xác suất được tuyển
+  "band_reason": "Bạn đã có bằng chứng Excel qua project nhưng chưa có SQL trong profile.",
+  "matched_skills": [ { "skill": "Excel", "evidence": "Project Dashboard bán hàng" } ],
+  "missing_skills": ["SQL"],       // tập con market.top_skills và không trùng matched_skills
+  "search_queries": ["data analyst intern", "junior reporting analyst"],
+  "actions_30d": [
+    { "week": 1, "action": "Hoàn thiện dashboard", "deliverable": "1 link project + 3 insight", "why": "Tạo evidence cho Excel và data cleaning" }
   ]
 }
 ```
+
+Launch hard rules:
+
+- `matched_skills[*].evidence` phải truy về `Profile.skills.source_quote` hoặc `Profile.experiences`.
+- `missing_skills` chỉ lấy từ role/market top skills; không bịa requirement.
+- Mỗi action có deliverable kiểm chứng được; không trả lời chung chung “học thêm”.
+- `band` không được diễn đạt như xác suất được tuyển; không dùng GPA/trường/giới tính/vùng để hạ band.
 
 Ràng buộc BE phải đảm bảo (FE được phép assume):
 - `routes.length ≥ 2` và **luôn có ≥1 route** với `type ∈ {vocational, college, certificate}`.

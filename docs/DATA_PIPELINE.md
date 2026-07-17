@@ -30,6 +30,7 @@ Trước khi viết selector: ghi URL robots/terms/license và quyết định `
   "company": "Công ty ABC",
   "region_raw": "Đà Nẵng",
   "salary_raw": "9 - 15 triệu",
+  "experience_raw": "Không yêu cầu kinh nghiệm",
   "posted_date_raw": "Đăng 3 ngày trước",
   "description": "toàn bộ text mô tả + yêu cầu công việc",
   "crawled_at": "2026-07-17T20:00:00+07:00"
@@ -49,13 +50,15 @@ Input `data/raw/*.jsonl` → Output `data/processed/postings.jsonl`:
 
 | Trường | Xử lý |
 |---|---|
-| `salary_min/max_trieu` | "9 - 15 triệu"→(9,15) · "Đến 20 triệu"→(null,20) · "Thỏa thuận"→(null,null) · "$800-1200"→×tỉ giá 25.5k/1e6 → làm tròn 1 số lẻ |
+| `salary_min/max_trieu` | parse range; ngoại tệ dùng `exchange_rate` cấu hình kèm source/date trong manifest, không hardcode “tỉ giá hiện tại” |
+| `experience_min_years` | “không yêu cầu/fresher”→0; “1–2 năm”→1; không rõ→null; không suy ra từ tuổi |
+| `seniority` | `entry|mid|senior|unknown` từ title + experience; dùng rule deterministic, lưu confidence/reason để QA |
 | `region` | map `region_raw` → `hanoi/hcm/danang/other` (bảng map trong script; "Hồ Chí Minh", "TP HCM", "Thủ Đức"→hcm...) |
 | `posted_date` | "Đăng 3 ngày trước" → date tuyệt đối (từ `crawled_at`); parse các format dd/mm/yyyy |
 | dedupe | fuzzy: normalize(title)+normalize(company) trùng trong cửa sổ 30 ngày → giữ bản mới nhất |
 | lọc rác | description < 100 ký tự, title toàn ký tự lạ → bỏ, đếm vào report |
 
-Cuối script in report: tổng in/out, % có lương, phân bố vùng, phân bố ngày. **Report này paste vào PR** — là bằng chứng chất lượng data khi pitch.
+Cuối script in report: tổng in/out, % có lương/experience, phân bố vùng/ngày/seniority, drop/dedupe. **Report này paste vào PR** — là bằng chứng chất lượng data khi pitch và là guardrail cho Launch mode.
 
 ## [3] Extract skills (M3) — thiết kế chi tiết ở [AI_DESIGN.md §2](AI_DESIGN.md)
 
@@ -65,7 +68,7 @@ Bắt buộc: cache LLM theo hash, resume được, log chi phí ước tính ra
 ## [4] Market stats (M3) — công thức ở [AI_DESIGN.md §3](AI_DESIGN.md)
 
 Ghi vào `backend/market.db` các bảng:
-- `career_stats(career_id, region, demand_count, salary_p25, salary_p50, salary_p75, trend_pct, low_confidence, top_skills_json, updated_at)`
+- `career_stats(career_id, region, demand_count, entry_level_count, salary_p25, salary_p50, salary_p75, trend_pct, low_confidence, top_skills_json, updated_at)`
 - `skill_stats(skill, region, demand_count, trend_pct, gap_score, related_careers_json)`
 - `meta(postings_count, window_days, built_at, sources_json)` — FE hiện "từ N tin tuyển dụng" lấy ở đây.
 
@@ -75,4 +78,4 @@ Mỗi career trong `data/seed/careers_seed.json`: text = `title + description + 
 
 ## Career KB — `data/seed/careers_seed.json` (M2+M4 mở rộng ở D-07)
 
-File này **commit vào repo** (khác raw/processed). Vừa là seed demo cho FE từ giờ đầu, vừa là Career KB thật. Schema mỗi career: xem chính file (có 10 nghề mẫu đủ trường làm chuẩn). Mục tiêu cuối: 40–60 nghề, cân bằng giữa đại học/nghề, IT/phi-IT.
+File này **commit vào repo**. Mỗi career cần canonical title, `title_patterns`, `entry_role_aliases`, description, top skills, routes và roadmap/action templates. P0 ≥25 nghề cân bằng university/vocational, IT/phi-IT và có alias entry-level; P2 mới mở rộng 40–60.

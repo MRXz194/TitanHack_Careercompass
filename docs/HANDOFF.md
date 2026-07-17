@@ -30,6 +30,7 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 | Career embeddings | `.npy` + career IDs | M3 | M4 | cùng KB hash |
 | Replay fixtures | `backend/app/data/replay/*.json` | M1 + M4 | demo | ngắt mạng vẫn E2E |
 | Evaluation results | `docs/EVALUATION_RESULTS.md` | M1 | pitch/judges | ghi cả fail/caveat |
+| Launch profile/result fixture | replay + contract | M4 | M5/M6/M1 | matched/missing/actions invariants pass |
 
 ## 3. Integration order
 
@@ -39,6 +40,7 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 4. M3 handoff market DB/API cho M6; UI vẫn giữ fallback seed.
 5. M4 thay stub recommendation bằng scoring; M6 chuyển mock → real bằng env, không xóa mock.
 6. M1 chạy contract smoke test và E2E sau mỗi integration PR.
+7. Launch là presenter trên shared core: không handoff service/DB riêng; chỉ profile/result fields + fixtures.
 
 ## 4. Khi artifact đổi
 

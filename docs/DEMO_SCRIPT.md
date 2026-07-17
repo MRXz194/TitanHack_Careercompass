@@ -3,17 +3,17 @@
 ## Cấu trúc pitch (mục tiêu ≤ 10 slide, demo live là trung tâm)
 
 1. **Problem (30s):** 1 con số thật về mismatch cung-cầu lao động VN + 1 câu chuyện học sinh chọn nghề theo "trend/gia đình".
-2. **Demo live (4 phút)** — theo user journey trong PLAN.md §2. Persona: *Minh, lớp 12, Quảng Nam, thích vẽ + hay sửa đồ điện, nhà không dư dả* → hệ thống gợi ý cả nghề kỹ thuật (route trung cấp nghề) lẫn hướng sáng tạo, kèm dữ liệu Đà Nẵng thật.
+2. **Demo live (4 phút)** — Explore persona Minh là flow chính; cuối demo mở Launch result pre-seeded của An để chứng minh continuity học→việc, không chạy hai chat dài.
 3. **Differentiators (60s):** Radar nhu cầu kỹ năng theo vùng (hiring-demand proxy, không overclaim supply gap) · Evidence 2 chiều + counterfactual · Anti-bias by design.
 4. **Data & kiến trúc (45s):** N postings thật, pipeline chạy lại được mỗi đêm → real-time là thêm scheduler, không viết lại (slide từ ARCHITECTURE.md §5).
 5. **Future (30s):** counselor view, tích hợp trường học, mở rộng nguồn data.
 
 ## Persona demo (seed sẵn, có cached-replay — L-08)
 
-| | Persona A — "Minh" | Persona B — "Lan" |
+| | Persona A — "Minh" (Explore) | Persona B — "An" (Launch) |
 |---|---|---|
-| Bối cảnh | Lớp 12, Quảng Nam, thích vẽ + sửa đồ điện, tài chính hạn chế | Lớp 11, Hà Nội, giỏi toán, thích nói chuyện với người, gia đình ép học Y |
-| Điểm demo | Route vocational nổi bật, Skill Gap Đà Nẵng | Stretch card + counterfactual + autonomy (sửa profile) |
+| Bối cảnh | Lớp 12, Quảng Nam, thích vẽ + sửa đồ điện, tài chính hạn chế | Năm cuối ngành Kinh tế, đã làm project dashboard Excel nhưng chưa thực tập, chưa biết tìm job title nào |
+| Điểm demo | Route vocational nổi bật, Radar Đà Nẵng | Role lân cận + matched/missing skills + search queries + action tuần 1 có deliverable |
 
 ## Câu hỏi judge dự đoán — chuẩn bị trả lời (phân công tại H+44)
 
@@ -27,6 +27,7 @@
 8. "Scale thế nào?" → ARCHITECTURE.md §5, mỗi thành phần có đường thăng cấp.
 9. "Posting nhiều có nghĩa thị trường thiếu người không?" → Không. Đây là observed hiring demand; UI có sample/confidence. Đo skill shortage thật cần thêm dữ liệu supply/time-to-fill — đó là phase pilot.
 10. "Doanh nghiệp/trường học được lợi gì?" → học sinh có bản nháp có bằng chứng trước buổi tư vấn; tư vấn viên dùng thời gian 1:1 cho thảo luận sâu, không làm lại bước khám phá cơ bản.
+11. "Có giúp sinh viên xin việc không?" → Launch mode định hướng role family và chuẩn bị evidence/skill/action; không match vacancy, chấm CV hoặc hứa được tuyển trong MVP.
 
 ## Checklist trước giờ demo
 

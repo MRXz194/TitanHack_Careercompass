@@ -7,6 +7,10 @@
 export type Region = "hanoi" | "hcm" | "danang" | "other" | "all";
 export type RouteType = "university" | "college" | "vocational" | "certificate";
 export type Phase = "warmup" | "interests" | "abilities" | "constraints" | "wrapup";
+export type JourneyMode = "explore" | "launch";
+export type EducationStage = "high_school" | "vocational_student" | "college_student" | "university_student" | "final_year" | "recent_graduate" | "other";
+export type ExperienceKind = "project" | "internship" | "work" | "volunteer" | "coursework" | "other";
+export type ReadinessBand = "ready_now" | "near_ready" | "build_foundation";
 
 // ---------- Profile ----------
 
@@ -29,13 +33,25 @@ export interface EvidenceQuote {
   mapped_to: string;
 }
 
+export interface ExperienceEvidence {
+  title: string;
+  kind: ExperienceKind;
+  description: string;
+  skills: string[];
+  source_quote: string;
+}
+
 export interface Profile {
   session_id: string;
+  journey_mode: JourneyMode;
+  education_stage: EducationStage | null;
+  job_goal: string | null;
   dimensions: Record<string, number>; // ky_thuat, phan_tich, sang_tao, xa_hoi, quan_ly (0..1)
   skills: ProfileSkill[];
   interests: string[];
   constraints: Constraints;
   evidence_quotes: EvidenceQuote[];
+  experiences: ExperienceEvidence[];
   completeness: number;
 }
 
@@ -49,6 +65,16 @@ export interface ChatResponse {
   profile: Profile;
 }
 
+export interface ProfilePatch {
+  dimensions?: Record<string, number>;
+  remove_skills?: string[];
+  add_interests?: string[];
+  education_stage?: EducationStage | null;
+  job_goal?: string | null;
+  add_experiences?: ExperienceEvidence[];
+  remove_experience_titles?: string[];
+}
+
 // ---------- Recommendations ----------
 
 export interface Why {
@@ -59,12 +85,13 @@ export interface Why {
 
 export interface MarketStats {
   demand_count_90d: number;
+  entry_level_count_90d: number;
   salary_p25_trieu: number | null;
   salary_p50_trieu: number | null;
   salary_p75_trieu: number | null;
   trend_pct: number | null;
-  salary_sample_count?: number;
-  low_confidence?: boolean;
+  salary_sample_count: number;
+  low_confidence: boolean;
   top_regions: string[];
   top_skills: string[];
   source_note: string;
@@ -77,6 +104,15 @@ export interface Route {
   first_steps: string[];
 }
 
+export interface JobReadiness {
+  band: ReadinessBand;
+  band_reason: string;
+  matched_skills: { skill: string; evidence: string }[];
+  missing_skills: string[];
+  search_queries: string[];
+  actions_30d: { week: number; action: string; deliverable: string; why: string }[];
+}
+
 export interface Recommendation {
   career_id: string;
   title: string;
@@ -86,6 +122,7 @@ export interface Recommendation {
   market: MarketStats;
   routes: Route[]; // luôn ≥2, ≥1 ngoài đại học (BE đảm bảo)
   skill_roadmap: { skill: string; status: string }[];
+  job_readiness: JobReadiness | null;
 }
 
 export interface RecommendationResponse {
@@ -102,8 +139,8 @@ export interface MarketOverview {
   postings_count: number;
   window_days: number;
   updated_at: string;
-  source_note?: string;
-  rising_careers: { career_id: string; title: string; trend_pct: number; demand_count: number; low_confidence?: boolean }[];
+  source_note: string;
+  rising_careers: { career_id: string; title: string; trend_pct: number; demand_count: number; low_confidence: boolean }[];
   top_paying: { career_id: string; title: string; salary_p50_trieu: number }[];
 }
 
@@ -112,14 +149,14 @@ export interface SkillGapItem {
   gap_score: number;
   demand_count: number;
   trend_pct: number | null;
-  low_confidence?: boolean;
+  low_confidence: boolean;
   related_careers: string[];
 }
 
 export interface SkillGapResponse {
   region: Region;
   skills: SkillGapItem[];
-  source_note?: string;
+  source_note: string;
 }
 
 export interface CareerDetail {

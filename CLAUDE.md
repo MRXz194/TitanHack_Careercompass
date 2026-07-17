@@ -4,12 +4,20 @@
 
 ## What this project is
 
-48h hackathon product: AI career guidance for Vietnamese students. Three pillars:
+48h hackathon product addressing a real Vietnamese education-to-employment mismatch: students often choose from trends/family expectations without current labor signals; graduates then struggle to translate their study and projects into job roles/skills. Schools and counselors cannot provide deep 1:1, data-grounded guidance at scale.
+
+Two journeys share one core:
+- **Explore:** high-school/early students → career families + university/vocational/certificate routes.
+- **Graduate Launch:** final-year/recent graduates → entry-level role families + evidenced/missing skills + search queries + 30-day deliverables. It is NOT a job board, CV scorer, auto-apply or hiring prediction.
+
+Three pillars:
 1. **Market Intelligence** — real job-posting data (crawled) → skill demand, salaries, trends per region.
 2. **Conversational Profiler** — multi-turn Vietnamese chat builds a student profile (NOT a quiz); profile is visible and editable by the student.
 3. **Explainable Recommender** — top-5 careers + 1 "stretch" suggestion, each with evidence (student quotes + market stats), ≥2 study routes (always ≥1 non-university), and a counterfactual.
 
 **Ethics is a graded criterion (highest weight):** expand choices, never box in. No gender input anywhere in the profile/recommender. Region informs, never filters. All suggestions framed as reference, not verdict.
+
+Judges prioritize: skill-signal extraction quality; personalization/explainability; anti-bias/opportunity expansion (high weight); actual usefulness to students/counselors. Code or UI work that does not improve one of these or demo reliability is P2.
 
 ## Source of truth documents
 
@@ -20,6 +28,12 @@
 - `docs/HANDOFF.md` — required handoff template and artifact versions.
 - `docs/EVALUATION.md` — fixed quality gates; do not weaken thresholds to make results pass.
 - `docs/SECURITY_PRIVACY.md` — minors' data, source-use and logging rules.
+- `docs/BUSINESS_CASE.md` — users/buyers, real workflow and pilot KPIs.
+- `docs/GRADUATE_LAUNCH.md` — exact Launch scope/invariants; do not expand into recruitment automation.
+- `docs/AGENT_WORKFLOW.md` — mandatory AI-assisted development workflow and cost controls.
+- `docs/workstreams/M*.md` — detailed task cards by owner; read the matching member file.
+- `docs/FEATURE_ROADMAP.md` — features allowed only after P0/P1 gates pass.
+- `docs/PREFLIGHT.md` — kickoff readiness gate; docs alone never imply runtime READY.
 
 ## Tech stack (FIXED — do not suggest alternatives or add dependencies without asking)
 
@@ -41,6 +55,8 @@
 8. Keep the FE mock mode working at all times — it is the demo safety net.
 9. Job postings measure observed hiring demand, not labor-supply shortage. UI says “Radar nhu cầu kỹ năng”; never overclaim `gap_score`.
 10. Do not log raw student messages/profile or put real test transcripts in replay fixtures.
+11. `journey_mode` changes questions/presentation, not the candidate/data core. Do not fork Explore and Launch services.
+12. Launch `readiness.band` is not hiring probability; matched skill needs user evidence, missing skill must come from role market skills, every action needs a deliverable.
 
 ## Conventions
 
@@ -54,3 +70,4 @@
 - Prefer editing existing stubs over creating parallel new files (stubs already match the contract).
 - Small, runnable increments; the user must be able to run it locally before PR.
 - If a task seems to require changing the contract, architecture, or stack — say so explicitly instead of silently doing it.
+- Follow the Builder–Reviewer–Verifier process in `docs/AGENT_WORKFLOW.md`; status is not DONE until tests actually run and handoff is acknowledged.

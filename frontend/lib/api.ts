@@ -5,7 +5,7 @@
  * đến phút chót — TEAM_RULES.md §2). Mock phải luôn khớp shape API_CONTRACT.md.
  */
 import type {
-  ChatResponse, MarketOverview, Profile, RecommendationResponse, Region, SkillGapResponse,
+  ChatResponse, JourneyMode, MarketOverview, Profile, ProfilePatch, RecommendationResponse, Region, SkillGapResponse,
 } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -39,13 +39,13 @@ async function get<T>(path: string): Promise<T> {
 
 // ---------- Public API ----------
 
-export async function sendChat(message: string | null): Promise<ChatResponse> {
-  if (USE_MOCK) return (await import("./mock/chat")).mockChat(message);
-  return post<ChatResponse>("/api/chat", { session_id: getSessionId(), message });
+export async function sendChat(message: string | null, journeyMode: JourneyMode = "explore"): Promise<ChatResponse> {
+  if (USE_MOCK) return (await import("./mock/chat")).mockChat(message, journeyMode);
+  return post<ChatResponse>("/api/chat", { session_id: getSessionId(), message, journey_mode: journeyMode });
 }
 
-export async function fetchRecommendations(): Promise<RecommendationResponse> {
-  if (USE_MOCK) return (await import("./mock/recommendations")).mockRecommendations();
+export async function fetchRecommendations(journeyMode: JourneyMode = "explore"): Promise<RecommendationResponse> {
+  if (USE_MOCK) return (await import("./mock/recommendations")).mockRecommendations(journeyMode);
   return post<RecommendationResponse>("/api/recommendations", { session_id: getSessionId() });
 }
 
@@ -59,11 +59,7 @@ export async function fetchSkillGaps(region: Region): Promise<SkillGapResponse> 
   return get<SkillGapResponse>(`/api/market/skills?region=${region}`);
 }
 
-export async function patchProfile(patch: {
-  dimensions?: Record<string, number>;
-  remove_skills?: string[];
-  add_interests?: string[];
-}): Promise<{ profile: Profile }> {
+export async function patchProfile(patch: ProfilePatch): Promise<{ profile: Profile }> {
   if (USE_MOCK) return (await import("./mock/profile")).mockPatchProfile(patch);
   const res = await fetch(`${API_BASE}/api/profile/${getSessionId()}`, {
     method: "PATCH",

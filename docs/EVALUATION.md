@@ -2,6 +2,27 @@
 
 > M1 sở hữu bảng pass/fail; M2/M3/M4 cập nhật phần mình. Không sửa ngưỡng sau khi đã xem kết quả chỉ để “làm đẹp số”.
 
+## 0. Test/verify workflow cho mọi task
+
+Mỗi PR phải ghi bốn lớp, dùng `NOT_APPLICABLE` có lý do thay vì bỏ trống:
+
+1. **Static/contract:** type/schema/import/JSON/link/secret checks.
+2. **Unit/fixture:** pure parser/scoring/transform/component states.
+3. **Integration:** producer→consumer interface, DB/API/mock/live/replay tương ứng.
+4. **Acceptance:** DoD/task card và user-visible outcome.
+
+Kết quả ghi `command | environment | commit | PASS/FAIL/NOT_RUN | evidence`. “AI đã review” không phải evidence. Test fail không được xóa/skip để merge; phải fix, fallback hoặc M1 chấp nhận limitation và bỏ claim/feature.
+
+### Test ownership
+
+| Area | Builder test | Buddy verify | Release gate |
+|---|---|---|---|
+| Crawl/normalize | parser fixtures/idempotence | M3 sample read/hash | M1 source/data go-no-go |
+| Extraction/stats | gold + aggregate fixtures | M2 trace raw→stat | M1 metric/claim audit |
+| Profiler/matching | state/scoring/invariants | M3 persona/number grounding | M1 E2E/bias/replay |
+| FE explore/results | component states + typecheck | M5↔M6 browser task | M1 usability/demo run |
+| Contract/deploy | smoke/OpenAPI/CI | affected consumer | M1 merge/deploy |
+
 ## 1. Quality gates bắt buộc
 
 | Gate | Cách đo | Owner | Pass trước |
@@ -9,12 +30,12 @@
 | Data validity | schema, dedupe, ngày/lương/vùng, source URL, coverage report | M2 | H+20 |
 | Skill extraction | golden set 100 postings; precision/recall/F1 micro | M3 + M2 review | H+24 |
 | Career mapping | % mapped + accuracy trên 50 mẫu | M3 | H+28 |
-| Profiler | 10 scripted conversations: JSON valid, không lặp, quote truy vết | M4 | H+18 |
-| Recommendation | 12 golden personas, human rubric 1–5 bởi ≥2 người | M4 + M3 | H+34 |
+| Profiler | 6 Explore + 6 Launch conversations: JSON valid, không lặp, evidence truy vết | M4 | H+18 |
+| Recommendation | 8 Explore + 4 Launch golden personas, rubric 1–5 bởi ≥2 người | M4 + M3 | H+34 |
 | Grounding | mọi số trong evidence tồn tại trong stats input | M4 | 100% trước H+36 |
 | Route coverage | ≥2 route/nghề và ≥1 non-university | M4 + script | 100% trước H+34 |
 | Bias | gender/region paired tests + prompt audit | M4 + cả team | H+37 |
-| UX | 5 học sinh + 1–2 tư vấn viên, task completion + quote thật | M1 + M5 | H+38 |
+| UX | ≥3 Explore + ≥2 Launch students + 1–2 tư vấn viên | M1 + M5 | H+38 |
 | Reliability | 3 E2E liên tiếp; replay khi ngắt LLM | M1 | H+44 |
 
 ## 2. Data và skill extraction
@@ -39,7 +60,7 @@ Tạo `data/eval/skills_gold.jsonl` gồm 100 posting, cân bằng tối thiểu
 
 ### 12 golden personas
 
-Bao phủ: kỹ thuật, sáng tạo, xã hội, phân tích, thực hành; tài chính hạn chế; tỉnh ngoài 3 vùng; chưa biết sở thích; gia đình gây áp lực; tín hiệu mâu thuẫn; đề cập stereotype giới.
+8 Explore bao phủ kỹ thuật/sáng tạo/xã hội/phân tích/thực hành, tài chính hạn chế, tỉnh ngoài 3 vùng, chưa biết sở thích, gia đình gây áp lực, stereotype. 4 Launch bao phủ: project nhưng chưa thực tập, trái ngành, không có experience, skill mạnh nhưng goal mơ hồ.
 
 Hai reviewer chấm output 1–5:
 
@@ -49,6 +70,14 @@ Hai reviewer chấm output 1–5:
 4. Giải thích cụ thể, không phán quyết hoặc bịa dữ liệu.
 
 Pass: trung bình mỗi tiêu chí ≥3.5/5, không output nào vi phạm hard rule. Bất đồng reviewer >2 điểm phải review lại cùng M1.
+
+### Launch invariants
+
+- Matched skill có source quote/experience evidence: 100%.
+- Missing skill thuộc role top skills và không trùng matched: 100%.
+- 4 actions có week/action/deliverable/why: 100%.
+- Paired gender/school-name không đổi readiness band/candidate set ngoài tolerance.
+- Ít nhất 2 search query khác nhau, không chứa thuộc tính nhạy cảm.
 
 ## 5. Reliability, latency và cost
 

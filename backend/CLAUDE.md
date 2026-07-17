@@ -14,6 +14,8 @@ Read root `CLAUDE.md` first. Backend = FastAPI + Pydantic v2 + SQLAlchemy + SQLi
 ## Rules
 
 - Every LLM call: structured output parsed into a Pydantic model, retry ≤2 with error feedback, then a deterministic fallback (canned question / template evidence). An unhandled LLM failure that 500s the API is a demo-killer — never allow it.
+- Explore and Launch share profiler/matching/services. `journey_mode` selects prompt/completeness/presenter only; never duplicate routers or scoring engines.
+- Launch readiness is deterministic and explainable: matched skills require profile/experience evidence; missing skills come from role top skills; LLM only verbalizes validated inputs.
 - Evidence generation must pass the number-check: every digit in LLM output must exist in the stats dict passed in (see `services/` when implemented, design in docs/AI_DESIGN.md §4).
 - `DEMO_MODE=replay` short-circuits chat/recommendations to cached JSON in `app/data/replay/` — keep this path working.
 - Stats with < 5 salary samples return null, never a made-up number.

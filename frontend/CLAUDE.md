@@ -11,6 +11,7 @@ Read root `CLAUDE.md` first. Frontend = Next.js 15 App Router + TypeScript stric
   is missing, that's a contract discussion (TEAM_RULES.md §2), not a local type edit.
 - Pages: `/` landing · `/explore` chat+profile (M5) · `/results` recommendations (M6) ·
   `/market` radar nhu cầu kỹ năng (M6) · `/how-it-works` transparency page.
+- `/explore` supports `explore|launch` in the same component tree. Launch adds education/job goal/experiences; `/results` renders `job_readiness` only when non-null. Do not create a second duplicated Launch app.
 - Components go in `components/<area>/` (chat/, profile/, results/, market/, ui/). Extract
   from page files once they grow past ~150 lines.
 - Colors: use the `--cc-*` CSS variables in `app/globals.css` (design tokens). Stretch

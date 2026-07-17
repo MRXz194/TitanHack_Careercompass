@@ -20,12 +20,14 @@
 | Career mapping accuracy (n=50) | report | NOT_RUN | ⬜ | |
 | Profiler valid JSON after retry | ≥99% | NOT_RUN | ⬜ | |
 | Recommendation rubric (n=12) | ≥3.5/5 | NOT_RUN | ⬜ | |
+| Launch readiness invariants (n=4) | 100% | NOT_RUN | ⬜ | |
 | Evidence number grounding | 100% | NOT_RUN | ⬜ | |
 | Route structural check | 100% | NOT_RUN | ⬜ | |
 | Gender paired top-5 overlap | ≥4/5 | NOT_RUN | ⬜ | `BIAS_AUDIT.md` |
 | Chat / recommendation p95 | <5s / <8s | NOT_RUN | ⬜ | |
 | 3 E2E + replay | 0 unhandled 5xx | NOT_RUN | ⬜ | |
 | Student usefulness (n≥5) | median ≥4/5 | NOT_RUN | ⬜ | anonymized notes |
+| Launch: ≥2 new job queries + actionable first step | ≥60% launch testers | NOT_RUN | ⬜ | |
 
 ## Failures, fixes, limitations
 

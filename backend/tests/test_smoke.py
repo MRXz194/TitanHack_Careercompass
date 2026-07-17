@@ -27,3 +27,15 @@ def test_career_detail_matches_contract() -> None:
     body = response.json()
     assert {"career_id", "title", "description", "market", "routes"} <= body.keys()
     assert len(body["routes"]) >= 2
+
+
+def test_launch_opening_preserves_mode_in_profile() -> None:
+    response = client.post(
+        "/api/chat",
+        json={"session_id": "launch-smoke", "message": None, "journey_mode": "launch"},
+    )
+    assert response.status_code == 200
+    profile = response.json()["profile"]
+    assert profile["journey_mode"] == "launch"
+    assert profile["education_stage"] is None
+    assert profile["experiences"] == []

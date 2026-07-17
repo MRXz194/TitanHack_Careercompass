@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     w_skill_overlap: float = 0.3
     w_market_signal: float = 0.2
 
+    # Graduate Launch readiness bands — deterministic guidance, NOT hiring probability.
+    readiness_ready_coverage: float = 0.75
+    readiness_near_coverage: float = 0.45
+    readiness_min_evidence_skills: int = 2
+
 
 @lru_cache
 def get_settings() -> Settings:

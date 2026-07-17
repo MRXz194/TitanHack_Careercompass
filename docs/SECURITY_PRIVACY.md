@@ -6,6 +6,7 @@
 - Dùng session ID ngẫu nhiên; UI nói rõ đây là bản demo và không nhập thông tin nhận dạng.
 - Hội thoại chỉ phục vụ profile phiên hiện tại, không dùng để train/fine-tune.
 - Tư vấn nghề là hỗ trợ quyết định, không phải quyết định tự động có hậu quả học vụ.
+- Launch mode không yêu cầu tên trường/công ty, GPA, CV, email/phone hoặc link hồ sơ. Project/experience được mô tả tối thiểu và user có thể xóa.
 
 ## 2. Retention demo
 
@@ -21,6 +22,7 @@
 - Structured output + Pydantic validation; React không render HTML từ LLM.
 - LLM lỗi/timeout → fallback, không leak stack, key hoặc provider response.
 - Nếu user nêu khủng hoảng/tự hại: không dùng hướng nghiệp như giải pháp; trả safety copy và khuyến khích tìm người lớn/chuyên gia phù hợp.
+- Không mở link/execute code trong project description; không để nội dung user/model tạo URL ứng tuyển tự động. Search queries là text trung tính.
 
 ## 4. Dữ liệu tuyển dụng và quyền sử dụng
 

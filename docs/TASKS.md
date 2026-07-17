@@ -7,6 +7,19 @@
 > - Branch đặt tên theo task: `feat/PR-03-matching-engine`.
 > - Khi nhờ AI code: paste `CLAUDE.md` (root + của package) + nguyên văn task này vào prompt.
 
+## Task card chi tiết theo người
+
+File này là master schedule/dependency. Trước khi làm, mỗi member phải mở task card chi tiết của mình; task card định nghĩa problem, actions, expected artifact, tests, risks/fallback và handoff:
+
+- M1: [workstreams/M1_LEAD_INTEGRATION.md](workstreams/M1_LEAD_INTEGRATION.md)
+- M2: [workstreams/M2_DATA_ENGINEERING.md](workstreams/M2_DATA_ENGINEERING.md)
+- M3: [workstreams/M3_MARKET_AI.md](workstreams/M3_MARKET_AI.md)
+- M4: [workstreams/M4_PROFILE_RECOMMENDER.md](workstreams/M4_PROFILE_RECOMMENDER.md)
+- M5: [workstreams/M5_FRONTEND_EXPLORE.md](workstreams/M5_FRONTEND_EXPLORE.md)
+- M6: [workstreams/M6_FRONTEND_RESULTS_MARKET.md](workstreams/M6_FRONTEND_RESULTS_MARKET.md)
+
+Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một task chỉ `DONE` khi acceptance tests đã chạy và consumer handoff xác nhận.
+
 ---
 
 ## M1 — Team Lead / Integrator / DevOps
@@ -42,10 +55,10 @@
 | D-01 | Đọc `docs/DATA_PIPELINE.md` + `SECURITY_PRIVACY.md`; kiểm tra robots/terms/license của 3 nguồn trước khi khảo sát HTML, chọn nguồn **được phép và khả thi** làm #1 | H+0→2 | — | Source decision + URL điều khoản + caveat ghi vào DATA_PIPELINE.md; không bypass login/CAPTCHA |
 | D-02 | Crawler nguồn #1: phân trang theo ngành × 3 vùng (HN/HCM/ĐN), delay lịch sự 1–2s, lưu JSONL vào `data/raw/` | H+2→8 | D-01 | ≥500 postings raw, đủ trường, chạy lại không crash |
 | D-03 | Crawler nguồn #2 (schema output GIỐNG HỆT nguồn #1 — xem schema trong DATA_PIPELINE.md) | H+8→14 | D-02 | Tổng raw ≥3k postings từ ≥2 nguồn |
-| D-04 | `normalize.py`: chuẩn hóa lương (VND range: "12-18 triệu"→[12,18], "Thỏa thuận"→null), map region về {hanoi, hcm, danang, other}, parse posted_date, dedupe (title+company fuzzy) | H+12→18 | D-02 | `data/processed/postings.jsonl` sạch; report số bản ghi in/out |
+| D-04 | Normalize salary/region/date + experience years/seniority, dedupe/reject report; exchange rate config có source/date | H+12→18 | D-02 | Deterministic postings JSONL; unit tests edge cases; coverage report cho Launch |
 | D-05 | **Handoff cho M3**: bàn giao processed dataset + doc mô tả từng trường + caveats (VD: % posting thiếu lương) | H+18→20 | D-04 | M3 xác nhận đọc được, thống kê cơ bản khớp |
 | D-06 | Data QA: soát 30 bản ghi ngẫu nhiên/nguồn, sửa lỗi parse; kiểm tra phân bố vùng không lệch quá (nếu 90% là HCM → crawl bù HN/ĐN) | H+20→26 | D-04 | Report QA ngắn trong PR; phân bố vùng mỗi vùng ≥15% |
-| D-07 | Career KB: cùng M4 rà seed, ưu tiên nghề thiếu và vocational; P0 đạt 25 nghề cân bằng, P2 mới mở rộng 40–60 | H+20→26 | D-05 | KB phủ ≥85% mapped postings; mọi nghề pass route check; không trễ MI-06 refresh |
+| D-07 | Career KB: P0 25 nghề cân bằng + vocational + `entry_role_aliases`, top skills, routes/action templates; P2 mới 40–60 | H+20→26 | D-05 | ≥85% mapping; route/alias/schema checks; không trễ MI-06 refresh |
 | D-08 | Hỗ trợ M3 verify số liệu market stats (spot-check: "median lương Data Analyst HCM" có khớp cảm quan dữ liệu gốc không) | H+30→36 | MI-04 | 10 spot-check pass, ghi vào issue |
 | D-09 | Chuẩn bị 3–5 insight thật **chỉ từ biến dataset đo được** (không suy ra trường chưa dạy hay thị trường thiếu người nếu không có supply/curriculum data) | H+36→42 | MI-04 | Mỗi insight có query, denominator, sample size, source/date và limitation |
 | D-10 | Data card + provenance manifest: sources/license/terms URL, thời gian crawl, count theo nguồn/vùng, salary coverage, dedupe rate, limitations, hash snapshot | H+18→22 | D-04 | `data/processed/manifest.json` + report được M1 duyệt; UI/pitch dùng đúng count |
@@ -64,7 +77,7 @@
 | MI-01 | Skill taxonomy VN v1: mở rộng `data/taxonomy/skills_vi.json` lên ~300 kỹ năng (kỹ thuật + mềm + công cụ), mỗi skill có aliases TV/TA ("giao tiếp"≈"communication") | H+0→5 | — | File taxonomy pass validation script; M4 review 15' |
 | MI-02 | Prototype hybrid; tạo golden set 100 postings theo `EVALUATION.md`, đo precision/recall/F1 thay vì chỉ “nhìn hợp lý”; log chi phí/1k | H+2→10 | MI-01 | precision ≥0.80, recall ≥0.65 hoặc ghi failure/cách ưu tiên precision |
 | MI-03 | Chạy extraction toàn dataset sau khi nhận D-05 (cache/resume) → `postings_enriched.jsonl` + career mapping | H+20→25 | MI-02, D-05 | 100% postings có skills[] + career_id hoặc `unmapped`; log coverage |
-| MI-04 | Aggregate career × region → demand, salary percentiles/sample count, confidence-aware trend, top skills → SQLite | H+25→29 | MI-03 | Stats + meta/source thật; API không còn seed ở live mode |
+| MI-04 | Aggregate career × region → demand + entry-level count, salary n/percentiles, confidence-aware trend, top skills → SQLite | H+25→29 | MI-03 | Stats/meta/source thật; entry label QA; live API không dùng seed |
 | MI-05 | **Hiring-demand proxy**: rank skill/region từ demand + confidence-aware trend; API giữ tên cũ, UI gọi “Radar nhu cầu kỹ năng” | H+29→32 | MI-04 | Top 20 có công thức, sample/confidence/source; insufficient data không bị thổi phồng |
 | MI-06 | Embeddings hai nhịp: H+6→12 build loader + `top_k` trên seed hiện có để unblock M4; H+26→28 refresh sau D-07 và khóa KB hash | H+6→12; H+26→28 | seed; sau đó D-07 | M4 tích hợp được từ H+12; artifact cuối khớp career IDs/KB hash |
 | MI-07 | **Handoff cho M4 hai nhịp** theo HANDOFF.md: interface/sample tại H+12, artifact refresh tại H+28 | H+12 và H+28 | MI-06 | M4 xác nhận chạy được; refresh không đổi interface |
@@ -82,13 +95,13 @@
 
 | ID | Task | Giờ | Phụ thuộc | DoD |
 |---|---|---|---|---|
-| PR-01 | Chốt Profile Schema (5 chiều năng lực-sở thích + skills + constraints + evidence quotes — draft trong AI_DESIGN.md §1) cùng M5, freeze vào API_CONTRACT.md | H+0→3 | — | Schema merge vào contract, M5 xác nhận đủ để render |
-| PR-02 | Prompt hội thoại profiling v1: system prompt (persona "người anh/chị đồng hành", KHÔNG hỏi giới tính, hỏi mở, mỗi lượt cập nhật profile JSON) — test độc lập bằng `backend/scripts/test_chat.py` với 3 persona | H+2→8 | PR-01 | 3 cuộc hội thoại test ra profile JSON hợp lệ, câu hỏi không lặp, TV tự nhiên |
-| PR-03 | Chat engine production: state machine (warmup → khám phá sở thích → năng lực → ràng buộc → tổng kết), structured output có validation + retry, session store SQLite | H+8→16 | PR-02 | `POST /api/chat` chạy đúng contract; 10 lượt liên tiếp không vỡ JSON |
+| PR-01 | Freeze shared Profile contract cho Explore/Launch: dimensions, skill evidence, constraints, education stage, job goal, experiences; tuyệt đối không gender/school prestige | H+0→3 | — | Contract + Pydantic + TS + mocks đồng bộ, backward-compatible Explore |
+| PR-02 | Versioned prompts hai mode: Explore hỏi activity/ability; Launch hỏi project/internship/tool/job goal; structured delta, no gender | H+2→8 | PR-01 | 3 Explore + 3 Launch transcripts hợp lệ; không lặp; fallback question bank |
+| PR-03 | Shared state machine/session engine: mode-specific completeness, validated merge, experience evidence, patch/delete, SQLite | H+8→16 | PR-02 | 10-turn Explore + Launch, retry/fallback, correction persistence, delete pass |
 | PR-04 | **Handoff cho M5 + M1**: chat API lên `main`, thông báo sample request/response thật | H+16 | PR-03 | M5 nối được chat thật; M1 bắt đầu làm replay được |
-| PR-05 | Matching engine: điểm = α·cosine + β·skill_overlap + γ·market_signal; hệ số config; top 5 + 1 stretch. Tích hợp interface seed từ MI-07 sớm, refresh artifact không đổi code | H+20→26 | MI-07 handoff H+12 | Unit test scoring + 12 golden personas theo EVALUATION; không hard-filter theo region |
+| PR-05 | Shared matching: cosine + skill overlap + capped market signal; top5/stretch; Launch dùng project evidence nhưng không tạo scoring engine riêng | H+20→26 | MI-07 handoff H+12 | Unit tests + 8 Explore/4 Launch personas; region/gender/school-name invariants |
 | PR-06 | Evidence generation từ quotes + stats, regex number grounding + deterministic fallback; counterfactual tính bằng scoring thật | H+26→31 | PR-05 | Evidence không có số ngoài stats input; fallback pass; tiếng Việt tự nhiên |
-| PR-07 | Pathway builder: mỗi career trả ≥2 route từ `careers_seed.json` (university/college/vocational/cert) + next steps cụ thể; đảm bảo ≥1 route ngoài đại học luôn hiển thị | H+26→30 | D-07 | 100% career trong KB có ≥2 route; API trả đúng contract |
+| PR-07 | Explore pathways + Launch readiness: matched/missing skills, deterministic band, search queries, 4 weekly actions có deliverable | H+26→31 | D-07, PR-05 | Routes pass 100%; Launch invariants trong GRADUATE_LAUNCH/EVALUATION pass |
 | PR-08 | **Bias guardrails**: gender/region paired tests, prompt audit, structural checks; ghi cả failure/fix vào `BIAS_AUDIT.md` | H+31→35 | PR-05,06 | Audit có kết quả thật; cả team review H+35 |
 | PR-09 | Trang "Cách hệ thống hoạt động" — nội dung dữ liệu, scoring, giới hạn, autonomy | H+35→36 | PR-08 | ≤300 từ; M6 thay copy draft không đổi layout |
 | PR-10 | Tune chất lượng theo feedback test E2E của M1 (câu hỏi lặp, gợi ý nhạt, evidence sai...) | H+34→40 | L-07 | Các bug label `ai-quality` đóng hết |
@@ -105,9 +118,9 @@
 
 | ID | Task | Giờ | Phụ thuộc | DoD |
 |---|---|---|---|---|
-| F1-01 | Setup FE: chạy skeleton, đọc contract, dựng layout 2 cột màn `/explore` (chat trái, profile phải; mobile: profile thu thành drawer) | H+0→4 | — | Layout responsive chạy local |
+| F1-01 | Shared `/explore` shell + mode selector Explore/Launch; chat trái/profile-experience phải; mobile drawer | H+0→4 | — | Mode/reset semantics + responsive/keyboard pass |
 | F1-02 | Chat UI trên **mock** (`NEXT_PUBLIC_USE_MOCK=1` — mock có sẵn trong `lib/api.ts`): bubble, typing indicator, auto-scroll, input disabled khi chờ | H+4→10 | F1-01 | Hội thoại mock mượt, không giật scroll |
-| F1-03 | Profile Card live: 5 chiều (radar/bars animate khi đổi), skills chips, constraints; hiệu ứng "vừa cập nhật" (highlight chiều mới đổi) | H+8→14 | PR-01 schema | Trả lời 1 câu → thấy rõ profile nhích; đẹp để lên slide |
+| F1-03 | Profile Card live: dimensions/skills/source/constraints; Launch thêm education/job goal/project/experience evidence | H+8→14 | PR-01 schema | Partial/null/long text pass; user thấy nguồn inference |
 | F1-04 | Profile editing: click chip/chiều để sửa hoặc xóa ("Em không nghĩ vậy") → gửi correction lên BE (endpoint trong contract) | H+12→16 | F1-03 | Sửa profile → lần gợi ý sau phản ánh thay đổi |
 | F1-05 | Nối chat API THẬT, xử lý loading/error/retry, phase indicator ("Đang khám phá sở thích của em… 2/4") | H+16→20 | PR-04 | Full hội thoại thật 10 lượt không lỗi UI |
 | F1-06 | Màn chuyển tiếp: hội thoại đủ dữ kiện → CTA "Xem hướng đi của em" → gọi recommendations → chuyển `/results` (của M6) kèm session_id | H+20→24 | F1-05 | Flow chat→results liền mạch |
@@ -127,11 +140,11 @@
 | ID | Task | Giờ | Phụ thuộc | DoD |
 |---|---|---|---|---|
 | F2-01 | Setup + dựng màn `/results` trên seed JSON: list career cards xếp hạng (tên, % phù hợp, badge lương/demand/trend) | H+0→6 | — | Render đẹp từ `data/seed/careers_seed.json` qua mock |
-| F2-02 | Career card mở rộng: tab **"Vì sao gợi ý?"** (evidence: quote câu trả lời + số liệu thị trường + counterfactual), tab **"Lộ trình"** (≥2 route, route vocational có badge riêng nổi bật), tab **"Thị trường"** (mini chart demand/salary/trend theo vùng — Recharts) | H+6→14 | F2-01 | 3 tab đủ nội dung từ mock đúng shape contract |
+| F2-02 | Results sections: Why/Market/Routes; khi Launch render readiness band, matched/missing, queries, 30-day actions; khi Explore null thì ẩn sạch | H+6→14 | F2-01 | Mock contract cả hai mode; accessibility/null/low-confidence pass |
 | F2-03 | **Stretch card** "Có thể em chưa nghĩ tới" — style khác biệt (viền/gradient riêng) + 1 dòng vì sao đáng cân nhắc + disclaimer footer "Gợi ý chỉ mang tính tham khảo — quyết định là của em" hiển thị cố định | H+12→16 | F2-02 | Judge nhìn 3s là thấy yếu tố "mở rộng lựa chọn" |
 | F2-04 | **Radar nhu cầu kỹ năng** `/market`: UI mock H+14→22; nối MI-05 tại H+32; tooltip proxy + confidence/source/date | H+14→22; H+32 | MI-05 chỉ cho live data | Đổi vùng → số đổi; số khớp API; low-confidence hiển thị đúng |
 | F2-05 | Nối market thật ngay khi MI-04 xong; nối recommendations/evidence ngay khi PR-06/07 handoff; giữ mock fallback | H+28→34 | PR-06,07, MI-04 | E2E thật H+34; switch mock/live không đổi UI |
-| F2-06 | Landing + trang "Cách hoạt động": layout/copy draft H+22→28, thay copy PR-09 tại H+36 | H+22→28; H+36 | PR-09 chỉ cho final copy | Landing kể được câu chuyện trong 15s; không block vì copy |
+| F2-06 | Landing có hai journey + trang "Cách hoạt động": draft H+22→28, final transparency copy H+36 | H+22→28; H+36 | PR-09 final copy | Hiểu problem/two modes/not-a-verdict trong 15s |
 | F2-07 | Polish dashboard: màu nhất quán (xem `frontend/CLAUDE.md` §design tokens), số format kiểu VN ("12–18 triệu"), tooltips giải thích thuật ngữ | H+30→38 | — | Screenshot đủ đẹp để đưa thẳng vào pitch deck |
 | F2-08 | Hỗ trợ M1 pitch deck: chụp screens, vẽ 1 slide architecture, 1 slide mock "counselor view" (future) | H+38→44 | L-09 | Deck có hình sản phẩm thật, không lorem ipsum |
 

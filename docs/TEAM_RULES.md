@@ -42,6 +42,8 @@
 
 ## 5. Quy tắc dùng AI assistant (Claude/Cursor/Copilot) — QUAN TRỌNG vì cả team dùng AI
 
+Quy trình đầy đủ và prompt template: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Task card riêng: `docs/workstreams/`.
+
 1. **Trước khi prompt:** mở `CLAUDE.md` (root) + `CLAUDE.md` của package đang làm (frontend/ hoặc backend/) — nếu tool không tự đọc thì paste vào context. Paste thêm nguyên văn task của bạn từ TASKS.md.
 2. **Prompt theo task ID**, một task một phiên hội thoại — đừng dồn 3 task vào 1 chat, AI sẽ trộn lẫn.
 3. AI sinh code xong: **bạn phải chạy được nó local trước khi mở PR.** "AI bảo thế" không phải là lý do trong review.
@@ -49,6 +51,9 @@
 5. AI đề nghị đổi API contract / schema → KHÔNG nghe theo ngay, đi theo quy trình đổi contract ở §2.
 6. Code AI sinh ra dính key/secret hardcode → xóa ngay, dùng env var.
 7. Khi AI kẹt loop (sửa mãi không xong) > 30 phút → dừng, tự đọc lỗi, hoặc hỏi buddy. Đừng để AI đào hố sâu hơn.
+8. Một người/agent sở hữu một file tại một thời điểm; không chạy hai builder cùng sửa contract/service/page.
+9. Builder phải có reviewer khác và verifier chạy lệnh. `CODE_COMPLETE_NOT_VERIFIED` không được tick ✅.
+10. Dùng mock/deterministic fixture cho plumbing/UI; chỉ gọi LLM khi test đúng behavior model. Cache/batch mọi batch job.
 
 ## 6. Sức khỏe (nghiêm túc — chất lượng giờ 40+ phụ thuộc vào điều này)
 
