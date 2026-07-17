@@ -2,7 +2,53 @@
 
 **Mission:** tạo profile có evidence và recommendation mở rộng cơ hội; cùng core phục vụ Explore và Launch.
 
-**Owned:** profiler state/session, prompts, matching, evidence, pathways/readiness, recommend router. **Buddy:** M3.
+**Owned:** profiler state/session, prompts, matching, evidence, pathways/readiness, recommend router, bounded agent. **Buddy:** M3.
+
+## Rollup status (tip `kaguya`)
+
+| PR | Title | State | Primary handoff / report |
+|---|---|---|---|
+| PR-01 | Profile/Launch contract freeze | **DONE** | inline status below + contract tests |
+| PR-02 | Adaptive prompts two modes | **DONE** | `profiler-v2` + fixtures/profiler |
+| PR-03 | Profiler/session engine | **DONE** | SQLite sessions + handle_turn |
+| PR-04 | Chat handoff samples | **DONE** | `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` |
+| PR-05 | Explainable matching | **DONE** | `matching.py` + recommend router |
+| PR-06 | Grounded evidence | **DONE** | `docs/handoffs/M4_PR-06_EVIDENCE_HANDOFF.md` |
+| PR-07 | Pathways + Launch readiness | **DONE** | `docs/handoffs/M4_PR-07_PATHWAYS_LAUNCH_HANDOFF.md` |
+| PR-08 | Bias / opportunity audit | **DONE** | `docs/BIAS_AUDIT.md` + `M4_PR-08_*` |
+| PR-09 | Transparency copy | **DONE** | `docs/handoffs/M4_PR-09_TRANSPARENCY_COPY_HANDOFF.md` |
+| PR-10 | Quality tuning | **DONE** | `docs/handoffs/M4_PR-10_QUALITY_TUNING_HANDOFF.md` |
+| PR-11 | AI evaluation report | **DONE** | `docs/EVALUATION_RESULTS.md` + `M4_PR-11_*` |
+| PR-12 | Agent tools/policy/graph | **DONE** | `docs/handoffs/M4_PR-12_AGENT_RUNTIME_HANDOFF.md` |
+| PR-13 | Chat agent orchestrator | **DONE** | `docs/handoffs/M4_PR-13_CHAT_AGENT_HANDOFF.md` |
+| PR-14 | Agent red-team | **DONE** | `docs/handoffs/M4_PR-14_AGENT_REDTEAM_HANDOFF.md` |
+
+**M4 product chain on branch:** complete. **M1 still owns:** release PASS/CONDITIONAL/FAIL, human dual-rater, usefulness n≥5, pitch claim freeze.
+
+### Validate from repo root (canonical)
+
+```bash
+cd backend
+python -m compileall -q app scripts tests
+python -m pytest -q tests/unit tests/contract tests/integration
+python scripts/check_routes.py
+PYTHONPATH=. python scripts/run_m4_evaluation.py   # rewrites docs/EVALUATION_RESULTS.md
+cd ../frontend && npm run typecheck
+```
+
+### Runtime defaults (demo-safe)
+
+| Flag | Default | Notes |
+|---|---|---|
+| `AGENT_MODE` | `deterministic` | `langgraph` optional for bounded chat agent |
+| `DEMO_MODE` | `off` | `replay` disables agent graph + live model path |
+| Recommend planner | **none** | PR-05…07 code only |
+| Tool policy / registry | `agent-policy-v1` / `agent-tools-v1` | |
+
+### Claim boundary (pitch)
+
+- **OK:** conversational profiler + explainable recommend + offline agent allowlist/policy/fallback gates.
+- **Not OK without live/human gates:** fully autonomous agent; dual-human rubric ≥3.5; student usefulness median.
 
 ## Card contract
 
@@ -259,10 +305,35 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Expected:** no open Sev-1/2 `ai-quality`; before/after evidence.
 - **Forbidden:** new model/feature/contract after freeze without M1.
 
+#### Status (M4)
+- **State:** DONE (no open GitHub `ai-quality` labels; internal Q-01…Q-05 tuned)
+- **Handoff:** `docs/handoffs/M4_PR-10_QUALITY_TUNING_HANDOFF.md`
+- **Code:** profiler interest/job_goal compaction; fallback de-dupe; evidence reason hint; budget constraint cue
+
+#### Verify evidence
+- `pytest -q tests/unit/test_quality_tuning.py tests/integration/test_quality_chat.py` → PASS
+- full unit/contract/integration → PASS
+- Gold personas: tech top-5 + launch readiness + no consecutive question repeat
+
 ### PR-11 — AI evaluation report (H+35→38)
 - **Actions:** profiler validity, persona rubric, grounding, readiness invariants, latency/cost, paired bias.
 - **Expected:** actual metrics + commit/model/prompt/artifact versions in `EVALUATION_RESULTS.md`.
 - **Verify:** M3/M1 reproduce sample; no cherry-pick.
+
+#### Status (M4)
+- **State:** DONE (M4 automated gates filled; status `M4_PARTIAL` until M1 release)
+- **Report:** `docs/EVALUATION_RESULTS.md`
+- **Harness:** `backend/scripts/run_m4_evaluation.py`
+- **Handoff:** `docs/handoffs/M4_PR-11_EVALUATION_REPORT_HANDOFF.md`
+
+#### Verify evidence
+- `PYTHONPATH=. python scripts/run_m4_evaluation.py` → exit 0
+- `pytest -q tests/unit/test_evaluation_report.py` → PASS
+- full unit/contract/integration → PASS
+
+#### Honest gaps
+- Human dual-rater rubric NOT_RUN; live LLM NOT_RUN; user testing N/A (M1/M3)
+- Agent offline red-team filled later in **PR-14** (not N/A anymore at tip of `kaguya`)
 
 ### PR-12 — LangChain tool layer + LangGraph spike + bounded policy registry (H+4→12)
 - **Problem:** Flow hỏi đáp không được hard-code kịch bản, nhưng agent tự do sẽ không test/replay/bảo vệ được ethics.
@@ -272,6 +343,17 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Risk/fallback:** graph spike fail → plain Python bounded orchestrator dùng cùng LangChain gateway/tool contracts. Planner lỗi hoặc policy deny hai lần → deterministic question/template, không loop.
 - **Handoff:** tool schemas + policy matrix + sample observation cho M3/M5/M6/M1.
 
+#### Status (M4)
+- **State:** DONE (spike gate PASS; chat wiring completed in PR-13)
+- **Code:** `agent_schemas.py`, `agent_policy.py`, `agent_tools.py` (10 tools), `agent_graph.py`
+- **Handoff:** `docs/handoffs/M4_PR-12_AGENT_RUNTIME_HANDOFF.md`
+- **Default:** `AGENT_MODE=deterministic` (no graph compile)
+
+#### Verify evidence
+- `pytest -q tests/unit/test_agent_policy.py tests/unit/test_agent_tools.py tests/unit/test_agent_graph.py tests/contract/test_agent_tool_contract.py` → PASS
+- full unit/contract/integration → PASS
+- overhead p95 &lt;100ms on 100 plain-orchestrator turns
+
 ### PR-13 — LangChain/LangGraph chat agent orchestrator + degradation (H+16→22)
 - **Problem:** Tool registry chỉ có giá trị nếu request path ghép được plan → policy → observation → response một cách có giới hạn.
 - **Actions:** tích hợp custom StateGraph vào `/api/chat` chỉ ở `discover/confirm_profile`; planner/composer gọi LangChain gateway, tool dùng typed registry; tối đa 2 agent-selected tools/turn; truyền deadline 8s qua nodes; sanitize trace; map stage về `phase`; recommendation deterministic; không expose CoT.
@@ -280,12 +362,43 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Risk/fallback:** `AGENT_MODE=deterministic` quay về question bank; retrieval/ranking luôn deterministic PR-05.
 - **Handoff:** endpoint behavior + replay trace fixture cho M1/M5/M6.
 
+#### Status (M4)
+- **State:** DONE
+- **Code:** `services/agent_chat.py` wired in `profiler.handle_turn`
+- **Handoff:** `docs/handoffs/M4_PR-13_CHAT_AGENT_HANDOFF.md`
+- **Default:** `AGENT_MODE=deterministic` (classic + local extract tool); `langgraph` enables agent loop on discover/confirm only
+
+#### Verify evidence
+- `pytest -q tests/unit/test_agent_chat.py tests/integration/test_agent_chat_api.py` → PASS
+- full unit/contract/integration → PASS
+- ChatResponse never includes trace/CoT; recommendations have no planner fields
+
 ### PR-14 — Agent evaluation/red-team (H+31→38)
 - **Problem:** Agentic chỉ là claim mạnh khi chứng minh được tool choice, safety và fallback, không chỉ có demo đẹp.
 - **Actions:** chạy tool-selection fixtures, prompt injection, 12 personas, gender/region/school pairs, missing provenance, budget/latency, replay; ghi failures/fix/retest.
 - **Expected:** `EVALUATION_RESULTS.md` có model/prompt/tool/policy/snapshot versions, calls/turn, p95, pass/fail, limitation.
 - **Tests:** toàn bộ bảng §8 `AGENTIC_RUNTIME.md`; fail không được xoá fixture hay nới threshold.
 - **Handoff:** scorecard/pitch evidence cho M1; M1 xác nhận deterministic replay.
+
+#### Status (M4)
+- **State:** DONE (offline §8 red-team + scorecard writeback)
+- **Fixtures:** `backend/tests/fixtures/agent/{allow,deny,fallback,injection,personas,replay}/`
+- **Replay:** `backend/app/data/replay/agent_sanitized_trace.json`
+- **Tests:** `tests/unit/test_agent_redteam.py`
+- **Harness:** `scripts/run_m4_evaluation.py` fills agent gates (no permanent N/A)
+- **Handoff:** `docs/handoffs/M4_PR-14_AGENT_REDTEAM_HANDOFF.md`
+- **Versions:** policy `agent-policy-v1`, tools `agent-tools-v1`, default `AGENT_MODE=deterministic`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_agent_redteam.py` → PASS (31)
+- agent suite unit+contract+integration → PASS (61)
+- `PYTHONPATH=. python scripts/run_m4_evaluation.py` → exit 0; `agent_langgraph_gates` = PASS
+- full `pytest -q tests/unit tests/contract tests/integration` → PASS
+- No fixture deleted; no threshold lowered
+
+#### Claim boundary
+- Offline allowlist/policy/fallback/replay: PASS
+- Live multi-turn LLM planner: NOT_RUN — do **not** claim fully autonomous agent
 
 ## Hard-stop rules
 

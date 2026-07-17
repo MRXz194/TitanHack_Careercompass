@@ -3,13 +3,19 @@
  *
  * Mock mode: NEXT_PUBLIC_USE_MOCK=1 → trả mock data (lưới an toàn demo, giữ hoạt động
  * đến phút chót — TEAM_RULES.md §2). Mock phải luôn khớp shape API_CONTRACT.md.
+ * Live mode: lỗi BE được parse từ envelope {"error":{code,message}} (contract §5),
+ * có timeout — UI hiện fallback tiếng Việt + nút thử lại, không bao giờ treo.
  */
+import { requestJson } from "@/lib/api-core";
 import type {
   ChatResponse, JourneyMode, MarketOverview, Profile, ProfilePatch, RecommendationResponse, Region, SkillGapResponse,
 } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "1";
+
+/** FE hiện badge "dữ liệu mẫu" khi mock — minh bạch với người xem demo (F1-05). */
+export const IS_MOCK = USE_MOCK;
 
 export function getSessionId(): string {
   if (typeof window === "undefined") return "ssr";
@@ -21,21 +27,14 @@ export function getSessionId(): string {
   return id;
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+const post = <T,>(path: string, body: unknown) =>
+  requestJson<T>(`${API_BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`API ${path} failed: ${res.status}`);
-  return res.json();
-}
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
-  if (!res.ok) throw new Error(`API ${path} failed: ${res.status}`);
-  return res.json();
-}
+const get = <T,>(path: string) => requestJson<T>(`${API_BASE}${path}`);
 
 // ---------- Public API ----------
 
@@ -61,11 +60,9 @@ export async function fetchSkillGaps(region: Region): Promise<SkillGapResponse> 
 
 export async function patchProfile(patch: ProfilePatch): Promise<{ profile: Profile }> {
   if (USE_MOCK) return (await import("./mock/profile")).mockPatchProfile(patch);
-  const res = await fetch(`${API_BASE}/api/profile/${getSessionId()}`, {
+  return requestJson<{ profile: Profile }>(`${API_BASE}/api/profile/${getSessionId()}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
   });
-  if (!res.ok) throw new Error(`API /api/profile failed: ${res.status}`);
-  return res.json();
 }

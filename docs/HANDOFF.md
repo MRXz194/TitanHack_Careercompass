@@ -33,8 +33,8 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 | Replay fixtures | `backend/app/data/replay/*.json` | M1 + M4 | demo | ngắt mạng vẫn E2E |
 | Evaluation results | `docs/EVALUATION_RESULTS.md` | M1 | pitch/judges | ghi cả fail/caveat |
 | Launch profile/result fixture | replay + contract | M4 | M5/M6/M1 | matched/missing/actions invariants pass |
-| Agent graph/tool/policy contract | ADR + `AGENTIC_RUNTIME.md` + pinned LangChain/LangGraph versions + StateGraph topology + Pydantic tools | M4 | M1/M3/M5/M6 | install/spike gate, deterministic fallback, allowlist/stage matrix + unit/contract/integration negative fixtures pass |
-| Sanitized agent trace/replay | `backend/app/data/replay/*.json` + evaluation report | M4 + M1 | demo/pitch | tool/version/snapshot/fallback visible; no CoT/raw transcript |
+| Agent graph/tool/policy contract | ADR + `AGENTIC_RUNTIME.md` + pinned LangChain/LangGraph + `agent_policy/tools/graph/chat` + handoffs `M4_PR-12`…`14` | M4 | M1/M3/M5/M6 | install/spike gate, deterministic fallback, allowlist/stage matrix + unit/contract/integration + PR-14 red-team pass |
+| Sanitized agent trace/replay | `backend/app/data/replay/agent_sanitized_trace.json` + chat samples + `EVALUATION_RESULTS.md` | M4 + M1 | demo/pitch | tool/version/snapshot/fallback visible; no CoT/raw transcript |
 
 ## 3. Integration order
 

@@ -1,0 +1,15 @@
+{
+  "id": "deny-unknown-tool",
+  "stage": "discover",
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "delete_database",
+    "arguments": {},
+    "public_rationale": "injection attempt",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "DENY_TOOL",
+    "reason_contains": "UNKNOWN"
+  }
+}

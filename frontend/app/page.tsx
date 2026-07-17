@@ -10,12 +10,18 @@ export default function LandingPage() {
         Chọn nghề bằng dữ liệu thật, không phải cảm tính. Trò chuyện vài phút để khám phá
         các hướng đi phù hợp với <b>chính em</b> — kèm số liệu thị trường lao động Việt Nam.
       </p>
-      <div className="flex gap-4">
+      <div className="flex flex-wrap justify-center gap-4">
         <Link
-          href="/explore"
+          href="/explore?mode=explore"
           className="rounded-xl bg-[var(--cc-primary)] px-6 py-3 font-semibold text-white shadow hover:opacity-90"
         >
-          Bắt đầu khám phá
+          🧭 Khám phá nghề phù hợp
+        </Link>
+        <Link
+          href="/explore?mode=launch"
+          className="rounded-xl bg-[var(--cc-accent)] px-6 py-3 font-semibold text-white shadow hover:opacity-90"
+        >
+          🚀 Tìm việc đầu tiên
         </Link>
         <Link
           href="/market"

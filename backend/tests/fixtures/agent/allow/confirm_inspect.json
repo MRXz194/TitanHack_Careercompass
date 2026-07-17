@@ -1,0 +1,23 @@
+{
+  "id": "allow-confirm-inspect",
+  "stage": "confirm_profile",
+  "plan": {
+    "intent": "confirm",
+    "next_tool": "inspect_profile_gaps",
+    "arguments": {
+      "session_id_hash": "fixturehash0003",
+      "stage": "confirm_profile",
+      "journey_mode": "explore",
+      "phase": "wrapup",
+      "completeness": 0.7,
+      "interest_count": 2,
+      "skill_count": 1,
+      "experience_count": 0
+    },
+    "public_rationale": "Mình đang kiểm tra hồ sơ còn thiếu gì.",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "ALLOW"
+  }
+}
