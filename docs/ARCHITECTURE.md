@@ -69,6 +69,8 @@ FE POST /api/chat {session_id, message, journey_mode}
 
 Agent không có shell/browser/write tool tổng quát. Matching, routes, readiness và mọi market number vẫn qua deterministic typed tools; xem `AGENTIC_RUNTIME.md`.
 
+**Ranh giới bắt buộc:** agent chỉ chạy trong `/api/chat` để chọn tool thu thập/xác nhận evidence. `/api/recommendations` không có planner; toàn bộ candidate retrieval, score, stretch, route, readiness và validation chạy deterministic như flow bên dưới.
+
 ### Recommendation
 ```
 FE POST /api/recommendations {session_id}

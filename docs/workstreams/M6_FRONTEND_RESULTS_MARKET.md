@@ -51,9 +51,9 @@
 - **Expected:** ≤10-slide deck inputs; no lorem/seed presented as actual result.
 - **Verify:** commit/data snapshot/model labels; M1 claim audit.
 
-### F2-09 — Agent provenance panel (H+28→34)
-- **Actions:** thêm panel “Dựa trên gì?” lấy từ sanitized observations: evidence học sinh, snapshot/source/date/confidence, scoring factors và alternative/stretch; render fallback label.
-- **Expected:** judge trace được lý do mà không nhìn private reasoning; market claim luôn đi cùng provenance/limitation.
+### F2-09 — Result provenance panel (H+28→34)
+- **Actions:** thêm panel “Dựa trên gì?” lấy từ contract response: evidence học sinh, snapshot/source/date/confidence, scoring factors và alternative/stretch; render fallback label.
+- **Expected:** judge trace được lý do mà không nhìn private reasoning hoặc agent trace; market claim luôn đi cùng provenance/limitation.
 - **Tests:** source/date missing, low confidence, null salary, replay/mock/live parity, keyboard/mobile; không render raw tool args/CoT.
 - **Fallback:** static structured sections từ API fields, không chờ trace UI phức tạp.
 

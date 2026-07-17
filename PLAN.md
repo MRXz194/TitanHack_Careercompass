@@ -30,6 +30,17 @@ Cả hai mode dùng chung taxonomy, market stats, profile evidence, matching và
 
 Trường học và trung tâm hướng nghiệp phải phục vụ nhiều học sinh nhưng thiếu thời gian 1:1, dữ liệu thị trường rời rạc và khó giải thích tại sao một hướng nghề được đề xuất. CareerCompass tạo **bản nháp trước buổi tư vấn**: học sinh tự khám phá, sửa hồ sơ, xem nhiều route và mang một output có bằng chứng đến tư vấn viên. Hệ thống hỗ trợ chứ không thay thế quyết định của học sinh/tư vấn viên. Buyer, KPI pilot và giới hạn claim nằm trong [BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
 
+### Goal vận hành của MVP tại H+40
+
+```text
+Một học sinh/sinh viên hoàn thành hội thoại có thể sửa profile của mình,
+nhận nhiều hướng đi có evidence cá nhân + market snapshot có nguồn,
+và biết một bước học/việc tiếp theo. Nếu AI provider lỗi, flow vẫn chạy bằng
+fallback/replay; nếu evidence hoặc bias gate fail, sản phẩm không claim kết luận đó.
+```
+
+Agent không thay mục tiêu này: agent chỉ chọn cách thu thập/xác nhận evidence trong chat. Code deterministic vẫn quyết định candidate, score, stretch, route và Launch readiness. Chi tiết: [docs/AGENTIC_RUNTIME.md](docs/AGENTIC_RUNTIME.md).
+
 ### Tiêu chí chấm → chiến lược điểm
 
 | Tiêu chí chấm | Trọng số (theo đề) | Ta đánh vào đâu |
@@ -218,6 +229,7 @@ Master schedule/dependency nằm ở `docs/TASKS.md`; mỗi member dùng task ca
 | DB | SQLite (qua SQLAlchemy) | Zero-setup, đủ cho scale hackathon; đường lên Postgres đã thiết kế sẵn |
 | Vector search | NumPy cosine in-process | ~200 careers, không cần vector DB — đừng over-engineer |
 | LLM chat | DeepSeek `deepseek-v4-flash` (OpenAI-compatible) — cấu hình qua env | Nhanh/rẻ; JSON mode; đổi provider qua gateway |
+| Agent runtime | Bounded ReAct viết trong FastAPI/Pydantic, không thêm framework/dependency | Agent chỉ có typed local tool allowlist; policy/replay/test được, không tạo failure mode mới |
 | Embeddings | OpenAI `text-embedding-3-small` | Rẻ, multilingual đủ tốt cho tiếng Việt |
 | Crawl | httpx + BeautifulSoup/selectolax (+ Playwright chỉ khi bắt buộc) | Nhẹ, nhanh |
 | Deploy | Vercel (FE) + Render/Railway (BE) | Free tier, nhanh |

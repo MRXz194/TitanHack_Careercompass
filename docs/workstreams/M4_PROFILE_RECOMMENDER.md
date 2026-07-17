@@ -76,12 +76,12 @@
 - **Risk/fallback:** planner lỗi hoặc policy deny hai lần → deterministic question/template, không loop. Giữ state machine cũ làm rail, không fork service.
 - **Handoff:** tool schemas + policy matrix + sample observation cho M3/M5/M6/M1.
 
-### PR-13 — Agent orchestrator + degradation (H+12→20)
+### PR-13 — Chat agent orchestrator + degradation (H+16→22)
 - **Problem:** Tool registry chỉ có giá trị nếu request path ghép được plan → policy → observation → response một cách có giới hạn.
-- **Actions:** tích hợp bounded loop vào `/api/chat` và `/api/recommendations`; tối đa 2 tool calls/turn; sanitize trace; cache read tools; expose public rationale/provenance, không expose CoT.
-- **Expected:** Explore/Launch dùng chung agent; API không đổi shape; `DEMO_MODE=replay` chạy không network/key.
-- **Tests:** 10-turn mỗi mode; timeout/invalid JSON/tool exception; contract fixture; no raw transcript/CoT log; trace has versions/latency/fallback; recommendation deterministic candidate set.
-- **Risk/fallback:** chỉ bật agent ở discover/confirm nếu deadline; retrieval/ranking vẫn deterministic PR-05.
+- **Actions:** tích hợp bounded loop vào `/api/chat` **chỉ ở `discover/confirm_profile`**; tối đa 2 agent-selected tools/turn; sanitize trace; map stage nội bộ về `phase` contract; `/api/recommendations` giữ deterministic; không expose CoT.
+- **Expected:** Explore/Launch chat dùng chung agent; API không đổi shape; `DEMO_MODE=replay` chạy không network/key.
+- **Tests:** 10-turn mỗi mode; timeout/invalid JSON/tool exception; contract fixture; no raw transcript/CoT log; trace has versions/latency/fallback; recommendation remains deterministic without planner.
+- **Risk/fallback:** `AGENT_MODE=off` quay về deterministic question bank; retrieval/ranking luôn deterministic PR-05.
 - **Handoff:** endpoint behavior + replay trace fixture cho M1/M5/M6.
 
 ### PR-14 — Agent evaluation/red-team (H+31→38)
