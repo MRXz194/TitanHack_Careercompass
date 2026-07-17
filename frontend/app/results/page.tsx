@@ -5,6 +5,7 @@ import { fetchRecommendations } from "@/lib/api";
 import type { RecommendationResponse, JourneyMode } from "@/types";
 import ResultsHeader from "@/components/results/ResultsHeader";
 import RecommendationCard from "@/components/results/RecommendationCard";
+import StretchCard from "@/components/results/StretchCard";
 
 export default function ResultsPage() {
   const [data, setData] = useState<RecommendationResponse | null>(null);
@@ -120,7 +121,7 @@ export default function ResultsPage() {
       {data.stretch && (
         <div className="space-y-3.5 pt-4 border-t border-[var(--cc-border)]/60">
           <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Vùng mở rộng cơ hội (Stretch Suggestion):</h2>
-          <RecommendationCard rec={data.stretch} />
+          <StretchCard rec={data.stretch} />
         </div>
       )}
 
