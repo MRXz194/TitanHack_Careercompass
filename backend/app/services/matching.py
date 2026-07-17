@@ -16,8 +16,8 @@ Cosine source:
 Stretch: among ranks 6..15 (or remainder), pick highest score whose dominant
 career dimension differs from the user's dominant dimension.
 
-Launch readiness (lite, shared engine): matched needs evidence; missing ⊆ top_skills.
-Full action plan polish remains PR-07.
+Launch readiness + pathways: `pathways.py` (PR-07) — Explore job_readiness=null;
+Launch matched/missing/band/queries/actions with GRADUATE_LAUNCH invariants.
 """
 from __future__ import annotations
 
@@ -34,18 +34,14 @@ import numpy as np
 from app.core.config import get_settings
 from app.data.seed_loader import get_career, load_careers
 from app.models.schemas import (
-    JobReadiness,
-    LaunchAction,
     MarketStats,
     Profile,
     Recommendation,
-    Route,
-    SkillEvidence,
-    SkillRoadmapItem,
     Why,
     WhyFromMarket,
     WhyFromYou,
 )
+from app.services import pathways
 
 log = logging.getLogger("matching")
 
@@ -295,29 +291,6 @@ def pick_stretch(
     return ranked[-1][0], ranked[-1][1]
 
 
-def _ensure_routes(career: dict) -> list[Route]:
-    routes = [Route(**r) for r in career.get("routes") or []]
-    if len(routes) < 2:
-        routes.append(
-            Route(
-                type="certificate",
-                label="Chứng chỉ / khóa nghề ngắn",
-                detail="Bổ sung kỹ năng thực hành",
-                first_steps=["Tìm khóa nghề gần nơi bạn sống"],
-            )
-        )
-    if not any(r.type in ("vocational", "college", "certificate") for r in routes):
-        routes.append(
-            Route(
-                type="vocational",
-                label="Lộ trình nghề / trung cấp",
-                detail="Đường không bắt buộc đại học",
-                first_steps=["Tìm hiểu trường nghề địa phương"],
-            )
-        )
-    return routes
-
-
 def _market_stats(career: dict) -> MarketStats:
     m = career.get("seed_market") or {}
     return MarketStats(
@@ -404,71 +377,6 @@ def _counterfactual_text(profile: Profile, current_id: str) -> str:
     )
 
 
-def _launch_readiness(profile: Profile, career: dict) -> Optional[JobReadiness]:
-    if profile.journey_mode != "launch":
-        return None
-    settings = get_settings()
-    top_skills = list((career.get("seed_market") or {}).get("top_skills") or [])
-    # evidenced profile skills
-    evidenced: list[tuple[str, str]] = []
-    for s in profile.skills:
-        if s.source_quote:
-            evidenced.append((s.name, s.source_quote))
-    for e in profile.experiences:
-        for sk in e.skills or []:
-            evidenced.append((sk, e.source_quote or e.title))
-
-    matched: list[SkillEvidence] = []
-    matched_norm: set[str] = set()
-    for csk in top_skills:
-        cn = _normalize(csk)
-        for name, evidence in evidenced:
-            pn = _normalize(name)
-            if pn == cn or pn in cn or cn in pn:
-                if cn not in matched_norm:
-                    matched.append(SkillEvidence(skill=csk, evidence=evidence[:200]))
-                    matched_norm.add(cn)
-                break
-    missing = [s for s in top_skills if _normalize(s) not in matched_norm]
-    # coverage
-    coverage = len(matched) / max(1, len(top_skills))
-    evidence_strength = len(matched)
-    if coverage >= settings.readiness_ready_coverage and evidence_strength >= settings.readiness_min_evidence_skills:
-        band = "ready_now"
-        reason = "Bạn đã có bằng chứng cho nhiều kỹ năng vai trò thường yêu cầu."
-    elif coverage >= settings.readiness_near_coverage:
-        band = "near_ready"
-        reason = "Bạn đã có nền tảng; còn vài kỹ năng/role skills chưa có evidence trong hồ sơ."
-    else:
-        band = "build_foundation"
-        reason = "Hãy xem đây là hướng cần xây thêm project/evidence trước khi tập trung ứng tuyển."
-
-    queries = [
-        f"{career['title']} fresher",
-        f"{career['title']} entry level",
-        f"{career['title']} thực tập",
-    ]
-    actions = []
-    for week in range(1, 5):
-        focus = missing[week - 1] if week - 1 < len(missing) else (matched[0].skill if matched else "kỹ năng cốt lõi")
-        actions.append(
-            LaunchAction(
-                week=week,
-                action=f"Tạo output minh chứng cho «{focus}»",
-                deliverable=f"1 file/link kiểm tra được (tuần {week})",
-                why=f"Bổ sung evidence cho kỹ năng nhà tuyển dụng thường nêu: {focus}",
-            )
-        )
-    return JobReadiness(
-        band=band,  # type: ignore[arg-type]
-        band_reason=reason,
-        matched_skills=matched,
-        missing_skills=missing[:5],
-        search_queries=queries,
-        actions_30d=actions,
-    )
-
-
 def build_recommendation(
     profile: Profile,
     career_id: str,
@@ -480,8 +388,8 @@ def build_recommendation(
     if not career:
         raise KeyError(career_id)
     market = _market_stats(career)
-    routes = _ensure_routes(career)
-    roadmap = [SkillRoadmapItem(**s) for s in career.get("skill_roadmap") or []]
+    routes = pathways.ensure_routes(career, journey_mode=profile.journey_mode)
+    roadmap = pathways.ensure_skill_roadmap(career)
     return Recommendation(
         career_id=career_id,
         title=career["title"],
@@ -491,7 +399,7 @@ def build_recommendation(
         market=market,
         routes=routes,
         skill_roadmap=roadmap,
-        job_readiness=_launch_readiness(profile, career),
+        job_readiness=pathways.build_job_readiness(profile, career),
     )
 
 
