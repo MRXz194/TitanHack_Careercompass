@@ -1,0 +1,65 @@
+{
+  "contract_version": "v1",
+  "prompt_version": "profiler-v2",
+  "fictional": true,
+  "journey_mode": "explore",
+  "persona_id": "explore_an_uncertain",
+  "turns": [
+    {
+      "phase": "warmup",
+      "user": "Em không biết mình thích gì.",
+      "assistant": {
+        "reply": "Không sao, nhiều bạn cũng vậy. Tuần trước bạn từng dành thời gian khá lâu cho việc gì, dù chỉ là xem video hay giúp việc nhà?",
+        "profile_delta": {
+          "interests": [],
+          "skills": [],
+          "experiences": [],
+          "dimensions": {},
+          "evidence_quotes": [
+            {"turn": 1, "quote": "Em không biết mình thích gì", "mapped_to": "uncertainty"}
+          ]
+        },
+        "phase_done": false
+      }
+    },
+    {
+      "phase": "interests",
+      "user": "Không biết nữa, toàn lướt điện thoại.",
+      "assistant": {
+        "reply": "Khi lướt điện thoại, bạn hay dừng lại ở nội dung kiểu nào — làm đồ thủ công, game, hay chuyện người khác kể?",
+        "profile_delta": {
+          "interests": [],
+          "skills": [],
+          "experiences": [],
+          "dimensions": {},
+          "constraints": {"notes": "user uncertain about interests"},
+          "evidence_quotes": [
+            {"turn": 2, "quote": "Toàn lướt điện thoại", "mapped_to": "interests_probe"}
+          ]
+        },
+        "phase_done": false
+      }
+    },
+    {
+      "phase": "interests",
+      "user": "Hay xem video người ta vẽ trên iPad.",
+      "assistant": {
+        "reply": "Bạn xem vì thích thành quả đẹp, hay vì muốn thử tự vẽ theo?",
+        "profile_delta": {
+          "interests": ["xem vẽ kỹ thuật số"],
+          "dimensions": {"sang_tao": 0.45},
+          "skills": [],
+          "experiences": [],
+          "evidence_quotes": [
+            {
+              "turn": 3,
+              "quote": "Hay xem video người ta vẽ trên iPad",
+              "mapped_to": "sang_tao"
+            }
+          ]
+        },
+        "phase_done": false
+      }
+    }
+  ]
+}

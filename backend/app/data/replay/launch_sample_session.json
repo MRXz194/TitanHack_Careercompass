@@ -1,0 +1,734 @@
+{
+  "contract_version": "v1",
+  "prompt_version": "profiler-v2",
+  "fictional": true,
+  "journey_mode": "launch",
+  "session_id": "handoff-launch-sample",
+  "source": "deterministic_profiler_pr04",
+  "notes": {
+    "llm": "not used (no CHAT_API_KEY / deterministic path)",
+    "fallback": "question bank + keyword extractor (PR-03)",
+    "latency_ms": {
+      "per_turn": [
+        9.7,
+        6.08,
+        6.96,
+        4.89,
+        5.32,
+        4.65,
+        5.25,
+        5.72
+      ],
+      "p50_approx": 5.72,
+      "max": 9.7,
+      "patch": 5.6
+    },
+    "errors": {
+      "422": {
+        "error": {
+          "code": "422",
+          "message": "Dữ liệu gửi lên không hợp lệ"
+        }
+      },
+      "404_profile": {
+        "error": {
+          "code": "404",
+          "message": "session not found"
+        }
+      },
+      "500": {
+        "error": {
+          "code": "500",
+          "message": "Có lỗi xảy ra, vui lòng thử lại"
+        }
+      }
+    }
+  },
+  "turns": [
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": null,
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Bạn đang ở giai đoạn nào và muốn bắt đầu tìm loại công việc gì, dù mới chỉ là ý tưởng ban đầu?",
+        "phase": "warmup",
+        "turn": 1,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": null,
+          "job_goal": null,
+          "dimensions": {
+            "ky_thuat": 0.0,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [],
+          "constraints": {
+            "region_pref": null,
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [],
+          "experiences": [],
+          "completeness": 0.0
+        }
+      },
+      "latency_ms": 9.7
+    },
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": "Em năm cuối, muốn tìm việc data entry-level",
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Trong các project, môn học, việc làm thêm hoặc hoạt động từng làm, việc nào khiến bạn thấy muốn làm tiếp?",
+        "phase": "interests",
+        "turn": 2,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": "final_year",
+          "job_goal": "Em năm cuối, muốn tìm việc data entry-level",
+          "dimensions": {
+            "ky_thuat": 0.0,
+            "phan_tich": 0.0,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em năm cuối, muốn tìm việc data entry-level"
+          ],
+          "constraints": {
+            "region_pref": null,
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em năm cuối, muốn tìm việc data entry-level",
+              "mapped_to": "interests"
+            }
+          ],
+          "experiences": [],
+          "completeness": 0.4
+        }
+      },
+      "latency_ms": 6.08
+    },
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": "Em làm dashboard bán hàng từ CSV mở",
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Có output nào (file, repo, bài thuyết trình) bạn có thể đưa người khác xem không?",
+        "phase": "abilities",
+        "turn": 3,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": "final_year",
+          "job_goal": "Em năm cuối, muốn tìm việc data entry-level",
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.55,
+            "sang_tao": 0.0,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [],
+          "interests": [
+            "Em năm cuối, muốn tìm việc data entry-level",
+            "Em làm dashboard bán hàng từ CSV mở"
+          ],
+          "constraints": {
+            "region_pref": null,
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em năm cuối, muốn tìm việc data entry-level",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em làm dashboard bán hàng từ CSV mở",
+              "mapped_to": "ky_thuat"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Dashboard",
+              "kind": "project",
+              "description": "Em làm dashboard bán hàng từ CSV mở",
+              "skills": [],
+              "source_quote": "Em làm dashboard bán hàng từ CSV mở"
+            }
+          ],
+          "completeness": 0.6
+        }
+      },
+      "latency_ms": 6.96
+    },
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": "Em clean data và vẽ biểu đồ bằng Excel",
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Nếu chưa có project lớn, bạn từng làm bài tập/tool nào gần với việc muốn ứng tuyển?",
+        "phase": "abilities",
+        "turn": 4,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": "final_year",
+          "job_goal": "Em clean data và vẽ biểu đồ bằng Excel",
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.55,
+            "sang_tao": 0.55,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [
+            {
+              "name": "Excel",
+              "level": "đã đề cập",
+              "source_quote": "Em clean data và vẽ biểu đồ bằng Excel"
+            }
+          ],
+          "interests": [
+            "Em năm cuối, muốn tìm việc data entry-level",
+            "Em làm dashboard bán hàng từ CSV mở",
+            "Em clean data và vẽ biểu đồ bằng Excel"
+          ],
+          "constraints": {
+            "region_pref": null,
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em năm cuối, muốn tìm việc data entry-level",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em làm dashboard bán hàng từ CSV mở",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Em clean data và vẽ biểu đồ bằng Excel",
+              "mapped_to": "phan_tich"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Dashboard",
+              "kind": "project",
+              "description": "Em làm dashboard bán hàng từ CSV mở",
+              "skills": [],
+              "source_quote": "Em làm dashboard bán hàng từ CSV mở"
+            }
+          ],
+          "completeness": 0.7
+        }
+      },
+      "latency_ms": 4.89
+    },
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": "Cũng biết chút Python để đọc file",
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Có ràng buộc nào về hình thức (remote/onsite) hoặc thời điểm bắt đầu không?",
+        "phase": "constraints",
+        "turn": 5,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": "final_year",
+          "job_goal": "Em clean data và vẽ biểu đồ bằng Excel",
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.55,
+            "sang_tao": 0.55,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [
+            {
+              "name": "Excel",
+              "level": "đã đề cập",
+              "source_quote": "Em clean data và vẽ biểu đồ bằng Excel"
+            },
+            {
+              "name": "Python",
+              "level": "đã đề cập",
+              "source_quote": "Cũng biết chút Python để đọc file"
+            }
+          ],
+          "interests": [
+            "Em năm cuối, muốn tìm việc data entry-level",
+            "Em làm dashboard bán hàng từ CSV mở",
+            "Em clean data và vẽ biểu đồ bằng Excel",
+            "Cũng biết chút Python để đọc file"
+          ],
+          "constraints": {
+            "region_pref": null,
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em năm cuối, muốn tìm việc data entry-level",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em làm dashboard bán hàng từ CSV mở",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Em clean data và vẽ biểu đồ bằng Excel",
+              "mapped_to": "phan_tich"
+            },
+            {
+              "turn": 5,
+              "quote": "Cũng biết chút Python để đọc file",
+              "mapped_to": "ky_thuat"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Dashboard",
+              "kind": "project",
+              "description": "Em làm dashboard bán hàng từ CSV mở",
+              "skills": [],
+              "source_quote": "Em làm dashboard bán hàng từ CSV mở"
+            }
+          ],
+          "completeness": 0.8
+        }
+      },
+      "latency_ms": 5.32
+    },
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Bạn muốn tìm việc ở khu vực hoặc trong khoảng thời gian nào? Chia sẻ được đến đâu hay đến đó nhé.",
+        "phase": "wrapup",
+        "turn": 6,
+        "done": false,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": "recent_graduate",
+          "job_goal": "Em clean data và vẽ biểu đồ bằng Excel",
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.55,
+            "sang_tao": 0.55,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [
+            {
+              "name": "Excel",
+              "level": "đã đề cập",
+              "source_quote": "Em clean data và vẽ biểu đồ bằng Excel"
+            },
+            {
+              "name": "Python",
+              "level": "đã đề cập",
+              "source_quote": "Cũng biết chút Python để đọc file"
+            }
+          ],
+          "interests": [
+            "Em năm cuối, muốn tìm việc data entry-level",
+            "Em làm dashboard bán hàng từ CSV mở",
+            "Em clean data và vẽ biểu đồ bằng Excel",
+            "Cũng biết chút Python để đọc file",
+            "Muốn làm ở Đà Nẵng sau tốt nghiệp"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em năm cuối, muốn tìm việc data entry-level",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em làm dashboard bán hàng từ CSV mở",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Em clean data và vẽ biểu đồ bằng Excel",
+              "mapped_to": "phan_tich"
+            },
+            {
+              "turn": 5,
+              "quote": "Cũng biết chút Python để đọc file",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 6,
+              "quote": "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+              "mapped_to": "interests"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Dashboard",
+              "kind": "project",
+              "description": "Em làm dashboard bán hàng từ CSV mở",
+              "skills": [],
+              "source_quote": "Em làm dashboard bán hàng từ CSV mở"
+            }
+          ],
+          "completeness": 1.0
+        }
+      },
+      "latency_ms": 4.65
+    },
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": "Project dashboard là evidence chính",
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Hồ sơ vậy đã ổn chưa? Nếu rồi, mình sẽ gợi ý vài nhóm việc entry-level kèm việc nên bổ sung.",
+        "phase": "wrapup",
+        "turn": 7,
+        "done": true,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": "recent_graduate",
+          "job_goal": "Em clean data và vẽ biểu đồ bằng Excel",
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.55,
+            "sang_tao": 0.55,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.0
+          },
+          "skills": [
+            {
+              "name": "Excel",
+              "level": "đã đề cập",
+              "source_quote": "Em clean data và vẽ biểu đồ bằng Excel"
+            },
+            {
+              "name": "Python",
+              "level": "đã đề cập",
+              "source_quote": "Cũng biết chút Python để đọc file"
+            }
+          ],
+          "interests": [
+            "Em năm cuối, muốn tìm việc data entry-level",
+            "Em làm dashboard bán hàng từ CSV mở",
+            "Em clean data và vẽ biểu đồ bằng Excel",
+            "Cũng biết chút Python để đọc file",
+            "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+            "Project dashboard là evidence chính"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em năm cuối, muốn tìm việc data entry-level",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em làm dashboard bán hàng từ CSV mở",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Em clean data và vẽ biểu đồ bằng Excel",
+              "mapped_to": "phan_tich"
+            },
+            {
+              "turn": 5,
+              "quote": "Cũng biết chút Python để đọc file",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 6,
+              "quote": "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 7,
+              "quote": "Project dashboard là evidence chính",
+              "mapped_to": "phan_tich"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Dashboard",
+              "kind": "project",
+              "description": "Em làm dashboard bán hàng từ CSV mở",
+              "skills": [],
+              "source_quote": "Em làm dashboard bán hàng từ CSV mở"
+            }
+          ],
+          "completeness": 1.0
+        }
+      },
+      "latency_ms": 5.25
+    },
+    {
+      "request": {
+        "session_id": "handoff-launch-sample",
+        "message": "Hồ sơ ổn, sẵn sàng xem nhóm việc",
+        "journey_mode": "launch"
+      },
+      "response": {
+        "reply": "Bạn xem lại kỹ năng và trải nghiệm bên cạnh nhé — chỗ nào chưa đúng, bạn có thể sửa trước khi xem nhóm việc phù hợp.",
+        "phase": "wrapup",
+        "turn": 8,
+        "done": true,
+        "profile": {
+          "session_id": "handoff-launch-sample",
+          "journey_mode": "launch",
+          "education_stage": "recent_graduate",
+          "job_goal": "Hồ sơ ổn, sẵn sàng xem nhóm việc",
+          "dimensions": {
+            "ky_thuat": 0.55,
+            "phan_tich": 0.55,
+            "sang_tao": 0.55,
+            "xa_hoi": 0.0,
+            "quan_ly": 0.55
+          },
+          "skills": [
+            {
+              "name": "Excel",
+              "level": "đã đề cập",
+              "source_quote": "Em clean data và vẽ biểu đồ bằng Excel"
+            },
+            {
+              "name": "Python",
+              "level": "đã đề cập",
+              "source_quote": "Cũng biết chút Python để đọc file"
+            }
+          ],
+          "interests": [
+            "Em năm cuối, muốn tìm việc data entry-level",
+            "Em làm dashboard bán hàng từ CSV mở",
+            "Em clean data và vẽ biểu đồ bằng Excel",
+            "Cũng biết chút Python để đọc file",
+            "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+            "Project dashboard là evidence chính",
+            "Hồ sơ ổn, sẵn sàng xem nhóm việc"
+          ],
+          "constraints": {
+            "region_pref": "danang",
+            "study_budget": null,
+            "study_duration_pref": null,
+            "notes": ""
+          },
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "Em năm cuối, muốn tìm việc data entry-level",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 3,
+              "quote": "Em làm dashboard bán hàng từ CSV mở",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 4,
+              "quote": "Em clean data và vẽ biểu đồ bằng Excel",
+              "mapped_to": "phan_tich"
+            },
+            {
+              "turn": 5,
+              "quote": "Cũng biết chút Python để đọc file",
+              "mapped_to": "ky_thuat"
+            },
+            {
+              "turn": 6,
+              "quote": "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+              "mapped_to": "interests"
+            },
+            {
+              "turn": 7,
+              "quote": "Project dashboard là evidence chính",
+              "mapped_to": "phan_tich"
+            },
+            {
+              "turn": 8,
+              "quote": "Hồ sơ ổn, sẵn sàng xem nhóm việc",
+              "mapped_to": "quan_ly"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Dashboard",
+              "kind": "project",
+              "description": "Em làm dashboard bán hàng từ CSV mở",
+              "skills": [],
+              "source_quote": "Em làm dashboard bán hàng từ CSV mở"
+            }
+          ],
+          "completeness": 1.0
+        }
+      },
+      "latency_ms": 5.72
+    }
+  ],
+  "patch_sample": {
+    "request": {
+      "dimensions": {
+        "phan_tich": 0.85
+      },
+      "add_interests": [
+        "sample-interest-from-patch"
+      ]
+    },
+    "response": {
+      "profile": {
+        "session_id": "handoff-launch-sample",
+        "journey_mode": "launch",
+        "education_stage": "recent_graduate",
+        "job_goal": "Hồ sơ ổn, sẵn sàng xem nhóm việc",
+        "dimensions": {
+          "ky_thuat": 0.55,
+          "phan_tich": 0.85,
+          "sang_tao": 0.55,
+          "xa_hoi": 0.0,
+          "quan_ly": 0.55
+        },
+        "skills": [
+          {
+            "name": "Excel",
+            "level": "đã đề cập",
+            "source_quote": "Em clean data và vẽ biểu đồ bằng Excel"
+          },
+          {
+            "name": "Python",
+            "level": "đã đề cập",
+            "source_quote": "Cũng biết chút Python để đọc file"
+          }
+        ],
+        "interests": [
+          "Em năm cuối, muốn tìm việc data entry-level",
+          "Em làm dashboard bán hàng từ CSV mở",
+          "Em clean data và vẽ biểu đồ bằng Excel",
+          "Cũng biết chút Python để đọc file",
+          "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+          "Project dashboard là evidence chính",
+          "Hồ sơ ổn, sẵn sàng xem nhóm việc",
+          "sample-interest-from-patch"
+        ],
+        "constraints": {
+          "region_pref": "danang",
+          "study_budget": null,
+          "study_duration_pref": null,
+          "notes": ""
+        },
+        "evidence_quotes": [
+          {
+            "turn": 2,
+            "quote": "Em năm cuối, muốn tìm việc data entry-level",
+            "mapped_to": "interests"
+          },
+          {
+            "turn": 3,
+            "quote": "Em làm dashboard bán hàng từ CSV mở",
+            "mapped_to": "ky_thuat"
+          },
+          {
+            "turn": 4,
+            "quote": "Em clean data và vẽ biểu đồ bằng Excel",
+            "mapped_to": "phan_tich"
+          },
+          {
+            "turn": 5,
+            "quote": "Cũng biết chút Python để đọc file",
+            "mapped_to": "ky_thuat"
+          },
+          {
+            "turn": 6,
+            "quote": "Muốn làm ở Đà Nẵng sau tốt nghiệp",
+            "mapped_to": "interests"
+          },
+          {
+            "turn": 7,
+            "quote": "Project dashboard là evidence chính",
+            "mapped_to": "phan_tich"
+          },
+          {
+            "turn": 8,
+            "quote": "Hồ sơ ổn, sẵn sàng xem nhóm việc",
+            "mapped_to": "quan_ly"
+          }
+        ],
+        "experiences": [
+          {
+            "title": "Dashboard",
+            "kind": "project",
+            "description": "Em làm dashboard bán hàng từ CSV mở",
+            "skills": [],
+            "source_quote": "Em làm dashboard bán hàng từ CSV mở"
+          }
+        ],
+        "completeness": 1.0
+      }
+    },
+    "latency_ms": 5.6
+  }
+}
