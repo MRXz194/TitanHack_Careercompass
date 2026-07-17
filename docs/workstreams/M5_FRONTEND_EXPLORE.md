@@ -57,6 +57,13 @@
 - **Expected:** anonymized report; Sev priority; one fix before freeze.
 - **Tests:** delete clears local+server; no transcript in analytics/log/screenshot.
 
+### F1-10 — Agent transparency without hidden reasoning (H+18→24)
+- **Actions:** map `phase` sang trạng thái ngắn, ví dụ “Mình đang cập nhật điều bạn vừa chia sẻ”; giữ profile evidence editable; render fallback/timeout như một bước rõ ràng.
+- **Expected:** user hiểu agent đang làm gì ở mức sản phẩm nhưng không thấy tool JSON, chain-of-thought hay transcript nội bộ.
+- **Tests:** agent allow/deny/timeout/replay; long rationale; screen reader; correction sau rationale.
+- **Forbidden:** suy diễn “AI đã quyết định”; hiển thị raw trace, prompt, score reasoning riêng tư.
+- **Handoff:** screenshot/state matrix cho M1/M6.
+
 ## Component architecture
 
 ```text

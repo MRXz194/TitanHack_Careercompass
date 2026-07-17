@@ -1,6 +1,6 @@
 # 📋 PLAN — CareerCompass, Hackathon 48h
 
-> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) · [docs/AI_FOCUS.md](docs/AI_FOCUS.md) · [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) · [docs/EVALUATION.md](docs/EVALUATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
+> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) · [docs/AI_FOCUS.md](docs/AI_FOCUS.md) · [docs/AGENTIC_RUNTIME.md](docs/AGENTIC_RUNTIME.md) · [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) · [docs/EVALUATION.md](docs/EVALUATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
 >
 > Trước khi bấm giờ: cả team pass [docs/PREFLIGHT.md](docs/PREFLIGHT.md). Trạng thái repo/docs tốt không đồng nghĩa runtime đã sẵn sàng.
 
@@ -41,12 +41,13 @@ Trường học và trung tâm hướng nghiệp phải phục vụ nhiều họ
 
 ### 3 điểm đột phá (differentiators) — nói trong pitch
 
-> Chi tiết phần AI focus và ứng dụng đa bối cảnh: [docs/AI_FOCUS.md](docs/AI_FOCUS.md).
+> Chi tiết phần AI focus và ứng dụng đa bối cảnh: [docs/AI_FOCUS.md](docs/AI_FOCUS.md). Thiết kế agentic bounded ReAct: [docs/AGENTIC_RUNTIME.md](docs/AGENTIC_RUNTIME.md).
 
 1. **Radar nhu cầu kỹ năng tuyển dụng theo vùng**: từ snapshot posting thật, chỉ ra kỹ năng có demand/momentum cao ở địa phương. Đây là proxy tín hiệu cầu, **không tuyên bố đo trực tiếp thiếu hụt cung–cầu** — sự minh bạch này làm sản phẩm đáng tin hơn.
 2. **Profile qua hội thoại + hiển thị live**: học sinh THẤY hồ sơ của mình hình thành theo từng câu trả lời (transparency = trust), và có thể sửa trực tiếp — tôn trọng autonomy đúng yêu cầu đề.
 3. **Explainability 2 chiều**: mỗi gợi ý có (a) bằng chứng từ chính lời em nói, (b) bằng chứng từ thị trường (số posting, lương, trend), và (c) **counterfactual** — "nếu em thích X hơn thì gợi ý sẽ đổi thành Y" → chứng minh gợi ý là tham khảo, không phán quyết.
 4. **Continuity học → việc**: cùng một profile chuyển từ Explore sang Launch, biến project/thực tập thành evidence và chỉ ra job-title lân cận + deliverable 30 ngày.
+5. **AI agent có kiểm soát, không phải chatbot trả lời theo kịch bản**: agent chọn câu hỏi/tool đọc dữ liệu phù hợp với evidence đang thiếu, nhưng tool, dữ liệu, ngân sách và đạo đức đều bị policy code khóa; vì vậy vừa linh hoạt cho từng học sinh vừa test/replay được trước judge.
 
 ---
 

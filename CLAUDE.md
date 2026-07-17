@@ -24,6 +24,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 - `docs/API_CONTRACT.md` — FE↔BE contract. NEVER change response/request shapes without updating this file + `backend/app/models/schemas.py` + `frontend/types/index.ts` in the same PR. If your generated code needs a field that doesn't exist in the contract, STOP and tell the user to follow the contract-change process (TEAM_RULES.md §2).
 - `docs/ARCHITECTURE.md` — component layout; put new files where §4 says.
 - `docs/AI_FOCUS.md` — why this is an AI-centered hackathon product, what AI claims are allowed, and where the product applies.
+- `docs/AGENTIC_RUNTIME.md` — bounded ReAct agent, tool allowlist, policy gates, budgets and agent evaluation. Read before touching profiler, LLM, matching or agent UI.
 - `docs/AI_DESIGN.md` — prompt/scoring/bias design. Do not invent alternative scoring or prompt schemes.
 - `docs/TASKS.md` — task IDs; the user will tell you which task (e.g. PR-05) they're on.
 - `docs/HANDOFF.md` — required handoff template and artifact versions.
@@ -64,7 +65,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 - Branches `feat/<TASK-ID>-slug`, commits `type(scope): message`, PRs < 400 lines, squash merge.
 - Python: type hints, Pydantic models mirror the contract, black-ish formatting. TS: strict mode, types in `frontend/types/index.ts` mirror the contract.
 - Errors: API returns `{"error": {"code", "message"}}`; FE shows friendly Vietnamese fallback, never a raw stack.
-- LLM calls: always structured output + Pydantic validation + retry ≤2 + non-LLM fallback so the flow never dies mid-demo.
+- LLM calls: always structured output + Pydantic validation + retry ≤2 + non-LLM fallback so the flow never dies mid-demo. In agent mode, LLM may plan from the fixed tool allowlist and phrase grounded evidence; it never directly selects careers, changes config/KB, calls arbitrary tools or bypasses policy.
 
 ## When generating code
 

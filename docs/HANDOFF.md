@@ -11,6 +11,7 @@ Copy template này vào PR và group chat:
 - Chạy thử: <lệnh copy-paste được>
 - Input → output mẫu: <path hoặc JSON ngắn>
 - Known limitations: <tối đa 3 ý, không giấu lỗi>
+- Nếu là agent task: <tool/stage allowlist + policy version + trace/replay fixture; xác nhận không có CoT/raw transcript>
 - Người nhận đã chạy và phản hồi: ⬜
 ```
 
@@ -31,6 +32,8 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 | Replay fixtures | `backend/app/data/replay/*.json` | M1 + M4 | demo | ngắt mạng vẫn E2E |
 | Evaluation results | `docs/EVALUATION_RESULTS.md` | M1 | pitch/judges | ghi cả fail/caveat |
 | Launch profile/result fixture | replay + contract | M4 | M5/M6/M1 | matched/missing/actions invariants pass |
+| Agent tool/policy contract | `docs/AGENTIC_RUNTIME.md` + Pydantic tool models | M4 | M1/M3/M5/M6 | allowlist/stage matrix + policy version + negative fixtures pass |
+| Sanitized agent trace/replay | `backend/app/data/replay/*.json` + evaluation report | M4 + M1 | demo/pitch | tool/version/snapshot/fallback visible; no CoT/raw transcript |
 
 ## 3. Integration order
 
@@ -41,6 +44,7 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 5. M4 thay stub recommendation bằng scoring; M6 chuyển mock → real bằng env, không xóa mock.
 6. M1 chạy contract smoke test và E2E sau mỗi integration PR.
 7. Launch là presenter trên shared core: không handoff service/DB riêng; chỉ profile/result fields + fixtures.
+8. Agentic handoff: M4 giao typed tool/policy fixtures trước; M5/M6 chỉ render contract evidence/phase copy, không đọc/expose trace riêng tư; M1 xác nhận replay không network.
 
 ## 4. Khi artifact đổi
 
