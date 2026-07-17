@@ -40,8 +40,8 @@ python -m pytest -q tests/unit tests/contract tests/integration
 ## Known remaining quality debt (not Sev-1 for demo)
 
 1. Deterministic extractor still keyword-based vs full LLM chat quality  
-2. Live 12-persona human rubric → PR-11  
-3. Agent path → PR-12+  
+2. Live 12-persona **human** rubric still NOT_RUN (PR-11 automated proxy only)  
+3. Agent path: implemented PR-12→14; default remains `AGENT_MODE=deterministic` for demo safety  
 
 ## Consumer ack
 

@@ -286,7 +286,8 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - full unit/contract/integration → PASS
 
 #### Honest gaps
-- Human dual-rater rubric NOT_RUN; live LLM NOT_RUN; agent N/A; user testing N/A (M1/M3)
+- Human dual-rater rubric NOT_RUN; live LLM NOT_RUN; user testing N/A (M1/M3)
+- Agent offline red-team filled later in **PR-14** (not N/A anymore at tip of `kaguya`)
 
 ### PR-12 — LangChain tool layer + LangGraph spike + bounded policy registry (H+4→12)
 - **Problem:** Flow hỏi đáp không được hard-code kịch bản, nhưng agent tự do sẽ không test/replay/bảo vệ được ethics.
@@ -297,7 +298,7 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Handoff:** tool schemas + policy matrix + sample observation cho M3/M5/M6/M1.
 
 #### Status (M4)
-- **State:** DONE (spike gate PASS; `/api/chat` still profiler path until PR-13)
+- **State:** DONE (spike gate PASS; chat wiring completed in PR-13)
 - **Code:** `agent_schemas.py`, `agent_policy.py`, `agent_tools.py` (10 tools), `agent_graph.py`
 - **Handoff:** `docs/handoffs/M4_PR-12_AGENT_RUNTIME_HANDOFF.md`
 - **Default:** `AGENT_MODE=deterministic` (no graph compile)

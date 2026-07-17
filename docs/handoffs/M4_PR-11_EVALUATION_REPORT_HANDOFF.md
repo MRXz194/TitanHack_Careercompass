@@ -26,7 +26,7 @@
 - Live LLM session validity
 - Human dual-rater recommendation rubric
 - User testing n≥5 (M1)
-- LangGraph/agent gates (PR-12+)
+- Live multi-turn LLM agent planner (offline agent gates are measured in **PR-14** — see `M4_PR-14_AGENT_REDTEAM_HANDOFF.md`)
 
 ## Reproduce
 

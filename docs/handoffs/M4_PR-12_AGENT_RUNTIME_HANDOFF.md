@@ -28,7 +28,8 @@
 | `deterministic` (default) | `plain_python_orchestrator` only; **no** graph compile |
 | `langgraph` | custom `StateGraph` plan→policy→tool→compose |
 
-`/api/chat` still uses existing profiler path until **PR-13** wires orchestrator.
+Historical note (at PR-12 land): `/api/chat` still used classic profiler path.  
+**Superseded:** **PR-13** wires `agent_chat` into `profiler.handle_turn`; **PR-14** red-teams allowlist/fallback.
 
 ## Forbidden (enforced by design)
 
