@@ -132,7 +132,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 
 #### Status (M4)
 - **State:** DONE
-- **Handoff doc:** `docs/handoffs/PR-04_CHAT_HANDOFF.md`
+- **Handoff doc:** `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md`
 - **Samples:** `backend/app/data/replay/explore_sample_session.json`, `launch_sample_session.json`
 
 #### Verify evidence
@@ -141,7 +141,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 - Capture: `PYTHONPATH=. python scripts/capture_chat_samples.py`
 
 #### Handoff → M5 / M1
-See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, errors, fallback, consumer checklist).
+See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, errors, fallback, consumer checklist).
 
 #### Cannot do / deferred
 - Full `DEMO_MODE=replay` router short-circuit (M1 L-08 uses samples as seed)
@@ -182,7 +182,7 @@ See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, error
 #### Status (M4)
 - **State:** DONE
 - **Code:** `services/evidence.py`, `prompts/evidence.py` (v1); wired in `matching.build_recommendation`
-- **Handoff:** `docs/handoffs/PR-06_EVIDENCE_HANDOFF.md`
+- **Handoff:** `docs/handoffs/M4_PR-06_EVIDENCE_HANDOFF.md`
 
 #### Verify evidence
 - `pytest -q tests/unit/test_evidence.py tests/integration/test_evidence_grounding.py` → PASS

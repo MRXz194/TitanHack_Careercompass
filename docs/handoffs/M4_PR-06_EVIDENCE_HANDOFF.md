@@ -1,4 +1,4 @@
-# [HANDOFF] PR-06 — M4 → M6 / M1
+# [HANDOFF] M4 · PR-06 — Grounded evidence → M6 / M1
 
 Grounded evidence + true counterfactual for recommendation cards.
 
