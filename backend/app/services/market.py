@@ -1,13 +1,147 @@
-"""Market stats reader — task MI-04. Reads market.db (built by data/pipeline/build_market_stats.py).
+"""SQLAlchemy-only market aggregate reader for MI-04/MI-05."""
 
-Replaces the seed-based logic in app/routers/market.py once market.db exists — keep
-the response shapes in docs/API_CONTRACT.md §4 identical when swapping the data source.
-"""
-from app.models.schemas import MarketOverview, SkillGapResponse
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from sqlalchemy import MetaData, Table, select
+from sqlalchemy.engine import Engine
+
+from app.core import db as db_module
+from app.models.schemas import (
+    MarketOverview,
+    MarketStats,
+    RisingCareer,
+    SkillGapResponse,
+    TopPayingCareer,
+)
 
 
-def get_overview(region: str) -> MarketOverview:
-    raise NotImplementedError("Task MI-04 — read career_stats table")
+class MarketDataUnavailable(RuntimeError):
+    """The aggregate DB is missing or does not have the MI-04 schema."""
+
+
+def _tables(engine: Engine) -> tuple[Table, Table]:
+    metadata = MetaData()
+    try:
+        stats = Table("career_stats", metadata, autoload_with=engine)
+        meta = Table("market_meta", metadata, autoload_with=engine)
+    except Exception as exc:
+        raise MarketDataUnavailable("market aggregate tables are unavailable") from exc
+    return stats, meta
+
+
+def _meta_values(connection: Any, table: Table) -> dict[str, Any]:
+    try:
+        return {
+            row.key: json.loads(row.value_json)
+            for row in connection.execute(select(table.c.key, table.c.value_json))
+        }
+    except (TypeError, json.JSONDecodeError) as exc:
+        raise MarketDataUnavailable("market metadata is invalid") from exc
+
+
+def _source_note(postings_count: int, meta: dict[str, Any]) -> str:
+    snapshot = meta.get("snapshot_id", "snapshot chưa xác minh")
+    formatted_count = f"{postings_count:,}".replace(",", ".")
+    return f"Từ {formatted_count} tin tuyển dụng quan sát, {snapshot}"
+
+
+def get_overview(region: str, *, engine: Engine | None = None) -> MarketOverview:
+    engine = engine or db_module.market_engine
+    stats, meta_table = _tables(engine)
+    with engine.connect() as connection:
+        meta = _meta_values(connection, meta_table)
+        rows = connection.execute(
+            select(stats).where(stats.c.region == region)
+        ).mappings().all()
+    if not meta:
+        raise MarketDataUnavailable("market metadata is empty")
+    region_counts = meta.get("region_counts", {})
+    postings_count = int(
+        meta.get("postings_count", 0)
+        if region == "all"
+        else region_counts.get(region, 0)
+    )
+    rising = [row for row in rows if row["trend_pct"] is not None]
+    rising.sort(
+        key=lambda row: (
+            -row["trend_pct"],
+            -row["demand_count_90d"],
+            row["career_id"],
+        )
+    )
+    paying = [row for row in rows if row["salary_p50_trieu"] is not None]
+    paying.sort(key=lambda row: (-row["salary_p50_trieu"], row["career_id"]))
+    return MarketOverview(
+        region=region,
+        postings_count=postings_count,
+        window_days=int(meta.get("window_days", 90)),
+        updated_at=str(meta.get("window_end", "unknown")),
+        source_note=_source_note(postings_count, meta),
+        rising_careers=[
+            RisingCareer(
+                career_id=row["career_id"],
+                title=row["title"],
+                trend_pct=row["trend_pct"],
+                demand_count=row["demand_count_90d"],
+                low_confidence=bool(row["low_confidence"]),
+            )
+            for row in rising[:8]
+        ],
+        top_paying=[
+            TopPayingCareer(
+                career_id=row["career_id"],
+                title=row["title"],
+                salary_p50_trieu=row["salary_p50_trieu"],
+            )
+            for row in paying[:5]
+        ],
+    )
+
+
+def get_career_market(
+    career_id: str, region: str, *, engine: Engine | None = None
+) -> MarketStats:
+    engine = engine or db_module.market_engine
+    stats, meta_table = _tables(engine)
+    with engine.connect() as connection:
+        meta = _meta_values(connection, meta_table)
+        row = connection.execute(
+            select(stats).where(
+                stats.c.career_id == career_id,
+                stats.c.region == region,
+            )
+        ).mappings().first()
+        all_row = connection.execute(
+            select(stats).where(
+                stats.c.career_id == career_id,
+                stats.c.region == "all",
+            )
+        ).mappings().first()
+    if not meta:
+        raise MarketDataUnavailable("market metadata is empty")
+    if row is None:
+        return MarketStats(
+            demand_count_90d=0,
+            low_confidence=True,
+            top_regions=json.loads(all_row["top_regions_json"]) if all_row else [],
+            source_note=_source_note(0, meta),
+        )
+    return MarketStats(
+        demand_count_90d=row["demand_count_90d"],
+        entry_level_count_90d=row["entry_level_count_90d"],
+        salary_p25_trieu=row["salary_p25_trieu"],
+        salary_p50_trieu=row["salary_p50_trieu"],
+        salary_p75_trieu=row["salary_p75_trieu"],
+        trend_pct=row["trend_pct"],
+        salary_sample_count=row["salary_sample_count"],
+        low_confidence=bool(row["low_confidence"]),
+        top_regions=json.loads(row["top_regions_json"]),
+        top_skills=json.loads(row["top_skills_json"]),
+        source_note=_source_note(row["demand_count_90d"], meta),
+    )
 
 
 def get_skill_gaps(region: str) -> SkillGapResponse:

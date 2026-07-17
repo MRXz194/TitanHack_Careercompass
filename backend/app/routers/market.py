@@ -1,21 +1,25 @@
-"""Market intelligence endpoints.
-
-STATUS: serves SEED data (data/seed/careers_seed.json).
-Task MI-04/MI-05 swaps the data source to market.db — the response shapes must not change.
-"""
+"""Market intelligence endpoints backed by market.db with explicit seed fallback."""
 from fastapi import APIRouter, HTTPException, Query
 
 from app.data.seed_loader import get_career, load_careers
 from app.models.schemas import (CareerDetail, MarketOverview, MarketStats, Route,
                                 RisingCareer, SkillGapItem, SkillGapResponse, TopPayingCareer)
+from app.services import market as market_service
 
 router = APIRouter(prefix="/api/market", tags=["market"])
 
-SEED_NOTE = "Dữ liệu mẫu (seed) — sẽ thay bằng số thật từ pipeline (MI-04)"
+SEED_NOTE = "Dữ liệu mẫu (seed fallback) — market.db chưa sẵn sàng"
 
 
 @router.get("/overview", response_model=MarketOverview)
 def overview(region: str = Query("all")) -> MarketOverview:
+    try:
+        return market_service.get_overview(region)
+    except market_service.MarketDataUnavailable:
+        return _seed_overview(region)
+
+
+def _seed_overview(region: str) -> MarketOverview:
     careers = load_careers()
     rising = sorted(careers, key=lambda c: c["seed_market"]["trend_pct"], reverse=True)[:8]
     paying = sorted(careers, key=lambda c: c["seed_market"]["salary_p50_trieu"], reverse=True)[:5]
@@ -54,7 +58,11 @@ def career_detail(career_id: str, region: str = Query("all")) -> CareerDetail:
     c = get_career(career_id)
     if not c:
         raise HTTPException(404, detail="career not found")
-    m = dict(c["seed_market"])
-    m["source_note"] = SEED_NOTE
+    try:
+        stats = market_service.get_career_market(career_id, region)
+    except market_service.MarketDataUnavailable:
+        seed = dict(c["seed_market"])
+        seed["source_note"] = SEED_NOTE
+        stats = MarketStats(**seed)
     return CareerDetail(career_id=c["career_id"], title=c["title"], description=c["description"],
-                        market=MarketStats(**m), routes=[Route(**r) for r in c["routes"]])
+                        market=stats, routes=[Route(**r) for r in c["routes"]])
