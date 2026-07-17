@@ -11,6 +11,8 @@
 
 Flow profiling dùng agent ReAct bị giới hạn thay vì một prompt tuyến tính: agent chọn công cụ hợp lệ để trích evidence, kiểm profile gap hoặc hỏi một câu tiếp theo. Code vẫn kiểm soát stage, tool allowlist, schema, budget và fallback; agent không được tự quyết career/ranking. Xem thiết kế đầy đủ tại `AGENTIC_RUNTIME.md`.
 
+Runtime P0 dùng LangChain cho model/structured output/typed tool contracts và custom LangGraph `StateGraph` theo `ADR_AGENT_ORCHESTRATION.md`; graph chỉ orchestration `/api/chat`. Session, policy, validation và recommendation vẫn thuộc code/domain hiện có.
+
 ### State machine 5 phase (agent tự do trong allowlist của phase, code kiểm soát chuyển phase)
 
 | Phase | Mục tiêu | Lượt (ước) | Chuyển phase khi |

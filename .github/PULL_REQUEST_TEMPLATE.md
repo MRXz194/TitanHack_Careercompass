@@ -9,10 +9,11 @@
 
 | Layer | Command/evidence | Result |
 |---|---|---|
-| Static/contract | | PASS / FAIL / N/A |
-| Unit/fixture | | PASS / FAIL / N/A |
+| Static | | PASS / FAIL / N/A |
+| Unit | | PASS / FAIL / N/A |
+| Contract | | PASS / FAIL / N/A |
 | Integration | | PASS / FAIL / N/A |
-| Acceptance/DoD | | PASS / FAIL / N/A |
+| E2E/Acceptance/DoD | | PASS / FAIL / N/A / NOT_IMPLEMENTED |
 
 ## AI-assisted workflow
 <!-- Nếu dùng AI: builder session làm gì; reviewer là ai; verifier đã chạy lệnh nào. Không paste transcript dài. -->
@@ -31,4 +32,5 @@
 - [ ] Metric/claim mới có sample size, source và limitation; không gọi hiring demand là supply shortage
 - [ ] Không log/commit PII hoặc transcript người test; mock/replay vẫn chạy
 - [ ] Tôi đã đọc task card trong `docs/workstreams/`; status không phải DONE nếu test chưa chạy
+- [ ] Test/fixture đặt đúng folder/marker theo `docs/TESTING.md`; không gọi network/model live mặc định
 - [ ] Explore/Launch dùng shared core; readiness không được diễn đạt là xác suất tuyển dụng

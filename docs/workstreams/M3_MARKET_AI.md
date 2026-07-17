@@ -4,6 +4,12 @@
 
 **Owned:** taxonomy, extraction, career mapping, stats DB, embeddings, `services/market.py`. **Buddy:** M2; consumer M4/M6.
 
+## Card contract
+
+Mỗi task phải làm rõ artifact đầu ra, input hash/version, tests/metrics, risk/fallback và consumer
+handoff. Với task không lặp dòng `Problem`, mission + task title là problem boundary; mọi metric
+phải có denominator, command và limitation theo `TESTING.md`/`EVALUATION.md`.
+
 ## Task cards
 
 ### MI-01 — Vietnamese skill taxonomy v1 (H+0→5)

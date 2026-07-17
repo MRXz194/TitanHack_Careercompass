@@ -4,6 +4,12 @@
 
 **Owned:** `data/pipeline/crawl*`, `normalize.py`, raw/processed schema, manifest/data card. **Buddy:** M3.
 
+## Card contract
+
+Mỗi task phải làm rõ artifact đầu ra, schema/version, tests/verify, risk/fallback và consumer handoff.
+Với task không lặp dòng `Problem`, vấn đề được hiểu là mission + mục tiêu trong tiêu đề task;
+owner vẫn phải ghi failure mode và evidence chạy theo `TESTING.md` trong PR.
+
 ## Task cards
 
 ### D-01 — Source reconnaissance và quyền sử dụng (H+0→2)

@@ -18,7 +18,7 @@ File này là master schedule/dependency. Trước khi làm, mỗi member phải
 - M5: [workstreams/M5_FRONTEND_EXPLORE.md](workstreams/M5_FRONTEND_EXPLORE.md)
 - M6: [workstreams/M6_FRONTEND_RESULTS_MARKET.md](workstreams/M6_FRONTEND_RESULTS_MARKET.md)
 
-Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một task chỉ `DONE` khi acceptance tests đã chạy và consumer handoff xác nhận.
+Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Test layout/gates: [TESTING.md](TESTING.md). Một task chỉ `DONE` khi targeted + required layer tests đã chạy và consumer handoff xác nhận.
 
 ---
 
@@ -40,6 +40,7 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | L-10 | Rehearse: điều phối 2 lần chạy thử có bấm giờ, phân vai ai nói phần nào, in demo script | H+44→46 | L-09 | 2 lần chạy dưới thời gian quy định, không vấp |
 | L-11 | **User testing THẬT**: tuyển từ H+20 tối thiểu 5 học sinh + 1–2 giáo viên/tư vấn viên; test bản P0 từ H+31→38 theo EVALUATION.md; thu consent dùng quote, điểm hữu ích, task completion và 1 chỗ họ chê | H+20 tuyển; H+31→38 test | M3a | Ghi đúng `x/y`, ≥3 quote ẩn danh; ≥1 fix trước freeze; không gọi mẫu nhỏ là đại diện |
 | L-12 | Data/privacy go-no-go: cùng M2 kiểm tra quyền dùng từng nguồn, source manifest; cùng M5/M4 kiểm tra PII/log/session delete/TTL theo `SECURITY_PRIVACY.md` | H+2→4 và H+38 | D-01 | Không crawl nguồn cấm; release checklist privacy pass hoặc limitation hiện rõ |
+| L-13 | **Test/AI-stack baseline:** verify pinned LangChain/LangGraph install, giữ `tests/unit|contract|integration|e2e|fixtures`, CI tách gate và no-network fixtures theo `TESTING.md` | H+1→4; duy trì | L-02 | Import smoke + unit/contract/integration + route check xanh; E2E có owner/status thật, không placeholder pass |
 
 **Handoff nhận:** PR-04 (contract chat để làm replay), tất cả PR của mọi người.
 **Handoff giao:** L-03 → cả team (URL + env); L-06 → M2/M3 (quyết định nguồn data).
@@ -106,8 +107,8 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | PR-09 | Trang "Cách hệ thống hoạt động" — nội dung dữ liệu, scoring, giới hạn, autonomy | H+35→36 | PR-08 | ≤300 từ; M6 thay copy draft không đổi layout |
 | PR-10 | Tune chất lượng theo feedback test E2E của M1 (câu hỏi lặp, gợi ý nhạt, evidence sai...) | H+34→40 | L-07 | Các bug label `ai-quality` đóng hết |
 | PR-11 | Tổng hợp AI evaluation: profiler, 12 personas, grounding, latency/cost, paired bias; gửi số thật cho M1 | H+35→38 | PR-06,08 | Phần AI trong `EVALUATION_RESULTS.md` có pass/fail + limitations |
-| PR-12 | **Bounded ReAct policy + tool registry:** định nghĩa 10 typed internal tools, stage allowlist, planner JSON schema, privacy/provenance/budget gates; không thêm browser/shell/external side effect | H+4→12 | PR-01 | Tool contract/Pydantic + policy matrix; invalid tool/args bị deny/repair, không chạm session/data trái phép |
-| PR-13 | **Agent orchestrator + degradation:** tích hợp planner → gate → tool observation → composer vào shared profiler/recommend flow; tối đa 2 tools/turn, trace sanitize, replay/fallback | H+12→20 | PR-02,03,12 | Explore + Launch chạy agent mode; LLM/tool failure không 5xx, output vẫn đúng API contract |
+| PR-12 | **LangChain tool layer + LangGraph spike + bounded policy registry:** verify pinned install/gateway, trong 90' compile/invoke StateGraph với fake LangChain structured planner; tạo 10 `@tool` Pydantic contracts, stage allowlist, privacy/provenance/budget; không browser/shell/side effect | H+4→12 | PR-01 | Unit/contract graph/tool tests + policy matrix pass; `AGENT_MODE=deterministic` không compile/invoke graph; invalid tool/args deny/repair |
+| PR-13 | **LangChain/LangGraph chat orchestrator + degradation:** nối custom StateGraph planner → policy → typed tool → composer vào `/api/chat`; recommendation deterministic; tối đa 2 agent-selected tools/turn, deadline 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent integration pass; timeout/model/tool failure không 5xx; deterministic mode cùng contract; không `create_agent`/LangSmith/checkpointer |
 | PR-14 | **Agent evaluation/red-team:** tool-selection fixtures, injection, paired bias, provenance, budget/latency/replay; ghi pass/fail thật | H+31→38 | PR-05,06,08,13 | `EVALUATION_RESULTS.md` có agent metrics + failures/fix; không claim autonomous khi gate fail |
 
 **Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render).
@@ -130,7 +131,7 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | F1-07 | Polish: micro-animations, empty states, copy TV thân thiện (xưng "em/mình", không phán xét), skeleton loading | H+30→38 | — | Người ngoài team dùng thử không hỏi "giờ làm gì tiếp?" |
 | F1-08 | Hỗ trợ M6 responsive + cross-browser check toàn app | H+38→42 | — | Chạy tốt trên Chrome + 1 mobile viewport |
 | F1-09 | Điều phối usability test cùng M1: quan sát không gợi ý, đo completion/time, kiểm tra copy privacy + nút xóa phiên | H+31→38 | L-11 | Report ẩn danh; không lưu PII; blocker UX được fix trước freeze |
-| F1-10 | Agent transparency trong chat: map phase sang trạng thái ngắn (VD “Mình đang cập nhật điều bạn vừa chia sẻ”), evidence có thể sửa; tuyệt đối không hiển thị chain-of-thought/tool JSON | H+18→24 | PR-13, F1-03 | Explore/Launch có status rõ + correction UX; timeout/deny vẫn nói rõ bước tiếp theo |
+| F1-10 | Agent transparency trong chat: map phase sang trạng thái ngắn (VD “Mình đang cập nhật điều bạn vừa chia sẻ”), evidence có thể sửa; tuyệt đối không hiển thị chain-of-thought/tool JSON | H+22→26 | PR-13, F1-03 | Explore/Launch có status rõ + correction UX; timeout/deny vẫn nói rõ bước tiếp theo |
 
 **Handoff nhận:** PR-01 (schema), PR-04 (chat API). **Handoff giao:** F1-06 → M6 (điểm nối flow).
 **⚠️ Rule riêng:** không tự chế field ngoài contract — thiếu gì thì yêu cầu M4 qua M1.
@@ -151,7 +152,7 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | F2-06 | Landing có hai journey + trang "Cách hoạt động": draft H+22→28, final transparency copy H+36 | H+22→28; H+36 | PR-09 final copy | Hiểu problem/two modes/not-a-verdict trong 15s |
 | F2-07 | Polish dashboard: màu nhất quán (xem `frontend/CLAUDE.md` §design tokens), số format kiểu VN ("12–18 triệu"), tooltips giải thích thuật ngữ | H+30→38 | — | Screenshot đủ đẹp để đưa thẳng vào pitch deck |
 | F2-08 | Hỗ trợ M1 pitch deck: chụp screens, vẽ 1 slide architecture, 1 slide mock "counselor view" (future) | H+38→44 | L-09 | Deck có hình sản phẩm thật, không lorem ipsum |
-| F2-09 | Agent provenance trên kết quả: panel “Dựa trên gì?” hiển thị profile evidence, snapshot/source/date/confidence, factors và alternatives; không đưa private reasoning | H+28→34 | PR-13, PR-06, MI-09 | Mọi số/caveat trace được; low confidence/fallback label rõ, mock/replay parity |
+| F2-09 | Result provenance: panel “Dựa trên gì?” hiển thị profile evidence, snapshot/source/date/confidence, factors và alternatives; không đưa private reasoning/agent trace | H+28→34 | PR-06, MI-09 | Mọi số/caveat trace được; low confidence/fallback label rõ, mock/replay parity |
 
 **Handoff nhận:** F1-06 (flow), PR-06/07 + MI-04 (data thật). **Handoff giao:** F2-08 → M1.
 **⚠️ Rule riêng:** chart nào cũng phải có nhãn nguồn dữ liệu — "số thật, truy được nguồn" là điểm ăn tiền.
@@ -167,6 +168,11 @@ graph LR
   MI04 --> MI05[MI-05 demand proxy] --> F204[F2-04 radar]
   MI06[MI-06 seed handoff H+12] --> PR05[PR-05 matching] --> PR06[PR-06 evidence] --> F205
   PR02[PR-02 prompt] --> PR03[PR-03 chat engine] --> F105[F1-05 chat thật]
+  PR12[PR-12 policy/registry] --> PR13[PR-13 chat agent] --> F110[F1-10 agent status]
+  PR03 --> PR13
+  PR13 --> L08[L-08 replay fallback]
+  PR13 --> PR14[PR-14 red-team]
+  PR08[PR-08 bias audit] --> PR14
   D07[D-07 career KB] --> PR07[PR-07 pathway]
   PR03 --> L08[L-08 replay fallback]
 ```
@@ -175,10 +181,12 @@ graph LR
 
 ### Critical path và kill switches
 
-`D-05 → MI-03 → MI-04 → F2-05` và `PR-04 → L-08/F1-05 → PR-05 → PR-06 → F2-05` là hai đường găng. Tại mỗi sync, M1 chỉ hỏi hai chain này trước.
+`D-05 → MI-03 → MI-04 → F2-05` và `PR-04 → L-08/F1-05 → PR-05 → PR-06 → F2-05` là hai đường găng để demo P0. Chain claim agent là `PR-12 → PR-13 → F1-10 → PR-14`; không pass chain này thì demo vẫn chạy nhưng pitch chỉ gọi là conversational profiler có guardrails, không claim AI agent.
 
 - H+10 data <1k hoặc source không hợp lệ → Plan B, không cố bypass.
 - H+18 chat chưa stable → khóa prompt, dùng deterministic phase fallback + replay; không thêm conversational flourish.
+- H+5.5 custom LangGraph spike chưa pass CI/fallback/overhead → không bật graph, dùng plain Python bounded orchestrator với cùng LangChain gateway/tool contracts; không kéo dài spike.
+- H+22 agent chưa pass tool/policy tests → đặt `AGENT_MODE=deterministic`, giữ profiler/replay; không trì hoãn recommendation hoặc UI core.
 - H+26 matching chưa pass unit test → bỏ market weight tạm thời, dùng cosine + skill overlap; không hardcode kết quả persona.
 - H+32 live evidence/radar chưa ready → demo P0 bằng grounded template + snapshot đã validate; cắt mini-chart/animation.
 - H+38 một hard rule/evaluation gate fail → replay-only hoặc bỏ claim liên quan khỏi pitch; không “vá số” trong slide.

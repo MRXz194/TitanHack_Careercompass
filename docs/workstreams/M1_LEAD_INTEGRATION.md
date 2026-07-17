@@ -2,14 +2,20 @@
 
 **Mission:** giữ critical path chạy, main xanh, claims trung thực và demo có fallback. M1 không ôm code core của người khác.
 
-**Đọc:** `PLAN.md`, `TASKS.md`, `AGENT_WORKFLOW.md`, `HANDOFF.md`, `EVALUATION.md`, `SECURITY_PRIVACY.md`, `BUSINESS_CASE.md`.
+**Đọc:** `PLAN.md`, `TASKS.md`, `AGENT_WORKFLOW.md`, `HANDOFF.md`, `TESTING.md`, `EVALUATION.md`, `SECURITY_PRIVACY.md`, `BUSINESS_CASE.md`.
+
+## Card contract
+
+Mỗi task phải có outcome cụ thể, action, expected artifact, verify/test, risk/fallback và handoff.
+Task nào dùng `Verify` thay cho `Tests` vẫn phải ghi command/evidence theo `TESTING.md`; không có
+evidence thì trạng thái là `NOT_VERIFIED`, không phải `DONE`.
 
 ## Task cards
 
 ### L-01 — Kickoff và contract alignment (H+0→2)
 - **Problem:** team sinh viên + AI dễ hiểu khác nhau về MVP, mode và API.
 - **Actions:** walkthrough đề bài; chốt P0/P1/P2; gán owner/buddy; cả team đọc hard rules; xác nhận Explore vs Launch.
-- **Expected:** board có 59 task ID/owner/status; contract v1 label; giờ sync/sleep; contact escalation; API budget envelope/pool owners.
+- **Expected:** board chứa toàn bộ task ID hiện có với owner/status; contract v1 label; giờ sync/sleep; contact escalation; API budget envelope/pool owners.
 - **Verify:** 6/6 chạy quickstart/mock; mỗi người nói lại input/output task đầu; không còn field “tự hiểu”.
 - **Risk/fallback:** setup lỗi >30' → người đó dùng mock/UI hoặc fixture trước; buddy xử lý setup riêng.
 - **Handoff:** kickoff note + contract version → toàn team.
@@ -80,6 +86,14 @@
 - **Expected:** SECURITY_PRIVACY checklist signed; blocked claims/features removed.
 - **Verify:** secret scan/diff, log inspection, delete session, malicious text rendered safely.
 - **Fallback:** delete endpoint chưa xong → no persistence/restart DB + disclaimer; không pilot thật.
+
+### L-13 — Test/AI-stack baseline (H+1→4, duy trì)
+- **Problem:** sáu người và nhiều AI agent sẽ tạo test rải rác, gọi model live hoặc cài LangChain/LangGraph lệch version nếu không có gate chung.
+- **Actions:** verify exact dependencies trong ADR/requirements; duy trì `pytest.ini` và `tests/unit|contract|integration|e2e|fixtures`; CI chạy import smoke → compile → unit → contract → integration → route check; review mọi fixture theo no-network/no-PII rule.
+- **Expected:** test tree/markers đúng `TESTING.md`; failures chỉ đúng layer; E2E Explore/Launch/replay có owner và status thật.
+- **Verify:** clean environment install; chạy toàn bộ command baseline; cố tình dùng marker sai để xác nhận strict markers; rút key/network vẫn chạy unit/contract/integration.
+- **Risk/fallback:** package install conflict → giữ `AGENT_MODE=deterministic`, ghi exact resolver error và sửa dependency PR; không để từng member tự pin version khác.
+- **Handoff:** command/output/commit + test status matrix → toàn team; M4 nhận stack baseline cho PR-12.
 
 ## M1 hourly dashboard
 
