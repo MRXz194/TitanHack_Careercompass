@@ -7,7 +7,11 @@
 ### Vì sao không phải quiz?
 Đề bài cấm "reduced to a single personality quiz". Thiết kế: hội thoại mở, **adaptive** (câu sau phụ thuộc câu trước), profile hình thành dần và học sinh THẤY nó hình thành + sửa được. Đó là 3 điểm ăn tiền: interaction, transparency, autonomy.
 
-### State machine 5 phase (LLM tự do trong phase, code kiểm soát chuyển phase)
+### Bounded ReAct + state safety rail
+
+Flow profiling dùng agent ReAct bị giới hạn thay vì một prompt tuyến tính: agent chọn công cụ hợp lệ để trích evidence, kiểm profile gap hoặc hỏi một câu tiếp theo. Code vẫn kiểm soát stage, tool allowlist, schema, budget và fallback; agent không được tự quyết career/ranking. Xem thiết kế đầy đủ tại `AGENTIC_RUNTIME.md`.
+
+### State machine 5 phase (agent tự do trong allowlist của phase, code kiểm soát chuyển phase)
 
 | Phase | Mục tiêu | Lượt (ước) | Chuyển phase khi |
 |---|---|---|---|

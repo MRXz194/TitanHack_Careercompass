@@ -11,7 +11,7 @@ Mỗi task mở một AI session mới và đọc theo thứ tự:
 1. `CLAUDE.md` hoặc `AGENTS.md` ở root.
 2. `frontend/CLAUDE.md` hoặc `backend/CLAUDE.md` nếu chạm package đó.
 3. Task card của member trong `docs/workstreams/`.
-4. Chỉ các source-of-truth liên quan: API contract, architecture, AI design, data pipeline, evaluation/security.
+4. Chỉ các source-of-truth liên quan: API contract, architecture, AI design, data pipeline, evaluation/security. Nếu task chạm agent/tool/LLM flow, bắt buộc đọc thêm `docs/AGENTIC_RUNTIME.md`.
 5. Code hiện tại của đúng files `Allowed files`; không load cả repo nếu không cần.
 
 Agent phải nhắc lại trước khi code: `Task ID`, expected artifact, files sẽ sửa, test sẽ chạy, contract có đổi không và stop condition.
@@ -32,6 +32,18 @@ Handoff consumer: <ai nhận và cần gì>
 ```
 
 Thiếu một mục → agent hỏi owner hoặc đọc docs; không tự mở scope.
+
+### Bổ sung bắt buộc cho task agentic (PR-12/13/14 và consumer UI)
+
+```md
+Allowed tools/stages: <tên tool + stage được phép>
+Policy invariants: <privacy/provenance/autonomy/budget cần giữ>
+Trace policy: <những metadata được log; xác nhận không log CoT/raw transcript>
+Failure behavior: <deny/timeout/invalid tool -> fallback nào>
+Replay fixture: <path + contract/prompt/tool/snapshot versions>
+```
+
+Không dùng từ “agent tự quyết” trong handoff. Owner phải chỉ ra authority cuối nằm ở policy code, contract hay deterministic service.
 
 ## 4. Lifecycle cho mọi task
 
@@ -54,6 +66,7 @@ Không được ghi “done” nếu test chưa chạy. Nếu môi trường thi
 | Data | M2 | `data/pipeline/crawl*`, `normalize.py`, manifests | API/UI |
 | Market AI | M3 | taxonomy, extract/stats/embed, `services/market.py` | profiler/UI |
 | Profile/recommend | M4 | profiler/matching/prompts/recommend router | crawler/charts |
+| Agent runtime | M4 | `services/agent.py`, `services/agent_tools.py`, policy/tool schemas | arbitrary integration, FE rendering |
 | FE explore | M5 | chat/profile components, `/explore` | market algorithms |
 | FE results | M6 | results/market/landing components | backend scoring |
 
@@ -73,6 +86,8 @@ Builder không tự tuyên bố quality metric. Reviewer không merge. Owner quy
 - Một transcript/profile fixture tái dùng cho local test; không gọi model để test CSS/API plumbing.
 - Batch + cache theo input hash/taxonomy version; resume từ checkpoint.
 - Prompt ngắn, structured JSON; chỉ truyền fields cần thiết, không truyền raw dataset/cả docs.
+- Agent planner chỉ nhận compact sanitized state + allowed-tool schema; không nhét full transcript, raw market data hoặc chain-of-thought vào context.
+- Mỗi trace fixture dùng observation đã sanitize; không dùng transcript thật làm replay/demo.
 - Trong agent context, dùng path + đoạn liên quan thay vì paste tất cả file lặp lại.
 - Khi lỗi, gửi stack trace tối thiểu + command + changed files; không paste log hàng nghìn dòng.
 - Mỗi task một session; cuối session ghi 5–10 dòng handoff để session sau không đọc lại lịch sử dài.

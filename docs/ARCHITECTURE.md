@@ -15,9 +15,10 @@ graph TB
   subgraph "Backend — FastAPI :8000"
     E --> H[/api/market/*<br/>stats, skill gap/]
     G --> I[Matching Engine<br/>cosine + skill overlap + market signal]
-    J[/api/chat<br/>Conversational Profiler/] --> K[(SQLite<br/>sessions.db)]
+    J[/api/chat<br/>Bounded ReAct Profiler/] --> R[Agent Orchestrator<br/>policy + typed tools + budget]
+    R --> K[(SQLite<br/>sessions.db)]
     I --> L[/api/recommendations<br/>top5 + stretch + evidence + pathway/]
-    J -.->|LLM chat| M[LLM Gateway<br/>OpenAI-compatible client<br/>DeepSeek chat + OpenAI embed]
+    R -.->|structured planner/composer| M[LLM Gateway<br/>OpenAI-compatible client<br/>DeepSeek chat + OpenAI embed]
     L -.->|evidence gen| M
   end
 
@@ -59,12 +60,14 @@ Không service online nào ghi raw/processed/market stats. Không pipeline nào 
 FE POST /api/chat {session_id, message, journey_mode}
  → load session state (SQLite)
  → lock journey_mode on opening turn
- → state machine chọn phase (shared phases, mode-specific completeness/questions)
- → LLM call (structured output): {reply, profile_delta, phase, done}
- → validate bằng Pydantic; fail → retry tối đa 2 lần với error feedback
- → merge profile_delta vào profile, lưu session
+ → agent policy xác định stage + allowed tool set (shared phases, mode-specific completeness)
+ → planner LLM trả tool-plan JSON; policy validate schema/privacy/budget
+ → gọi tối đa 2 typed internal tools (extract/merge/inspect/question), tạo provenance observation
+ → composer LLM hoặc deterministic fallback trả reply; merge validated profile evidence, lưu session
  → trả {reply, profile, phase, done}
 ```
+
+Agent không có shell/browser/write tool tổng quát. Matching, routes, readiness và mọi market number vẫn qua deterministic typed tools; xem `AGENTIC_RUNTIME.md`.
 
 ### Recommendation
 ```
@@ -103,6 +106,7 @@ flowchart LR
 |---|---|---|
 | Router | validate HTTP, call service, map errors/schema | scoring, SQL aggregation, prompts |
 | Profiler service | state/completeness/merge/session | career ranking or UI copy |
+| Agent orchestrator/policy | choose allowlisted tool order, validate budget/privacy/provenance, produce safe observations | arbitrary tool/URL/code execution, ranking verdict, hidden reasoning persistence |
 | Matching service | retrieve/score/diversify/readiness inputs | call crawler, invent evidence |
 | Market service | read typed stats/meta | scan raw JSON or call LLM |
 | LLM gateway | provider call/log/retry/timeout | business decisions/session persistence |
@@ -123,6 +127,7 @@ flowchart LR
 | 7 | Profile schema KHÔNG có field giới tính | Anti-bias by design — không thể leak thứ không tồn tại | Không cá nhân hóa xưng hô — dùng "em/bạn" trung tính |
 | 8 | Explore/Launch dùng shared core | Bám cả chọn ngành và thất nghiệp sau tốt nghiệp mà không nhân đôi architecture | Launch MVP không match vacancy/công ty cụ thể |
 | 9 | Readiness dùng 3 band deterministic, không xác suất | Giải thích/test được; tránh false precision và hiring prediction | Ít “wow” hơn % score nhưng đáng tin hơn |
+| 10 | Bounded ReAct agent thay chatbot tuyến tính | Hỏi/kiểm chứng linh hoạt theo evidence thật, vẫn replay/test được | Không làm agent tự do hay multi-agent trong 48h |
 
 ## 4. Cấu trúc thư mục (chuẩn — đặt file mới đúng chỗ)
 
@@ -142,6 +147,8 @@ backend/
 │   ├── services/
 │   │   ├── llm.py            # LLM Gateway — MỌI call LLM/embedding đi qua đây
 │   │   ├── profiler.py       # state machine hội thoại
+│   │   ├── agent.py          # bounded ReAct orchestrator, policy, tool registry
+│   │   ├── agent_tools.py    # typed read/write tools, no external side effects
 │   │   ├── matching.py       # scoring engine
 │   │   └── market.py         # đọc market.db
 │   ├── prompts/              # MỌI prompt ở đây, có version comment
@@ -178,6 +185,7 @@ Thiết kế hiện tại cố tình để mỗi thành phần có "đường th
 | Skill extraction | Batch script + cache | Queue worker (Celery), chỉ xử lý posting mới | Logic giữ nguyên, bọc vào worker |
 | Market stats | Build lại toàn bộ | Materialized views, refresh theo lịch | Query giữ nguyên |
 | LLM | Gọi trực tiếp | Thêm cache layer theo (prompt-hash), rate limit, fallback model tự động | Gateway đã là 1 module — chèn middleware |
+| Agent | 1 bounded orchestrator + typed local tools | durable workflow engine + approved integrations after audit | Keep policy/tool contracts; never expose arbitrary execution |
 | Serving | 1 instance Render | Backend stateless → scale ngang sau load balancer; session sang Redis | Đổi session store |
 | FE | Vercel | Vercel (giữ nguyên) + ISR cho trang market | — |
 | Mới | — | Counselor dashboard, school integration, API cho trường học | Feature mới trên nền data đã có |
