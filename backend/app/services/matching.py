@@ -8,9 +8,10 @@ Weights from Settings. profile_text / fit vectors NEVER include gender or region
 Region only enters market_signal for informational ordering — never filters candidates.
 
 Cosine source:
-1. If data/processed/careers.npy + career_ids.json exist and align → use them
-   (MI-06 artifact). Profile side uses a bag-of-tokens hash projection so we
-   stay offline without calling embed API in the request path.
+1. If a validated deterministic MI-06 artifact exists → use the same stable
+   SHA-256 hashing projection for profile and career text.
+   Live-model artifacts are consumed through career_embeddings.top_k_careers(),
+   never mixed with a hashing projection.
 2. Else fallback: cosine on the shared 5-dimension vectors (always available).
 
 Stretch: among ranks 6..15 (or remainder), pick highest score whose dominant
@@ -21,12 +22,10 @@ Launch matched/missing/band/queries/actions with GRADUATE_LAUNCH invariants.
 """
 from __future__ import annotations
 
-import json
 import logging
 import math
 import re
 from functools import lru_cache
-from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
@@ -34,6 +33,7 @@ import numpy as np
 from app.core.config import get_settings
 from app.data.seed_loader import get_career, load_careers
 from app.models.schemas import MarketStats, Profile, Recommendation
+from app.services import career_embeddings
 from app.services import evidence as evidence_service
 from app.services import pathways
 
@@ -50,10 +50,8 @@ DIM_LABELS_VI = {
 
 # Cap so a market spike cannot dominate a low-fit profile (PR-05 invariant).
 MARKET_SIGNAL_CAP = 0.35
-REPO_ROOT = Path(__file__).resolve().parents[3]
-PROCESSED = REPO_ROOT / "data" / "processed"
-CAREERS_NPY = PROCESSED / "careers.npy"
-CAREER_IDS_JSON = PROCESSED / "career_ids.json"
+CAREERS_NPY = career_embeddings.DEFAULT_VECTORS
+CAREER_IDS_JSON = career_embeddings.DEFAULT_METADATA
 
 
 # Stripped from scoring text so free-text leaks cannot bias ranking (PR-08).
@@ -198,33 +196,20 @@ def _capped_market_component(raw_signal: float, w_market: float) -> float:
 def _load_embedding_index() -> tuple[Optional[np.ndarray], tuple[str, ...]]:
     if not CAREERS_NPY.is_file() or not CAREER_IDS_JSON.is_file():
         return None, tuple()
-    try:
-        ids = json.loads(CAREER_IDS_JSON.read_text(encoding="utf-8"))
-        if isinstance(ids, dict):
-            ids = ids.get("career_ids") or ids.get("ids") or []
-        mat = np.load(CAREERS_NPY)
-        if len(ids) != mat.shape[0]:
-            log.warning("careers.npy / career_ids length mismatch — using dim fallback")
-            return None, tuple()
-        return mat, tuple(str(i) for i in ids)
-    except Exception as exc:  # noqa: BLE001 — offline demo must not die
-        log.warning("failed to load embeddings: %s", type(exc).__name__)
+    index = career_embeddings.load_embedding_index(
+        CAREERS_NPY,
+        CAREER_IDS_JSON,
+        career_embeddings.DEFAULT_KB,
+    )
+    if index.model_id != career_embeddings.DETERMINISTIC_MODEL:
+        log.info("live embedding artifact uses text retrieval handoff; using dim fallback")
         return None, tuple()
+    return index.matrix, index.career_ids
 
 
 def _hash_embed(text: str, dim: int) -> np.ndarray:
-    """Deterministic bag-of-tokens projection for offline profile embedding."""
-    vec = np.zeros(dim, dtype=np.float64)
-    tokens = re.findall(r"[\wÀ-ỹ]+", text.lower())
-    if not tokens:
-        return vec
-    for tok in tokens:
-        h = hash(tok) % dim
-        vec[h] += 1.0
-    n = np.linalg.norm(vec)
-    if n > 1e-12:
-        vec /= n
-    return vec
+    """Same stable projection used to build deterministic MI-06 artifacts."""
+    return career_embeddings.stable_hash_embed(text, dim)
 
 
 def cosine_fit(profile: Profile, career: dict) -> float:
