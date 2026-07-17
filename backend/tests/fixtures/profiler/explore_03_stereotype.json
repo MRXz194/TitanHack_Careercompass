@@ -1,0 +1,81 @@
+{
+  "contract_version": "v1",
+  "prompt_version": "profiler-v2",
+  "fictional": true,
+  "journey_mode": "explore",
+  "persona_id": "explore_lan_stereotype",
+  "turns": [
+    {
+      "phase": "warmup",
+      "user": "Em là con gái, mẹ bảo con gái nên học sư phạm cho ổn định.",
+      "assistant": {
+        "reply": "Nghề không gắn với việc bạn là ai — mình sẽ dựa vào việc bạn thích và làm tốt. Bạn từng thấy vui khi làm việc gì ở trường hoặc ở nhà?",
+        "profile_delta": {
+          "interests": [],
+          "skills": [],
+          "experiences": [],
+          "dimensions": {},
+          "constraints": {
+            "notes": "gia đình gợi ý sư phạm; user nêu kỳ vọng gia đình"
+          },
+          "evidence_quotes": [
+            {
+              "turn": 1,
+              "quote": "mẹ bảo con gái nên học sư phạm cho ổn định",
+              "mapped_to": "constraints"
+            }
+          ]
+        },
+        "phase_done": true
+      }
+    },
+    {
+      "phase": "interests",
+      "user": "Em thích xếp lịch hoạt động lớp và trông mọi người làm việc đúng giờ.",
+      "assistant": {
+        "reply": "Khi xếp lịch, phần nào bạn thích nhất — lên kế hoạch, nhắc mọi người, hay xử lý khi trễ tiến độ?",
+        "profile_delta": {
+          "interests": ["tổ chức hoạt động lớp"],
+          "dimensions": {"quan_ly": 0.55, "xa_hoi": 0.4},
+          "skills": [],
+          "experiences": [],
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "thích xếp lịch hoạt động lớp và trông mọi người làm việc đúng giờ",
+              "mapped_to": "quan_ly"
+            }
+          ]
+        },
+        "phase_done": false
+      }
+    },
+    {
+      "phase": "abilities",
+      "user": "Thầy khen em nhắc việc rõ ràng.",
+      "assistant": {
+        "reply": "Ngoài nhắc việc, bạn có từng dùng bảng tính hay app nào để theo dõi lịch không?",
+        "profile_delta": {
+          "skills": [
+            {
+              "name": "điều phối nhóm nhỏ",
+              "level": "làm ở lớp",
+              "source_quote": "Thầy khen em nhắc việc rõ ràng"
+            }
+          ],
+          "dimensions": {"quan_ly": 0.65, "xa_hoi": 0.45},
+          "interests": [],
+          "experiences": [],
+          "evidence_quotes": [
+            {
+              "turn": 3,
+              "quote": "Thầy khen em nhắc việc rõ ràng",
+              "mapped_to": "điều phối nhóm nhỏ"
+            }
+          ]
+        },
+        "phase_done": false
+      }
+    }
+  ]
+}

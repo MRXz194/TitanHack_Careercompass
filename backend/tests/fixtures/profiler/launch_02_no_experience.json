@@ -1,0 +1,97 @@
+{
+  "contract_version": "v1",
+  "prompt_version": "profiler-v2",
+  "fictional": true,
+  "journey_mode": "launch",
+  "persona_id": "launch_chi_no_exp",
+  "turns": [
+    {
+      "phase": "warmup",
+      "user": "Em mới tốt nghiệp, chưa có thực tập hay project gì đáng kể.",
+      "assistant": {
+        "reply": "Cảm ơn bạn nói thẳng nhé. Bạn muốn thử nhóm việc kiểu gì, dù mới chỉ là ý tưởng mơ hồ?",
+        "profile_delta": {
+          "education_stage": "recent_graduate",
+          "job_goal": null,
+          "experiences": [],
+          "skills": [],
+          "interests": [],
+          "constraints": {
+            "notes": "chưa có thực tập/project đáng kể — explicit no experience"
+          },
+          "evidence_quotes": [
+            {
+              "turn": 1,
+              "quote": "chưa có thực tập hay project gì đáng kể",
+              "mapped_to": "constraints"
+            }
+          ],
+          "dimensions": {}
+        },
+        "phase_done": true
+      }
+    },
+    {
+      "phase": "interests",
+      "user": "Em nghĩ làm gì có máy tính cũng được, chưa rõ.",
+      "assistant": {
+        "reply": "Trong các môn đã học, môn nào bạn làm bài thấy đỡ vất hơn hoặc có điểm tốt nhờ hiểu bài?",
+        "profile_delta": {
+          "job_goal": "việc dùng máy tính entry-level (chưa rõ title)",
+          "interests": [],
+          "skills": [],
+          "experiences": [],
+          "dimensions": {"ky_thuat": 0.2},
+          "evidence_quotes": [
+            {
+              "turn": 2,
+              "quote": "làm gì có máy tính cũng được, chưa rõ",
+              "mapped_to": "job_goal"
+            }
+          ]
+        },
+        "phase_done": false
+      }
+    },
+    {
+      "phase": "abilities",
+      "user": "Em khá Word và PowerPoint cho bài thuyết trình môn học.",
+      "assistant": {
+        "reply": "Bạn có thể gửi hoặc mô tả một slide/bài thuyết trình từng làm để làm minh chứng nhỏ không?",
+        "profile_delta": {
+          "skills": [
+            {
+              "name": "PowerPoint",
+              "level": "bài thuyết trình môn học",
+              "source_quote": "Em khá Word và PowerPoint cho bài thuyết trình môn học"
+            },
+            {
+              "name": "Word",
+              "level": "bài thuyết trình môn học",
+              "source_quote": "Em khá Word và PowerPoint cho bài thuyết trình môn học"
+            }
+          ],
+          "experiences": [
+            {
+              "title": "Bài thuyết trình môn học",
+              "kind": "coursework",
+              "description": "slide và văn bản môn học",
+              "skills": ["Word", "PowerPoint"],
+              "source_quote": "Em khá Word và PowerPoint cho bài thuyết trình môn học"
+            }
+          ],
+          "interests": [],
+          "dimensions": {"sang_tao": 0.3, "xa_hoi": 0.25},
+          "evidence_quotes": [
+            {
+              "turn": 3,
+              "quote": "Em khá Word và PowerPoint cho bài thuyết trình môn học",
+              "mapped_to": "PowerPoint"
+            }
+          ]
+        },
+        "phase_done": false
+      }
+    }
+  ]
+}

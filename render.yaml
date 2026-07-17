@@ -1,0 +1,35 @@
+# Render Blueprint cho backend CareerCompass. Deploy: Render dashboard → New →
+# Blueprint → chọn repo này → Render tự đọc file này. Xem checklist bấm tay đầy đủ
+# trong docs/DEPLOY.md.
+services:
+  - type: web
+    name: careercompass-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: CHAT_API_BASE
+        sync: false
+      - key: CHAT_API_KEY
+        sync: false
+      - key: CHAT_MODEL
+        sync: false
+      - key: EMBED_API_BASE
+        sync: false
+      - key: EMBED_API_KEY
+        sync: false
+      - key: EMBED_MODEL
+        sync: false
+      - key: DATABASE_URL
+        value: sqlite:///./market.db
+      - key: SESSIONS_DB_URL
+        value: sqlite:///./sessions.db
+      - key: CORS_ORIGINS
+        sync: false # set = URL Vercel thật sau khi FE deploy, KHÔNG dùng "*"
+      - key: DEMO_MODE
+        value: "off"
+      - key: AGENT_MODE
+        value: deterministic

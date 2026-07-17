@@ -1,0 +1,17 @@
+{
+  "id": "deny-discover-market",
+  "stage": "discover",
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "get_market_context",
+    "arguments": {
+      "career_id": "data-analyst"
+    },
+    "public_rationale": "should not run",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "DENY_TOOL",
+    "reason_contains": "STAGE"
+  }
+}

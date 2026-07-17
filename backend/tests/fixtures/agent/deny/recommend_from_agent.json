@@ -1,0 +1,18 @@
+{
+  "id": "deny-recommend-from-agent",
+  "stage": "discover",
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "retrieve_career_candidates",
+    "arguments": {
+      "session_id_hash": "fixturehash0005"
+    },
+    "public_rationale": "agent must not rank careers",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "DENY_TOOL",
+    "reason_contains": "STAGE"
+  },
+  "notes": "Deterministic-only tools never agent-selectable in chat stages"
+}

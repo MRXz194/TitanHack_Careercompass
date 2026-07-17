@@ -1,0 +1,88 @@
+{
+  "contract_version": "v1",
+  "prompt_version": "profiler-v2",
+  "fictional": true,
+  "journey_mode": "explore",
+  "persona_id": "explore_minh_dien",
+  "turns": [
+    {
+      "phase": "warmup",
+      "user": "Em học lớp 12, đang phân vân chọn ngành.",
+      "assistant": {
+        "reply": "Cảm ơn bạn đã chia sẻ. Gần đây có việc gì (học, chơi, hay việc nhà) khiến bạn quên cả giờ không?",
+        "profile_delta": {
+          "education_stage": "high_school",
+          "interests": [],
+          "dimensions": {},
+          "skills": [],
+          "experiences": [],
+          "evidence_quotes": [
+            {"turn": 1, "quote": "Em học lớp 12, đang phân vân chọn ngành", "mapped_to": "warmup"}
+          ]
+        },
+        "phase_done": true
+      }
+    },
+    {
+      "phase": "interests",
+      "user": "Em hay sửa quạt và đèn trong nhà, ngồi mày mò cả buổi.",
+      "assistant": {
+        "reply": "Nghe thú vị! Khi sửa đồ điện, bạn thích nhất lúc tìm ra chỗ hỏng hay lúc thấy nó chạy lại?",
+        "profile_delta": {
+          "interests": ["sửa chữa đồ điện"],
+          "dimensions": {"ky_thuat": 0.55},
+          "evidence_quotes": [
+            {"turn": 2, "quote": "Em hay sửa quạt và đèn trong nhà", "mapped_to": "ky_thuat"}
+          ],
+          "skills": [],
+          "experiences": []
+        },
+        "phase_done": false
+      }
+    },
+    {
+      "phase": "interests",
+      "user": "Thích lúc tìm ra chỗ hỏng hơn.",
+      "assistant": {
+        "reply": "Bạn bè hoặc người nhà có khen bạn khéo tay việc gì gần đây không?",
+        "profile_delta": {
+          "interests": ["tìm lỗi kỹ thuật"],
+          "dimensions": {"ky_thuat": 0.65, "phan_tich": 0.4},
+          "evidence_quotes": [
+            {"turn": 3, "quote": "Thích lúc tìm ra chỗ hỏng hơn", "mapped_to": "phan_tich"}
+          ],
+          "skills": [],
+          "experiences": []
+        },
+        "phase_done": true
+      }
+    },
+    {
+      "phase": "abilities",
+      "user": "Mọi người khen em hàn dây điện cẩn thận.",
+      "assistant": {
+        "reply": "Ngoài hàn dây, bạn còn tự học thêm thao tác nào khi sửa đồ không?",
+        "profile_delta": {
+          "skills": [
+            {
+              "name": "hàn dây điện cơ bản",
+              "level": "tự làm ở nhà",
+              "source_quote": "Mọi người khen em hàn dây điện cẩn thận"
+            }
+          ],
+          "evidence_quotes": [
+            {
+              "turn": 4,
+              "quote": "Mọi người khen em hàn dây điện cẩn thận",
+              "mapped_to": "hàn dây điện cơ bản"
+            }
+          ],
+          "dimensions": {"ky_thuat": 0.75},
+          "interests": [],
+          "experiences": []
+        },
+        "phase_done": false
+      }
+    }
+  ]
+}
