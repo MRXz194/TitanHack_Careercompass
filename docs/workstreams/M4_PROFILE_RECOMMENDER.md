@@ -57,6 +57,37 @@ ethics invariant vẫn do deterministic code sở hữu.
 - **Tests:** no repeated question; no gender; handles “không biết”, stereotype, no experience, prompt injection.
 - **Fallback:** deterministic question bank per phase/mode.
 
+#### Status (M4)
+- **State:** DONE (prompts + delta + fixtures locked offline)
+- **Prompt version:** `profiler-v2`
+- **Commit:** `41f489f` (impl) + `c5c6968` (design/plan)
+
+#### Verify evidence
+- `python -m compileall app scripts tests` → PASS
+- `pytest -q tests/unit/test_profiler_io.py tests/unit/test_profiler_prompts.py tests/unit/test_profiler_transcripts.py` → PASS
+- full `pytest -q tests/unit tests/contract tests/integration` → PASS (42 on this branch base)
+
+#### Handoff → PR-03 / M1
+```md
+[HANDOFF] PR-02 — M4 → PR-03 (self) / M1 note
+- Artifact: app/prompts/profiler.py (v2), app/models/profiler_io.py, tests/fixtures/profiler/*.json
+- Contract/version: prompt_version=profiler-v2; internal ProfilerTurnOutput (not public API)
+- Chạy thử:
+  - `cd backend && python -m pytest -q tests/unit/test_profiler_io.py tests/unit/test_profiler_prompts.py tests/unit/test_profiler_transcripts.py`
+- Test evidence: unit IO/prompts/transcripts PASS; suite unit+contract+integration PASS
+- Input → output mẫu: build_profiler_system("launch","abilities"); get_fallback_question rotation; 6 fixtures parse as ProfilerTurnOutput
+- Known limitations:
+  1. Not wired into /api/chat or SQLite session (PR-03)
+  2. Transcripts are fictional static fixtures — not live LLM eval (PR-11/PR-14)
+  3. Merge/completeness/correction precedence still PR-03
+- Người nhận đã chạy và phản hồi: ⬜
+```
+
+#### Cannot do in PR-02 / deferred
+- PR-03 session engine + chat stub replacement
+- Live model transcript scoring
+- Agent graph (PR-12+)
+
 ### PR-03 — Profiler/session engine (H+8→16)
 - **Actions:** deterministic phase state; completeness rules by mode; merge validated deltas; experience evidence; SQLite sessions; patch/delete.
 - **Expected:** `/chat` 10 turns, profile persistence/edit, mode locked after opening.
