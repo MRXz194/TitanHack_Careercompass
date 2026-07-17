@@ -1,18 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* Design tokens — dùng các biến này thay vì màu tùy hứng (xem frontend/CLAUDE.md) */
+/* Design tokens — Vintage, gentle and warm paper-like aesthetic */
 :root {
-  --cc-primary: #2563eb;      /* blue-600 — hành động chính */
-  --cc-primary-soft: #dbeafe; /* blue-100 */
-  --cc-accent: #f59e0b;       /* amber-500 — stretch card, highlight */
-  --cc-success: #16a34a;      /* green-600 — trend tăng */
-  --cc-danger: #dc2626;       /* red-600 — trend giảm */
-  --cc-ink: #0f172a;          /* slate-900 — chữ chính */
-  --cc-muted: #64748b;        /* slate-500 — chữ phụ */
-  --cc-bg: #f8fafc;           /* slate-50 — nền */
+  --cc-primary: #5c715e;      /* Sage/Olive Green - vintage & gentle action */
+  --cc-primary-soft: #edf1ee; /* Soft warm green-cream */
+  --cc-accent: #c99a6c;       /* Muted amber/gold for stretch card */
+  --cc-accent-soft: #fcf7ef;  /* Very soft warm gold/cream */
+  --cc-success: #708a72;      /* Muted green for upward trends */
+  --cc-danger: #b06a6a;       /* Muted warm red for downward trends */
+  --cc-ink: #2e2a25;          /* Deep warm coffee/charcoal for main text */
+  --cc-muted: #7a7267;        /* Soft faded grey-brown for secondary text */
+  --cc-bg: #faf7f2;           /* Warm ivory/cream paper background */
+  --cc-card-bg: #fdfcf9;      /* Even warmer bookish cream for cards */
+  --cc-border: #e6dfd3;       /* Warm linen color for vintage borders */
 }
 
 body {
-  background: var(--cc-bg);
+  background-color: var(--cc-bg);
   color: var(--cc-ink);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Subtle paper grain / dotted grid background */
+  background-image: radial-gradient(var(--cc-border) 0.8px, transparent 0.8px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, .font-serif {
+  font-family: 'Lora', 'Playfair Display', Georgia, serif;
+}
+
+/* Custom scrollbar for vintage theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cc-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cc-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cc-muted);
 }
