@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Blocker / câu hỏi nhanh
+    url: https://github.com/MRXz194/TitanHack_Careercompass/discussions
+    about: Dùng cho câu hỏi không phải bug cụ thể — ưu tiên hỏi trong #blockers trước.

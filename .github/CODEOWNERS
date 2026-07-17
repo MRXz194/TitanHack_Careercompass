@@ -1,0 +1,8 @@
+# M1 (lead) là required reviewer cho contract/CI/security-sensitive paths.
+# Thay @MRXz194 bằng GitHub handle thật của leader nếu khác.
+
+/docs/API_CONTRACT.md            @MRXz194
+/backend/app/models/schemas.py   @MRXz194
+/frontend/types/index.ts         @MRXz194
+/.github/                        @MRXz194
+/backend/app/core/config.py      @MRXz194

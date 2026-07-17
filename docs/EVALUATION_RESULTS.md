@@ -7,9 +7,9 @@
 | Field | Value |
 |---|---|
 | Commit SHA | TBD |
-| Dataset hash / built_at | TBD |
-| Postings / sources / regions | TBD |
-| Career KB / taxonomy version | TBD |
+| Dataset hash / built_at | `192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430` / `2026-07-17` |
+| Postings / sources / regions | 298 / topcv, vietnamworks, itviec / hanoi, hcm, danang, other |
+| Career KB / taxonomy version | 25 careers / skills_vi_v1.0 |
 | Chat model / embed model | `deepseek-v4-flash` / `text-embedding-3-small` |
 | Agent engine / versions | `deterministic|langgraph`; LC Core `1.4.9`, LC OpenAI `1.3.5`, LangGraph `1.2.9` |
 
@@ -26,7 +26,7 @@
 | Recommendation rubric (n=12) | ≥3.5/5 | NOT_RUN | ⬜ | |
 | Launch readiness invariants (n=4) | 100% | NOT_RUN | ⬜ | |
 | Evidence number grounding | 100% | NOT_RUN | ⬜ | |
-| Route structural check | 100% | NOT_RUN | ⬜ | |
+| Route structural check | 100% | 100% | ✅ | check_routes.py |
 | Gender paired top-5 overlap | ≥4/5 | NOT_RUN | ⬜ | `BIAS_AUDIT.md` |
 | Chat / recommendation p95 | <5s / <8s | NOT_RUN | ⬜ | |
 | 3 E2E + replay | 0 unhandled 5xx | NOT_RUN | ⬜ | |
