@@ -39,16 +39,20 @@ def _mock_profile(session_id: str, turn: int, journey_mode: JourneyMode = "explo
     growth = min(turn / script_length, 1.0)
     p = Profile(session_id=session_id, journey_mode=journey_mode, completeness=round(growth, 2))
     if journey_mode == "launch":
-        p.education_stage = "final_year"
-        p.job_goal = "tìm vai trò dữ liệu entry-level"
-        p.dimensions = {"ky_thuat": round(0.2 * growth, 2), "phan_tich": round(0.8 * growth, 2),
-                        "sang_tao": round(0.4 * growth, 2), "xa_hoi": round(0.3 * growth, 2),
-                        "quan_ly": round(0.4 * growth, 2)}
+        # Opening turn has no user evidence yet: do not infer an education stage.
+        # The mock persona supplies it after the first answer; the real agent extracts it.
+        if turn >= 2:
+            p.education_stage = "final_year"
+            p.job_goal = "tìm vai trò dữ liệu entry-level"
+            p.dimensions = {"ky_thuat": round(0.2 * growth, 2), "phan_tich": round(0.8 * growth, 2),
+                            "sang_tao": round(0.4 * growth, 2), "xa_hoi": round(0.3 * growth, 2),
+                            "quan_ly": round(0.4 * growth, 2)}
     else:
-        p.education_stage = "high_school"
-        p.dimensions = {"ky_thuat": round(0.7 * growth, 2), "phan_tich": round(0.4 * growth, 2),
-                        "sang_tao": round(0.8 * growth, 2), "xa_hoi": round(0.3 * growth, 2),
-                        "quan_ly": round(0.2 * growth, 2)}
+        if turn >= 2:
+            p.education_stage = "high_school"
+            p.dimensions = {"ky_thuat": round(0.7 * growth, 2), "phan_tich": round(0.4 * growth, 2),
+                            "sang_tao": round(0.8 * growth, 2), "xa_hoi": round(0.3 * growth, 2),
+                            "quan_ly": round(0.2 * growth, 2)}
     if turn >= 2:
         p.interests = ["phân tích dữ liệu"] if journey_mode == "launch" else ["vẽ", "sửa chữa đồ điện"][: max(1, turn - 1)]
     if turn >= 4:

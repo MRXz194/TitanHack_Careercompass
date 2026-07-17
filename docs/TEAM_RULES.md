@@ -35,7 +35,7 @@
 
 - Feature ngoài In-scope (PLAN.md §2) → ghi `docs/BACKLOG.md`, không code. M1 có quyền veto tại chỗ.
 - Sau mốc **M4 (H+40): feature freeze** — chỉ fix bug. Sau **H+46: code freeze** — không deploy gì mới.
-- Không cần test coverage — nhưng **matching engine (PR-05) và normalize (D-04) phải có unit test** vì sai ở đó là sai âm thầm ra số liệu bịa.
+- Không chạy theo % coverage; chạy theo risk matrix trong [TESTING.md](TESTING.md). **Normalize/stats/matching/policy phải có unit**, API/tool schema phải có contract test, router/fallback phải có integration test; Explore/Launch/replay là release E2E.
 - Quality gate trong [EVALUATION.md](EVALUATION.md) là điều kiện freeze; không giảm ngưỡng sau khi thấy kết quả. Fail được phép nếu ghi limitation và fallback trung thực.
 - Dữ liệu học sinh/nguồn crawl tuân thủ [SECURITY_PRIVACY.md](SECURITY_PRIVACY.md); không log raw chat, không dùng transcript thật làm replay.
 - Secrets: **không bao giờ commit `.env`** (đã gitignore). Key chia sẻ qua group chat riêng tư, ai commit key thì người đó đi rotate.

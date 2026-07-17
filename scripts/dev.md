@@ -33,8 +33,9 @@ Mở `http://localhost:3000`; API docs tại `http://localhost:8000/docs`.
 
 ```powershell
 cd backend
-python -m compileall app scripts
-python -m pytest -q
+python -m compileall app scripts tests
+python -m pytest -q tests/unit tests/contract
+python -m pytest -q tests/integration
 python -m scripts.check_routes
 
 cd ..\frontend

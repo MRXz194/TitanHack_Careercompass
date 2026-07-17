@@ -38,6 +38,8 @@
 - [ ] M1 chốt crawl/API/LLM budget và ngưỡng 70% chuyển fallback.
 - [ ] LLM/embedding keys test bằng call tối thiểu, không paste key vào chat/issue.
 - [ ] Cache/artifact/replay directories và hash/version rule rõ.
+- [ ] M4/M1 cài đúng pinned LangChain/LangGraph từ `requirements.txt`; gateway import smoke pass; chốt spike 90 phút, `/api/chat` only, no `create_agent`/prebuilt/checkpointer/LangSmith service; `AGENT_MODE=deterministic` fallback chạy được.
+- [ ] M1 chạy test gates theo `TESTING.md`: compile; unit; contract; integration; route invariant. E2E folder/owner đã chốt, chưa có test thì ghi `NOT_IMPLEMENTED`.
 
 ## F. Ethics/security/evaluation
 

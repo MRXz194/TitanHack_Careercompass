@@ -1,6 +1,6 @@
 # HANDOFF — Bàn giao trong một repo, không mất context
 
-## 1. Một handoff chỉ hoàn tất khi đủ 6 mục
+## 1. Một handoff chỉ hoàn tất khi đủ các mục bắt buộc
 
 Copy template này vào PR và group chat:
 
@@ -9,6 +9,7 @@ Copy template này vào PR và group chat:
 - Artifact/PR: <link + path chính xác>
 - Contract/version: <API contract / taxonomy hash / dataset snapshot>
 - Chạy thử: <lệnh copy-paste được>
+- Test evidence: <static/unit/contract/integration/E2E = PASS|FAIL|NOT_RUN + commit/env>
 - Input → output mẫu: <path hoặc JSON ngắn>
 - Known limitations: <tối đa 3 ý, không giấu lỗi>
 - Nếu là agent task: <tool/stage allowlist + policy version + trace/replay fixture; xác nhận không có CoT/raw transcript>
@@ -32,7 +33,7 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 | Replay fixtures | `backend/app/data/replay/*.json` | M1 + M4 | demo | ngắt mạng vẫn E2E |
 | Evaluation results | `docs/EVALUATION_RESULTS.md` | M1 | pitch/judges | ghi cả fail/caveat |
 | Launch profile/result fixture | replay + contract | M4 | M5/M6/M1 | matched/missing/actions invariants pass |
-| Agent tool/policy contract | `docs/AGENTIC_RUNTIME.md` + Pydantic tool models | M4 | M1/M3/M5/M6 | allowlist/stage matrix + policy version + negative fixtures pass |
+| Agent graph/tool/policy contract | ADR + `AGENTIC_RUNTIME.md` + pinned LangChain/LangGraph versions + StateGraph topology + Pydantic tools | M4 | M1/M3/M5/M6 | install/spike gate, deterministic fallback, allowlist/stage matrix + unit/contract/integration negative fixtures pass |
 | Sanitized agent trace/replay | `backend/app/data/replay/*.json` + evaluation report | M4 + M1 | demo/pitch | tool/version/snapshot/fallback visible; no CoT/raw transcript |
 
 ## 3. Integration order
