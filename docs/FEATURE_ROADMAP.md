@@ -6,6 +6,8 @@ Không làm feature mới chỉ vì “còn vẻ đẹp”. M1 chỉ mở một 
 
 ## Nếu hoàn thiện sớm trong 48h
 
+Nếu còn trọn một ngày sau khi P0/P1 đã pass, dùng kế hoạch tích hợp trong [`docs/next/README.md`](next/README.md). Kế hoạch này ưu tiên Signal Inspector + Compare/What-if + Counselor Brief và có Expansion Gate riêng; bảng dưới chỉ là các lựa chọn nhỏ khi thời gian còn ít hơn.
+
 | Priority | Feature | Giá trị | Timebox | Test/rollback |
 |---|---|---|---:|---|
 | E1 | Compare 2 careers/roles | Giúp autonomy, không ép top-1 | 2h | compare chỉ field contract; remove route |
