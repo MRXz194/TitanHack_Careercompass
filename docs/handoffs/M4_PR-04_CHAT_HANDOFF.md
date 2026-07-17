@@ -1,4 +1,4 @@
-# [HANDOFF] PR-04 — M4 → M5 / M1
+# [HANDOFF] M4 · PR-04 — M4 → M5 / M1
 
 Chat profiling API is ready for FE integration and replay capture.
 

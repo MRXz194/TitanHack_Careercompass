@@ -132,7 +132,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 
 #### Status (M4)
 - **State:** DONE
-- **Handoff doc:** `docs/handoffs/PR-04_CHAT_HANDOFF.md`
+- **Handoff doc:** `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md`
 - **Samples:** `backend/app/data/replay/explore_sample_session.json`, `launch_sample_session.json`
 
 #### Verify evidence
@@ -141,7 +141,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 - Capture: `PYTHONPATH=. python scripts/capture_chat_samples.py`
 
 #### Handoff → M5 / M1
-See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, errors, fallback, consumer checklist).
+See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, errors, fallback, consumer checklist).
 
 #### Cannot do / deferred
 - Full `DEMO_MODE=replay` router short-circuit (M1 L-08 uses samples as seed)
@@ -205,6 +205,18 @@ See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, error
 - **Expected:** real `BIAS_AUDIT.md`, failures/fixes/retest.
 - **Tests:** top-5 overlap ≥4/5 gender; region candidate set not poorer; readiness unchanged by gender/school name.
 - **Fallback:** remove offending field/weight/copy; do not lower threshold.
+
+#### Status (M4)
+- **State:** DONE
+- **Report:** `docs/BIAS_AUDIT.md` (real PASS tables)
+- **Tests:** `backend/tests/unit/test_bias_audit.py`
+- **Handoff:** `docs/handoffs/M4_PR-08_BIAS_AUDIT_HANDOFF.md`
+- **Code harden:** `matching.sanitize_scoring_text` strips gender/school prestige from ranking text
+
+#### Verify evidence
+- `pytest -q tests/unit/test_bias_audit.py` → PASS
+- `python scripts/check_routes.py` → PASS
+- full unit/contract/integration → PASS
 
 ### PR-09 — Transparency copy (H+35→36)
 - **Actions:** explain data, mode, scoring, demand proxy, limits, autonomy, readiness meaning.

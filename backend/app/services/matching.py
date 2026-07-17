@@ -62,8 +62,26 @@ CAREERS_NPY = PROCESSED / "careers.npy"
 CAREER_IDS_JSON = PROCESSED / "career_ids.json"
 
 
+# Stripped from scoring text so free-text leaks cannot bias ranking (PR-08).
+_BIAS_LEAK_RE = re.compile(
+    r"(?i)\b("
+    r"giới\s*tính|con\s+trai|con\s+gái|nam\s+giới|nữ\s+giới|"
+    r"\bnữ\b|\bnam\b|"
+    r"GPA|điểm\s+trung\s+bình|"
+    r"ĐH\s+Bách\s+Khoa|Bách\s+Khoa|NEU|FTU|RMIT|FPT\s+University|"
+    r"trường\s+top|trường\s+nổi\s+tiếng|trường\s+chuyên"
+    r")\b"
+)
+
+
+def sanitize_scoring_text(text: str) -> str:
+    """Remove gender/prestige tokens from free text used only for ranking."""
+    cleaned = _BIAS_LEAK_RE.sub(" ", text or "")
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
 def profile_text(profile: Profile) -> str:
-    """Serialize profile for retrieval. NO region, NO gender, NO names."""
+    """Serialize profile for retrieval. NO region, NO gender, NO school prestige."""
     parts: list[str] = []
     for k in DIM_KEYS:
         v = float(profile.dimensions.get(k, 0.0) or 0.0)
@@ -76,11 +94,12 @@ def profile_text(profile: Profile) -> str:
         parts.extend(e.skills or [])
     if profile.job_goal:
         parts.append(profile.job_goal)
-    # quotes without storing PII heuristics beyond free text already in profile
+    # quotes — sanitized so gender/school mentions do not enter scoring
     for q in profile.evidence_quotes[:8]:
         if q.quote:
-            parts.append(q.quote[:120])
-    return " | ".join(parts)
+            parts.append(sanitize_scoring_text(q.quote[:120]))
+    # constraints.notes / region intentionally omitted (region is not a filter)
+    return sanitize_scoring_text(" | ".join(parts))
 
 
 def _normalize(s: str) -> str:
