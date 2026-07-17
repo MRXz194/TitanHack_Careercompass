@@ -1,0 +1,26 @@
+{
+  "fixture_version": "mi07-consumer-v1",
+  "fictional": true,
+  "embedding_contract": {
+    "schema_version": "career-embeddings-v1",
+    "serializer_version": "career-text-v1",
+    "kb_hash": "sha256:3b392b2eeb763a63cd53c0d14719982b531883bf322879b6cb8ef1f7d6bd410c",
+    "profile_text": "SQL Python phân tích dữ liệu dashboard",
+    "k": 5,
+    "return_shape": "list[tuple[career_id, score]]",
+    "lexical_fallback_expected": [
+      ["data-analyst", 0.128205],
+      ["digital-marketing", 0.081081],
+      ["lap-trinh-vien-web", 0.046512],
+      ["cham-soc-khach-hang", 0.027027],
+      ["kiem-thu-phan-mem", 0.026316]
+    ]
+  },
+  "market_contract": {
+    "overview_path": "/api/market/overview?region=all",
+    "skills_path": "/api/market/skills?region=all",
+    "source_note_required": true,
+    "skill_limit": 20,
+    "copy": "Radar nhu cầu kỹ năng"
+  }
+}
