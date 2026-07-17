@@ -8,7 +8,7 @@ import { ChatThread } from "@/components/chat/ChatThread";
 import { ModeSelector } from "@/components/chat/ModeSelector";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
 import { ProfilePanel } from "@/components/profile/ProfilePanel";
-import { patchProfile, sendChat } from "@/lib/api";
+import { IS_MOCK, patchProfile, sendChat } from "@/lib/api";
 import {
   canChangeModeFreely, canSend, chatReducer, initialChatState,
 } from "@/lib/chat/machine";
@@ -125,7 +125,14 @@ export function ExploreClient({ initialMode }: { initialMode: JourneyMode }) {
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col p-4 md:p-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-lg font-bold">🧭 CareerCompass</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-bold">🧭 CareerCompass</h1>
+          {IS_MOCK && (
+            <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+              Dữ liệu mẫu
+            </span>
+          )}
+        </div>
         <ModeSelector mode={state.mode} locked={!canChangeModeFreely(state)} onSelect={changeMode} />
       </header>
 

@@ -1,0 +1,34 @@
+# Render Blueprint — backend FastAPI (task L-03).
+# M1: New + > Blueprint trên dashboard Render, trỏ vào repo này — Render tự đọc file này.
+# Sau khi deploy: điền env vars trong dashboard (các key sync:false bên dưới).
+services:
+  - type: web
+    name: careercompass-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      # Bắt buộc: thêm domain Vercel của FE, phân tách bằng dấu phẩy
+      # VD: https://careercompass.vercel.app,http://localhost:3000
+      - key: CORS_ORIGINS
+        sync: false
+      # LLM keys — chỉ cần khi PR-03+ nối LLM thật; stub hiện tại chạy không cần
+      - key: CHAT_API_BASE
+        sync: false
+      - key: CHAT_API_KEY
+        sync: false
+      - key: CHAT_MODEL
+        sync: false
+      - key: EMBED_API_BASE
+        sync: false
+      - key: EMBED_API_KEY
+        sync: false
+      - key: EMBED_MODEL
+        sync: false
+      - key: DEMO_MODE
+        value: "off"
