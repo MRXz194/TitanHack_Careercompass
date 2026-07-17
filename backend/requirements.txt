@@ -11,3 +11,4 @@ selectolax==0.3.*
 python-dotenv==1.*
 tenacity==8.*
 rapidfuzz==3.*
+pytest==8.*

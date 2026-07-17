@@ -14,7 +14,9 @@
 
 Chạy toàn pipeline: theo thứ tự 1→5. Chỉ đổi taxonomy: chạy lại từ 3. Chỉ thêm nghề vào KB: chạy lại 5 (và 4 nếu đổi mapping).
 
-## [1] Crawl (M2)
+## [1] Source go/no-go + Crawl (M2)
+
+Trước khi viết selector: ghi URL robots/terms/license và quyết định `allowed | unclear | blocked` vào Notes. Chỉ crawl nguồn `allowed`; `unclear` phải được M1 duyệt và có phương án dataset mở. Không bypass login, CAPTCHA hoặc access control; không thu dữ liệu ứng viên/cá nhân.
 
 **Nguồn ưu tiên:** TopCV (nhiều posting đại trà + nghề phổ thông) → VietnamWorks (văn phòng, có lương nhiều hơn) → ITviec/CareerViet (dự phòng). Mục tiêu: **≥3.000 postings, ≥2 nguồn, mỗi vùng HN/HCM/ĐN ≥15%**. Cần cả nghề phổ thông/kỹ thuật (điện lạnh, cơ khí, bếp, làm đẹp, logistics) chứ không chỉ IT — sản phẩm hướng nghiệp cho MỌI học sinh.
 
@@ -39,6 +41,7 @@ Chạy toàn pipeline: theo thứ tự 1→5. Chỉ đổi taxonomy: chạy lạ
 - Crawl theo (danh mục ngành × vùng), phân trang đến hết hoặc đủ quota.
 - Script resume được: đã có `id` trong file raw → skip.
 - **Plan B (M1 kích hoạt tại H+10 nếu tổng < 1k):** dataset Kaggle "Vietnam job posting" + crawl bổ sung nguồn dễ nhất; các bước sau không đổi vì schema raw không đổi.
+- Mỗi snapshot có `manifest.json`: nguồn/license/terms URL, crawled_at, count, hash và caveat. UI chỉ hiện aggregate + attribution, không republish toàn bộ mô tả.
 
 ## [2] Normalize (M2)
 

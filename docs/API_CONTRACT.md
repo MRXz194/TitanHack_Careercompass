@@ -120,6 +120,8 @@ Response:
     "demand_count_90d": 412,
     "salary_p25_trieu": 9, "salary_p50_trieu": 12, "salary_p75_trieu": 15,
     "trend_pct": 23,                          // % thay đổi demand 45 ngày sau vs 45 ngày trước
+    "salary_sample_count": 86,                // số posting có lương dùng tính percentile
+    "low_confidence": false,                  // true → FE phải hiện cảnh báo/ẩn claim trend
     "top_regions": ["danang", "hcm"],
     "top_skills": ["điện lạnh dân dụng", "đọc sơ đồ mạch", "kỹ năng khách hàng"],
     "source_note": "Từ 3.412 tin tuyển dụng TopCV + VietnamWorks, 90 ngày gần nhất"
@@ -157,35 +159,54 @@ Ràng buộc BE phải đảm bảo (FE được phép assume):
   "postings_count": 1214,
   "window_days": 90,
   "updated_at": "2026-07-18",
-  "rising_careers": [ { "career_id": "…", "title": "…", "trend_pct": 34, "demand_count": 210 } ],  // top 8
+  "source_note": "Từ 1.214 tin tuyển dụng, snapshot 18/07/2026",
+  "rising_careers": [ { "career_id": "…", "title": "…", "trend_pct": 34, "demand_count": 210, "low_confidence": false } ],
   "top_paying": [ { "career_id": "…", "title": "…", "salary_p50_trieu": 25 } ]                      // top 5
 }
 ```
 
-### `GET /api/market/skills?region={…}` — Skill Gap Radar
+### `GET /api/market/skills?region={…}` — Radar nhu cầu kỹ năng (hiring-demand proxy)
 
 ```json
 {
   "region": "danang",
+  "source_note": "Từ 612 tin tuyển dụng tại Đà Nẵng, snapshot 18/07/2026",
   "skills": [
     {
       "skill": "điện lạnh dân dụng",
       "gap_score": 0.82,            // 0..1 — công thức xem AI_DESIGN.md §3
       "demand_count": 412,
       "trend_pct": 23,
+      "low_confidence": false,
       "related_careers": ["ky-thuat-vien-dien-lanh"]
     }
   ]                                  // top 20, sort gap_score desc
 }
 ```
 
-### `GET /api/market/careers/{career_id}?region={…}` → object `market` (schema như trong Recommendation) + `title`, `description`, `routes`.
+### `GET /api/market/careers/{career_id}?region={…}` → `CareerDetail`
+
+```json
+{ "career_id": "…", "title": "…", "description": "…", "market": { …MarketStats }, "routes": [ …Route ] }
+```
 
 ---
 
 ## 5. Quy ước chung
 
+### Format lỗi (mọi status ≠ 2xx — BE đã có exception handler chung trong `main.py`)
+
+```json
+{ "error": { "code": "404", "message": "career not found" } }
+```
+
+- `code` là **string** (mã HTTP dạng chuỗi). 422 trả message cố định "Dữ liệu gửi lên không hợp lệ"; 500 trả "Có lỗi xảy ra, vui lòng thử lại" (chi tiết chỉ ghi log server, không leak ra FE).
+- FE bắt lỗi và hiện fallback tiếng Việt thân thiện — không bao giờ hiện raw stack/error tiếng Anh cho học sinh.
+
+
 - Region enum: `hanoi | hcm | danang | other | all`. Route type enum: `university | college | vocational | certificate`.
 - Lương đơn vị **triệu VND/tháng**, số nguyên hoặc 1 chữ số thập phân.
+- `demand_count` là số posting trong snapshot, không phải số vacancy hoặc bằng chứng trực tiếp của thiếu hụt lao động. `gap_score` là hiring-demand proxy; UI không được gọi là đo cung–cầu.
+- `low_confidence=true` → FE hiện “dữ liệu còn hạn chế” và không dùng trend trong headline. `salary_sample_count < 5` → ba percentile lương phải là null.
 - Mọi text hiển thị cho user do BE trả về là **tiếng Việt**.
 - FE tự sinh `session_id` (uuid v4) lần đầu vào `/explore`, giữ trong localStorage key `cc_session_id`.

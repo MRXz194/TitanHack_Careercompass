@@ -28,7 +28,7 @@
 - **1 group chat chính** + kênh/thread `#blockers` riêng. Blocker post theo format: `[BLOCKED] <task-id> — đang kẹt gì — đã thử gì — cần ai`.
 - **Rule 45/90:** kẹt 45 phút → hỏi buddy. Kẹt 90 phút → báo M1, đổi cách tiếp cận hoặc đổi người. **Hero-coding trong im lặng là cấm.**
 - **Sync 10 phút** tại các mốc ⏰ trong PLAN.md. Format mỗi người 90 giây: (1) xong gì, (2) đang làm gì, (3) có block không. Không thảo luận sâu trong sync — hẹn riêng sau.
-- Handoff (bàn giao giữa 2 người) phải có **tin nhắn tường minh** trong group: "@người-nhận D-05 xong, dataset ở `data/processed/postings.jsonl`, doc ở PR #12" — người nhận thả ✅ xác nhận. Không có ✅ = chưa handoff xong.
+- Handoff phải dùng đủ template trong [HANDOFF.md](HANDOFF.md) — artifact/version, lệnh chạy, input/output, limitation và người nhận xác nhận. Không có ✅ = chưa xong.
 - Quyết định tranh cãi > 5 phút → M1 chốt. Chốt xong không mở lại (ghi vào `docs/BACKLOG.md` nếu tiếc).
 
 ## 4. Scope & chất lượng
@@ -36,6 +36,8 @@
 - Feature ngoài In-scope (PLAN.md §2) → ghi `docs/BACKLOG.md`, không code. M1 có quyền veto tại chỗ.
 - Sau mốc **M4 (H+40): feature freeze** — chỉ fix bug. Sau **H+46: code freeze** — không deploy gì mới.
 - Không cần test coverage — nhưng **matching engine (PR-05) và normalize (D-04) phải có unit test** vì sai ở đó là sai âm thầm ra số liệu bịa.
+- Quality gate trong [EVALUATION.md](EVALUATION.md) là điều kiện freeze; không giảm ngưỡng sau khi thấy kết quả. Fail được phép nếu ghi limitation và fallback trung thực.
+- Dữ liệu học sinh/nguồn crawl tuân thủ [SECURITY_PRIVACY.md](SECURITY_PRIVACY.md); không log raw chat, không dùng transcript thật làm replay.
 - Secrets: **không bao giờ commit `.env`** (đã gitignore). Key chia sẻ qua group chat riêng tư, ai commit key thì người đó đi rotate.
 
 ## 5. Quy tắc dùng AI assistant (Claude/Cursor/Copilot) — QUAN TRỌNG vì cả team dùng AI

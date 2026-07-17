@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     # LLM chat (OpenAI-compatible; DeepSeek by default)
     chat_api_base: str = "https://api.deepseek.com/v1"
     chat_api_key: str = ""
-    chat_model: str = "deepseek-chat"
+    chat_model: str = "deepseek-v4-flash"
 
     # Embeddings (OpenAI)
     embed_api_base: str = "https://api.openai.com/v1"

@@ -64,10 +64,12 @@ export async function patchProfile(patch: {
   remove_skills?: string[];
   add_interests?: string[];
 }): Promise<{ profile: Profile }> {
-  // Mock mode: chỉnh sửa profile là no-op trả profile hiện tại (F1-04 hoàn thiện)
-  return fetch(`${API_BASE}/api/profile/${getSessionId()}`, {
+  if (USE_MOCK) return (await import("./mock/profile")).mockPatchProfile(patch);
+  const res = await fetch(`${API_BASE}/api/profile/${getSessionId()}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
-  }).then((r) => r.json());
+  });
+  if (!res.ok) throw new Error(`API /api/profile failed: ${res.status}`);
+  return res.json();
 }

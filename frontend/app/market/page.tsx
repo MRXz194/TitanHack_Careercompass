@@ -1,4 +1,4 @@
-// Skill Gap Radar — task F2-04 (M6): nâng cấp bar chart Recharts + trend arrows + region switcher đẹp.
+// Hiring-demand radar — task F2-04 (M6): Recharts + trend + region + confidence/source states.
 "use client";
 
 import { useEffect, useState } from "react";
@@ -24,7 +24,10 @@ export default function MarketPage() {
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 p-6">
-      <h1 className="text-2xl font-bold">🎯 Radar kỹ năng đang khát nhân lực</h1>
+      <h1 className="text-2xl font-bold">🎯 Radar nhu cầu kỹ năng tuyển dụng</h1>
+      <p className="mt-2 text-sm text-slate-600">
+        Tín hiệu từ tin tuyển dụng, không phải kết luận trực tiếp về thiếu hụt lao động.
+      </p>
       <div className="flex gap-2">
         {REGIONS.map((r) => (
           <button
@@ -41,7 +44,7 @@ export default function MarketPage() {
 
       {gaps && (
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 font-semibold">Kỹ năng khát nhân lực nhất</h2>
+        <h2 className="mb-3 font-semibold">Kỹ năng có tín hiệu tuyển dụng cao</h2>
           <div className="space-y-2">
             {gaps.skills.map((s) => (
               <div key={s.skill} className="flex items-center gap-3">
@@ -53,11 +56,14 @@ export default function MarketPage() {
                   />
                 </div>
                 <span className="w-24 text-right text-xs text-[var(--cc-muted)]">
-                  {s.demand_count} tin {s.trend_pct != null && s.trend_pct > 0 ? `· ▲${s.trend_pct}%` : ""}
+                  {s.demand_count} tin {!s.low_confidence && s.trend_pct != null && s.trend_pct > 0 ? `· ▲${s.trend_pct}%` : ""}
                 </span>
               </div>
             ))}
           </div>
+          <p className="mt-3 text-xs text-[var(--cc-muted)]">
+            {gaps.source_note ?? "Nguồn dữ liệu sẽ hiển thị khi pipeline hoàn tất."}
+          </p>
         </section>
       )}
 
@@ -68,13 +74,15 @@ export default function MarketPage() {
             {overview.rising_careers.map((c) => (
               <div key={c.career_id} className="flex justify-between rounded-xl border border-slate-100 p-3 text-sm">
                 <span>{c.title}</span>
-                <span className="font-semibold text-[var(--cc-success)]">▲ {c.trend_pct}%</span>
+                <span className="font-semibold text-[var(--cc-success)]">
+                  {c.low_confidence ? "Dữ liệu còn hạn chế" : `▲ ${c.trend_pct}%`}
+                </span>
               </div>
             ))}
           </div>
           <p className="mt-3 text-xs text-[var(--cc-muted)]">
             Từ {overview.postings_count.toLocaleString("vi-VN")} tin tuyển dụng · {overview.window_days} ngày gần nhất
-            · cập nhật: {overview.updated_at}
+            · cập nhật: {overview.updated_at}{overview.source_note ? ` · ${overview.source_note}` : ""}
           </p>
         </section>
       )}

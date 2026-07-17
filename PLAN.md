@@ -1,6 +1,6 @@
 # 📋 PLAN — CareerCompass, Hackathon 48h
 
-> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) (task từng người) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
+> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) · [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) · [docs/EVALUATION.md](docs/EVALUATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
 
 ---
 
@@ -15,6 +15,10 @@
 | 3 | Gợi ý **lộ trình học/nghề cá nhân hóa, giải thích được**, gồm cả đường nghề (vocational), không chỉ đại học | **Explainable Recommender + Pathway Builder** | M4 (AI) + M6 (FE) |
 | ⚖️ | Ràng buộc đạo đức: **mở rộng lựa chọn, không đóng khung; không bias giới/vùng; gợi ý = tham khảo** | **Bias Guardrails by design** (xuyên suốt, có tài liệu riêng) | M4 chủ trì, cả team review |
 
+### Bài toán doanh nghiệp/tổ chức mà MVP chứng minh
+
+Trường học và trung tâm hướng nghiệp phải phục vụ nhiều học sinh nhưng thiếu thời gian 1:1, dữ liệu thị trường rời rạc và khó giải thích tại sao một hướng nghề được đề xuất. CareerCompass tạo **bản nháp trước buổi tư vấn**: học sinh tự khám phá, sửa hồ sơ, xem nhiều route và mang một output có bằng chứng đến tư vấn viên. Hệ thống hỗ trợ chứ không thay thế quyết định của học sinh/tư vấn viên. Buyer, KPI pilot và giới hạn claim nằm trong [BUSINESS_CASE.md](docs/BUSINESS_CASE.md).
+
 ### Tiêu chí chấm → chiến lược điểm
 
 | Tiêu chí chấm | Trọng số (theo đề) | Ta đánh vào đâu |
@@ -26,7 +30,7 @@
 
 ### 3 điểm đột phá (differentiators) — nói trong pitch
 
-1. **Skill Gap Radar theo vùng**: từ dữ liệu posting thật, tính "kỹ năng nào đang khát nhân lực ở địa phương em" — chưa tool hướng nghiệp VN nào làm. Đây là "wow moment" của demo.
+1. **Radar nhu cầu kỹ năng tuyển dụng theo vùng**: từ snapshot posting thật, chỉ ra kỹ năng có demand/momentum cao ở địa phương. Đây là proxy tín hiệu cầu, **không tuyên bố đo trực tiếp thiếu hụt cung–cầu** — sự minh bạch này làm sản phẩm đáng tin hơn.
 2. **Profile qua hội thoại + hiển thị live**: học sinh THẤY hồ sơ của mình hình thành theo từng câu trả lời (transparency = trust), và có thể sửa trực tiếp — tôn trọng autonomy đúng yêu cầu đề.
 3. **Explainability 2 chiều**: mỗi gợi ý có (a) bằng chứng từ chính lời em nói, (b) bằng chứng từ thị trường (số posting, lương, trend), và (c) **counterfactual** — "nếu em thích X hơn thì gợi ý sẽ đổi thành Y" → chứng minh gợi ý là tham khảo, không phán quyết.
 
@@ -44,7 +48,7 @@
    - **≥2 lộ trình**: Đại học / Cao đẳng–Trung cấp nghề / Chứng chỉ-Bootcamp, kèm bước đi cụ thể
    - 1 card **"Có thể em chưa nghĩ tới"** (stretch, mở rộng lựa chọn)
    - Dòng disclaimer: "Đây là gợi ý tham khảo — quyết định là của em."
-4. **Skill Gap Radar** (45s): chọn vùng (VD: Đà Nẵng) → biểu đồ kỹ năng đang khát + nghề đang tăng trưởng, từ dữ liệu crawl thật.
+4. **Radar nhu cầu kỹ năng** (45s): chọn vùng (VD: Đà Nẵng) → biểu đồ demand/momentum + nghề đang tăng trưởng, từ snapshot có nguồn và ngày cập nhật.
 
 ### In-scope (MVP — PHẢI xong)
 
@@ -56,7 +60,7 @@
 - ✅ Evidence Card giải thích được cho từng gợi ý (trích câu trả lời + số liệu thị trường)
 - ✅ Lộ trình học đa dạng: mỗi nghề ≥2 route trong đó ≥1 route ngoài đại học
 - ✅ Bias guardrails: không input giới tính vào recommender, stretch suggestions, disclaimer, trang "Cách hoạt động"
-- ✅ Skill Gap Radar theo vùng (1 màn hình dashboard)
+- ✅ Radar nhu cầu kỹ năng theo vùng (API giữ tên `skill gap`, UI ghi rõ đây là proxy từ hiring demand)
 - ✅ Deploy được (Vercel + Render/Railway) hoặc chạy local ổn định cho demo
 - ✅ Pitch deck + demo script + 2 persona demo chuẩn bị sẵn
 
@@ -77,6 +81,19 @@
 - [ ] Mọi số liệu trên màn hình truy được về dataset thật (judge hỏi "số này ở đâu ra" → trả lời được)
 - [ ] Thời gian phản hồi chat < 5s/lượt; trang kết quả < 8s
 - [ ] Có fallback: nếu LLM API chết lúc demo → chế độ replay từ cached responses (M1 chuẩn bị)
+- [ ] `docs/EVALUATION_RESULTS.md` có metric thật: extraction, mapping, recommendation rubric, bias, latency và limitations
+- [ ] Mọi nguồn dữ liệu có manifest/provenance; không dùng nguồn cấm automation hoặc không rõ quyền sử dụng
+- [ ] 5 học sinh + 1–2 tư vấn viên test; pitch ghi đúng cỡ mẫu, không phóng đại
+
+### Scope ladder — cắt đúng thứ tự để chắc chắn hoàn thiện
+
+| Mức | Phải giữ | Có thể giảm khi trễ |
+|---|---|---|
+| **P0 — demo sống** | 2 persona E2E; profile editable; 3 recommendation + 1 stretch; evidence grounded; ≥2 routes/nghề; market snapshot có nguồn; replay | Không được cắt |
+| **P1 — target chấm điểm** | 3k postings, ≥2 nguồn được phép dùng, top 5 + stretch, 3 vùng, extraction hybrid, user test | Giảm xuống 1 nguồn/1k postings nếu H+10 kích hoạt Plan B và phải nói rõ |
+| **P2 — polish** | animation, mini-chart từng card, 40–60 nghề, insight phụ, counselor mock slide | Cắt đầu tiên, không ảnh hưởng core |
+
+**Rule:** nếu một P2 đe dọa P0/P1, M1 cắt ngay. Không dùng seed number như số thật; seed UI luôn có nhãn “dữ liệu mẫu”.
 
 ---
 
@@ -90,9 +107,10 @@
 |---|---|---|
 | **M0 — Kickoff xong** | H+2 | Cả 6 người clone repo, chạy được FE + BE local, đọc xong PLAN + task của mình, API contract chốt v1 |
 | **M1 — Móng xong** | H+8 | FE chat UI + dashboard skeleton chạy trên mock; crawler ra ≥500 postings raw; skill taxonomy v1; prompt profiling v1 test được trong notebook |
-| **M2 — Dữ liệu thật + Chat thật** | H+20 | Dataset ≥3k postings processed; market stats API trả số thật; chat profiling end-to-end ra profile JSON; FE nối chat API thật |
-| **M3 — End-to-end** | H+30 | Recommendation + evidence + pathway chạy full flow FE↔BE với dữ liệu thật; Skill Gap Radar có số thật |
-| **M4 — Đóng băng tính năng** | H+40 | Polish UI, bias checklist pass, deploy xong, seed 2 persona demo, cached fallback sẵn sàng. **Sau mốc này: chỉ fix bug, không thêm feature** |
+| **M2 — Dữ liệu thật + Chat thật** | H+20 | Dataset target ≥3k (hoặc Plan B đã ghi rõ); data report + provenance; chat profiling E2E ra profile JSON; FE nối chat API thật |
+| **M3a — E2E skeleton** | H+30 | Full flow chạy bằng core/stub đúng contract; chat live; market source rõ; không còn blocker tích hợp |
+| **M3b — E2E dữ liệu thật** | H+34 | Recommendation + grounded evidence + pathway + Radar nhu cầu kỹ năng chạy với artifact thật |
+| **M4 — Đóng băng tính năng** | H+40 | P0 pass; evaluation/bias checklist có kết quả; deploy + replay sẵn; security/privacy checklist pass. **Sau mốc này chỉ fix bug** |
 | **M5 — Sẵn sàng pitch** | H+46 | Pitch deck xong, demo rehearse ≥2 lần, demo script in ra, code freeze |
 
 ### Lịch chi tiết theo phase
@@ -114,7 +132,7 @@
 - M3: chạy extract skills toàn dataset, build market stats + skill gap index, expose qua API.
 - M4: chat profiling engine hoàn chỉnh (state machine + LLM), endpoint /chat.
 - M5: nối chat thật, profile editing, loading/error states.
-- M6: nối market API thật, Skill Gap Radar, landing page.
+- M6: nối market API thật, Radar nhu cầu kỹ năng, landing page.
 - M1: integrate liên tục, giữ main luôn chạy được.
 
 **Phase 3 · H+20 → H+30 — Recommendation & Explainability** ⏰ sync H+24, H+30
@@ -125,7 +143,7 @@
 - M1: end-to-end test liên tục, log lỗi vào #blockers.
 
 **Phase 4 · H+30 → H+40 — Polish & Hardening (ngủ ca 2)** ⏰ sync H+34, H+40
-- Bias checklist review toàn team (H+32, 30 phút, bắt buộc — xem AI_DESIGN.md §5).
+- Bias checklist review toàn team (H+35, 30 phút, bắt buộc — xem AI_DESIGN.md §5).
 - Polish UI, copy tiếng Việt, empty/error states, responsive.
 - Deploy production, seed demo data, build cached-replay fallback.
 - M1 + M6 bắt đầu pitch deck.
@@ -146,7 +164,7 @@
 | **M3** | AI Engineer — Market Intelligence | extract skills, market stats, embeddings | Market stats API số thật; Skill Gap Index |
 | **M4** | AI Engineer — Profiling & Recommender | chat engine, matching, explainability, bias | Chat profiling; top-5 + stretch + evidence |
 | **M5** | Frontend — Trải nghiệm profiling | chat UI, Profile Card | Màn chat + profile live-update mượt |
-| **M6** | Frontend — Kết quả & Dashboard | career cards, radar, landing | Màn kết quả + Skill Gap Radar + landing |
+| **M6** | Frontend — Kết quả & Dashboard | career cards, radar, landing | Màn kết quả + Radar nhu cầu kỹ năng + landing |
 
 **Cặp hỗ trợ khi kẹt (buddy):** M2↔M3, M4↔M3, M5↔M6, M1 hỗ trợ tất cả.
 
@@ -162,6 +180,9 @@
 | LLM API chết lúc demo | Thấp | Cached-replay mode cho 2 persona demo (M1, task L-08) |
 | Thành viên kẹt task > 90 phút | Cao | Rule: kẹt 45' → hỏi buddy; 90' → báo M1 đổi hướng/đổi người. Không hero-coding trong im lặng |
 | Scope creep ("thêm tí này hay lắm") | Cao | Mọi feature ngoài In-scope → ghi vào `docs/BACKLOG.md`, làm sau M4 nếu thừa giờ. M1 có quyền veto |
+| Nguồn cấm/không rõ quyền crawl | Vừa | Check terms/robots trước; không bypass access control; chuyển dataset mở/seed có license; lưu source manifest và attribution |
+| Judge bắt bẻ “skill gap” không có dữ liệu supply | Cao | UI/pitch gọi đúng là hiring-demand proxy; nêu limitation; future kết hợp graduate/curriculum/supply data |
+| Core AI đẹp nhưng không chứng minh chất lượng | Cao | Quality gates trong EVALUATION.md; golden set/personas; report cả fail và limitations |
 
 ---
 
@@ -173,7 +194,7 @@
 | Backend | FastAPI (Python 3.11) + Pydantic v2 | Python mạnh nhất cho data/NLP; Swagger tự động = FE tự tra API |
 | DB | SQLite (qua SQLAlchemy) | Zero-setup, đủ cho scale hackathon; đường lên Postgres đã thiết kế sẵn |
 | Vector search | NumPy cosine in-process | ~200 careers, không cần vector DB — đừng over-engineer |
-| LLM chat | DeepSeek (OpenAI-compatible) — cấu hình qua env | Rẻ; đổi model = đổi 1 biến env |
+| LLM chat | DeepSeek `deepseek-v4-flash` (OpenAI-compatible) — cấu hình qua env | Nhanh/rẻ; JSON mode; đổi provider qua gateway |
 | Embeddings | OpenAI `text-embedding-3-small` | Rẻ, multilingual đủ tốt cho tiếng Việt |
 | Crawl | httpx + BeautifulSoup/selectolax (+ Playwright chỉ khi bắt buộc) | Nhẹ, nhanh |
 | Deploy | Vercel (FE) + Render/Railway (BE) | Free tier, nhanh |

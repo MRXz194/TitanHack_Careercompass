@@ -10,7 +10,7 @@ Read root `CLAUDE.md` first. Frontend = Next.js 15 App Router + TypeScript stric
 - Types in `types/index.ts` mirror `docs/API_CONTRACT.md`. Don't invent fields; if a field
   is missing, that's a contract discussion (TEAM_RULES.md §2), not a local type edit.
 - Pages: `/` landing · `/explore` chat+profile (M5) · `/results` recommendations (M6) ·
-  `/market` skill gap radar (M6) · `/how-it-works` transparency page.
+  `/market` radar nhu cầu kỹ năng (M6) · `/how-it-works` transparency page.
 - Components go in `components/<area>/` (chat/, profile/, results/, market/, ui/). Extract
   from page files once they grow past ~150 lines.
 - Colors: use the `--cc-*` CSS variables in `app/globals.css` (design tokens). Stretch
@@ -18,6 +18,7 @@ Read root `CLAUDE.md` first. Frontend = Next.js 15 App Router + TypeScript stric
 - All user-facing copy in Vietnamese, friendly tone ("em/bạn/mình"), no jargon. Numbers
   formatted Vietnamese-style ("12–18 triệu", `toLocaleString("vi-VN")`).
 - Every chart/stat must show its data source note (`source_note` from API).
+- `gap_score` is a hiring-demand proxy, not proof of labor shortage. UI label is “Radar nhu cầu kỹ năng”; show low-confidence state and never say “thiếu người” from postings alone.
 - Client components only where interactivity requires it; keep pages server-rendered otherwise.
 - No new dependencies without asking the team lead (M1). Recharts is the only chart lib.
 
