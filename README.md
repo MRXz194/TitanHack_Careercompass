@@ -11,6 +11,7 @@
 | [docs/TASKS.md](docs/TASKS.md) | Từng thành viên | Task breakdown chi tiết M1–M6, dependencies, handoff |
 | [docs/HANDOFF.md](docs/HANDOFF.md) | Cả team | Template bàn giao + artifact registry + integration order |
 | [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) | Product/Pitch | Bài toán tổ chức, buyer, KPI pilot, value proposition |
+| [docs/AI_FOCUS.md](docs/AI_FOCUS.md) | Cả team/Pitch | AI dùng ở đâu, chứng minh chất lượng bằng gì, ứng dụng sản phẩm vào đâu |
 | [docs/EVALUATION.md](docs/EVALUATION.md) | AI/Data/Lead | Quality gates định lượng và report bắt buộc |
 | [docs/SECURITY_PRIVACY.md](docs/SECURITY_PRIVACY.md) | Cả team | Dữ liệu học sinh, nguồn crawl, release checklist |
 | [docs/GRADUATE_LAUNCH.md](docs/GRADUATE_LAUNCH.md) | Product/AI/FE | Scope sinh viên sắp/đã tốt nghiệp tìm hướng việc làm |

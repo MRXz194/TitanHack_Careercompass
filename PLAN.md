@@ -1,6 +1,6 @@
 # 📋 PLAN — CareerCompass, Hackathon 48h
 
-> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) · [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) · [docs/EVALUATION.md](docs/EVALUATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
+> Đọc kèm: [docs/TASKS.md](docs/TASKS.md) · [docs/AI_FOCUS.md](docs/AI_FOCUS.md) · [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) · [docs/EVALUATION.md](docs/EVALUATION.md) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/AI_DESIGN.md](docs/AI_DESIGN.md)
 >
 > Trước khi bấm giờ: cả team pass [docs/PREFLIGHT.md](docs/PREFLIGHT.md). Trạng thái repo/docs tốt không đồng nghĩa runtime đã sẵn sàng.
 
@@ -40,6 +40,8 @@ Trường học và trung tâm hướng nghiệp phải phục vụ nhiều họ
 | Hữu ích thật với học sinh & tư vấn viên | Cao | Demo bằng persona học sinh thật (lớp 12, tỉnh, phân vân); ngôn ngữ tiếng Việt tự nhiên, không thuật ngữ |
 
 ### 3 điểm đột phá (differentiators) — nói trong pitch
+
+> Chi tiết phần AI focus và ứng dụng đa bối cảnh: [docs/AI_FOCUS.md](docs/AI_FOCUS.md).
 
 1. **Radar nhu cầu kỹ năng tuyển dụng theo vùng**: từ snapshot posting thật, chỉ ra kỹ năng có demand/momentum cao ở địa phương. Đây là proxy tín hiệu cầu, **không tuyên bố đo trực tiếp thiếu hụt cung–cầu** — sự minh bạch này làm sản phẩm đáng tin hơn.
 2. **Profile qua hội thoại + hiển thị live**: học sinh THẤY hồ sơ của mình hình thành theo từng câu trả lời (transparency = trust), và có thể sửa trực tiếp — tôn trọng autonomy đúng yêu cầu đề.

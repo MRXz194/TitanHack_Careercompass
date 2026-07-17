@@ -23,6 +23,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 
 - `docs/API_CONTRACT.md` — FE↔BE contract. NEVER change response/request shapes without updating this file + `backend/app/models/schemas.py` + `frontend/types/index.ts` in the same PR. If your generated code needs a field that doesn't exist in the contract, STOP and tell the user to follow the contract-change process (TEAM_RULES.md §2).
 - `docs/ARCHITECTURE.md` — component layout; put new files where §4 says.
+- `docs/AI_FOCUS.md` — why this is an AI-centered hackathon product, what AI claims are allowed, and where the product applies.
 - `docs/AI_DESIGN.md` — prompt/scoring/bias design. Do not invent alternative scoring or prompt schemes.
 - `docs/TASKS.md` — task IDs; the user will tell you which task (e.g. PR-05) they're on.
 - `docs/HANDOFF.md` — required handoff template and artifact versions.
