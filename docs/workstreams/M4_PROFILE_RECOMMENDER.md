@@ -20,7 +20,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 
 #### Status (M4)
 - **State:** DONE (freeze locked by tests)
-- **Commit:** 928737a (tests: 36c64ab unit, 15fa92e contract, 928737a integration) + docs handoff tip on branch
+- **Commit:** 36c64ab / 15fa92e / 928737a (tests) + afcfd23 (handoff) + this verify-evidence commit
 - **Contract version label:** Profile/Launch v1 (API_CONTRACT Profile schema)
 
 #### Verify evidence
@@ -28,7 +28,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 - `pytest -q tests/unit/test_profile_contract.py` → PASS (12)
 - `pytest -q tests/contract/test_schema_contract.py` → PASS (3)
 - `pytest -q tests/integration/test_api_smoke.py` → PASS (7)
-- full unit+contract+integration → 27 passed
+- full unit+contract+integration → **22 passed** (12+3+7)
 - `npm run typecheck` (frontend) → PASS
 
 #### Handoff → M5 / M1
@@ -39,7 +39,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 - Chạy thử:
   - backend: `cd backend && python -m pytest -q tests/unit/test_profile_contract.py tests/contract/test_schema_contract.py tests/integration/test_api_smoke.py`
   - frontend: `cd frontend && npm run typecheck`
-- Test evidence: unit/contract/integration = PASS (27); typecheck = PASS
+- Test evidence: unit/contract/integration = PASS (22); typecheck = PASS; compileall = PASS
 - Input → output mẫu: ChatRequest omit journey_mode → profile.journey_mode=explore; Launch opening keeps education_stage/job_goal null
 - Known limitations:
   1. PATCH not SQLite-persistent across process restart (PR-03)
