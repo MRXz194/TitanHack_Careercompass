@@ -45,6 +45,15 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 | `DEMO_MODE` | `off` | `off` cho live demo; `replay` là fallback bấm tay nếu mạng/LLM chết (L-08) |
 | `AGENT_MODE` | `deterministic` | `deterministic` (chỉ đổi `langgraph` sau khi PR-12/13 pass gate) |
 
+## Smoke test sau deploy (bắt buộc, ~3 phút — chạy lại sau MỌI redeploy)
+
+- [ ] `GET /api/health` trên Render: `status: ok`
+- [ ] Mở FE → `/explore` → lượt chào xuất hiện (không phải lỗi mạng) → trả lời 2 lượt → profile nhích %
+- [ ] `/explore?mode=launch` → câu mở đầu launch khác explore
+- [ ] Xóa 1 skill trong profile card → không có banner lỗi đỏ (verify optimistic-patch rollback không kích hoạt sai)
+- [ ] DevTools Console: không có lỗi CORS
+- [ ] Đổi `NEXT_PUBLIC_USE_MOCK=1` trên Vercel → redeploy → FE chạy độc lập không cần BE (drill lưới an toàn — làm 1 lần cho biết đường lui, rồi đổi lại `0`)
+
 ## Kết quả thật (điền sau khi bấm)
 
 - Backend URL: `TBD`

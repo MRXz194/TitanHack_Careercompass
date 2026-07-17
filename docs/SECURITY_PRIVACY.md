@@ -34,9 +34,9 @@
 
 ## 5. Checklist release
 
-- [ ] Không secret trong git history/diff
-- [ ] Production CORS chỉ có FE origin
-- [ ] Session delete/TTL hoạt động hoặc demo disclaimer nêu rõ
-- [ ] Không raw PII trong log, replay, screenshot, pitch
-- [ ] Source manifest + attribution + limitation có trên UI/report
-- [ ] Dependency và endpoint smoke test pass
+- [x] Không secret trong git history/diff — M1 verify 2026-07-17: `git log --all -p` cho `*.env` và pattern `sk-...`/`*_API_KEY=` không có key thật, chỉ `REPLACE_ME` trong `.env.example`; `.env`/`.env.local` không nằm trong `git ls-files`.
+- [ ] Production CORS chỉ có FE origin — **chưa deploy nên chưa verify được**; `CORS_ORIGINS` mặc định `http://localhost:3000`. Phải set = URL Vercel thật sau L-03, xem `docs/DEPLOY.md`§B bước cuối.
+- [x] Session delete/TTL hoạt động hoặc demo disclaimer nêu rõ — M1 verify: `DELETE /api/profile/{session_id}` tồn tại và gọi `profiler.delete_session` (`backend/app/routers/chat.py:33-38`). TTL tự động chưa implement trong `session_store.py`, nhưng điều kiện "delete hoạt động" trong checklist đã đủ (OR).
+- [x] Không raw PII trong log, replay, screenshot, pitch — M1 verify: mọi `log.info/warning` trong `backend/app/services/*` chỉ log model/tokens/latency/error type, không log message/profile content; 3 file trong `backend/app/data/replay/` đều có `"fictional": true`.
+- [x] Source manifest + attribution + limitation có trên UI/report — M1 verify: `data/processed/manifest.json` có terms_url/license/count theo nguồn; `frontend/app/market/page.tsx` render `source_note`/`updated_at` từ API.
+- [x] Dependency và endpoint smoke test pass — M1 verify 2026-07-17 (sau khi pull `main` mới nhất, commit `9a62969`): backend `pytest tests/unit tests/contract` 231 passed, `tests/integration` 26 passed, `scripts.check_routes` OK; frontend `npm run typecheck` + `npm run build` pass.

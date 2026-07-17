@@ -20,11 +20,11 @@
 ## C. Repo/environment
 
 - [ ] Python 3.11 + Node 20 trên ít nhất 4 máy; 6/6 chạy FE mock.
-- [x] Backend install + smoke tests pass trên 1 máy (2026-07-17, M1 dry-run): `compileall`, `pytest tests/unit tests/contract` (10 passed), `pytest tests/integration` (5 passed), `scripts.check_routes` (OK) đều xanh. Cần thêm ≥1 máy khác để tick đủ điều kiện.
-- [x] Frontend `npm run typecheck` + `npm run build` pass (2026-07-17, Next.js 15.5.20, 6 routes build tĩnh OK).
-- [ ] CI test PR pass; branch protection/review active — **chưa bấm**: cần leader làm theo `docs/DEPLOY.md` §A (branch protection rule + labels), CI (`ci.yml`) mới chỉ chạy trên push/PR chứ chưa được xác nhận pass trên PR thật.
-- [x] `.env` không tracked (`git ls-files` chỉ thấy `.env.example`, `.gitignore` có `.env`/`.env.local`; không tìm thấy secret lỡ commit qua `git grep`). Dev/demo env matrix ghi ở `docs/DEPLOY.md`; key owner = M1 (chưa gán tên thật).
-- [ ] Mock/live/replay flags được giải thích và thử — `DEMO_MODE`/mode table đã ghi trong `scripts/dev.md` §4, nhưng **replay short-circuit chưa wired trong code** (chat router `backend/app/routers/chat.py` vẫn là stub PR-03/04 chưa tới, chưa đọc `settings.demo_mode` ở đâu cả) — L-08 chờ PR-04 xong mới capture fixture thật.
+- [x] Backend install + smoke tests pass trên 1 máy, sau khi pull `main` mới nhất commit `9a62969` (2026-07-17): `compileall` OK, `pytest tests/unit tests/contract` 231 passed, `pytest tests/integration` 26 passed, `scripts.check_routes` OK (25 careers). Cần thêm ≥1 máy khác để tick đủ điều kiện "4 máy".
+- [x] Frontend `npm run typecheck` + `npm run build` pass (2026-07-17, commit `9a62969`, Next.js 15.5.20, 6 routes build tĩnh OK); `frontend/tests/unit/transparency-copy.test.ts` (chạy bằng `npx tsx`, không cần framework) cũng pass.
+- [ ] CI test PR pass; branch protection/review active — **chưa bấm**: cần leader làm theo `docs/DEPLOY.md` §A (branch protection rule + labels).
+- [x] `.env` không tracked, không có secret trong git history/diff (`git log --all -p` scan pattern `sk-...`/`*_API_KEY=` chỉ thấy `REPLACE_ME` trong `.env.example`). Dev/demo env matrix ghi ở `docs/DEPLOY.md`; key owner = M1 (chưa gán tên thật).
+- [x] Mock/live/replay flags — `DEMO_MODE=replay` đã wired thật trong code (`backend/app/services/agent_chat.py`, `evidence.py`, `profiler.py` đều đọc `settings.demo_mode`), có 3 fixture thật trong `backend/app/data/replay/` (explore/launch/agent trace, đều đánh dấu `"fictional": true`). Chưa test bằng `CHAT_API_KEY` thật (live LLM path vẫn `NOT_RUN`, xem `docs/EVALUATION_RESULTS.md`).
 
 ## D. Contract/fixtures
 
@@ -35,17 +35,17 @@
 
 ## E. Data/AI cost
 
-- [ ] M2 có ít nhất 1 source candidate + Plan B dataset/license.
+- [x] M2 có ít nhất 1 source candidate + Plan B dataset/license — 3 nguồn thật (topcv/vietnamworks/itviec) đã crawl, 298 postings, terms/license URL ghi trong `data/processed/manifest.json`. **L-06 go/no-go (2026-07-17): Plan A, tiếp tục crawl** — xem `docs/DATA_SNAPSHOT.md`§"Go/no-go decision". Re-check tại H+10; <1k hoặc bị block → Plan B.
 - [ ] M1 chốt crawl/API/LLM budget và ngưỡng 70% chuyển fallback.
 - [ ] LLM/embedding keys test bằng call tối thiểu, không paste key vào chat/issue.
 - [ ] Cache/artifact/replay directories và hash/version rule rõ.
 - [ ] M4/M1 cài đúng pinned LangChain/LangGraph từ `requirements.txt`; gateway import smoke pass; chốt spike 90 phút, `/api/chat` only, no `create_agent`/prebuilt/checkpointer/LangSmith service; `AGENT_MODE=deterministic` fallback chạy được.
-- [x] M1 chạy test gates theo `TESTING.md`: compile; unit; contract; integration; route invariant — tất cả xanh (chạy 2026-07-17: `compileall` OK, `pytest tests/unit tests/contract` 10 passed, `pytest tests/integration` 5 passed, `scripts.check_routes` OK). E2E folder tồn tại (`backend/tests/e2e`) nhưng rỗng → `NOT_IMPLEMENTED`, chưa có owner/status thật, cần L-07 gán khi core sẵn sàng.
+- [x] M1 chạy test gates theo `TESTING.md`: compile; unit; contract; integration; route invariant — tất cả xanh (chạy 2026-07-17, commit `9a62969` sau khi M2/M3/M4/M5/M6 merge: `compileall` OK, `pytest tests/unit tests/contract` 231 passed, `pytest tests/integration` 26 passed, `scripts.check_routes` OK). E2E folder tồn tại (`backend/tests/e2e`) nhưng rỗng → `NOT_IMPLEMENTED`, chưa có owner/status thật, cần L-07 gán khi core sẵn sàng.
 
 ## F. Ethics/security/evaluation
 
 - [ ] No-gender/region-not-filter/readiness-not-probability rules được 6/6 hiểu.
-- [ ] Data source/PII/session retention checklist có owner.
+- [x] Data source/PII/session retention checklist có owner — `docs/SECURITY_PRIVACY.md`§5 checklist release: 5/6 mục M1 đã verify pass (secret scan, session delete, no raw PII in log/replay, source manifest+attribution trên UI, dependency/endpoint smoke test); còn "Production CORS chỉ có FE origin" chờ L-03 deploy xong mới verify được.
 - [ ] Gold data/persona templates sẵn, không tune trên test set sau khi đo baseline.
 - [ ] Người test dự kiến và consent quote template đã liên hệ.
 
