@@ -68,9 +68,33 @@
 - **Expected:** actual metrics + commit/model/prompt/artifact versions in `EVALUATION_RESULTS.md`.
 - **Verify:** M3/M1 reproduce sample; no cherry-pick.
 
+### PR-12 — Bounded ReAct policy + tool registry (H+4→12)
+- **Problem:** Flow hỏi đáp không được hard-code kịch bản, nhưng agent tự do sẽ không test/replay/bảo vệ được ethics.
+- **Actions:** tạo `agent.py`/`agent_tools.py`; định nghĩa tool Pydantic theo `AGENTIC_RUNTIME.md`; stage allowlist; planner JSON; pre/post policy privacy, provenance, autonomy, route/readiness, cost.
+- **Expected:** registry 10 local typed tools; policy decision/reason code; không có browser/shell/arbitrary HTTP/config/KB write tool.
+- **Tests:** tool stage matrix; unknown tool/invalid args; gender/school strip; budget exceed; provenance missing; correction precedence.
+- **Risk/fallback:** planner lỗi hoặc policy deny hai lần → deterministic question/template, không loop. Giữ state machine cũ làm rail, không fork service.
+- **Handoff:** tool schemas + policy matrix + sample observation cho M3/M5/M6/M1.
+
+### PR-13 — Agent orchestrator + degradation (H+12→20)
+- **Problem:** Tool registry chỉ có giá trị nếu request path ghép được plan → policy → observation → response một cách có giới hạn.
+- **Actions:** tích hợp bounded loop vào `/api/chat` và `/api/recommendations`; tối đa 2 tool calls/turn; sanitize trace; cache read tools; expose public rationale/provenance, không expose CoT.
+- **Expected:** Explore/Launch dùng chung agent; API không đổi shape; `DEMO_MODE=replay` chạy không network/key.
+- **Tests:** 10-turn mỗi mode; timeout/invalid JSON/tool exception; contract fixture; no raw transcript/CoT log; trace has versions/latency/fallback; recommendation deterministic candidate set.
+- **Risk/fallback:** chỉ bật agent ở discover/confirm nếu deadline; retrieval/ranking vẫn deterministic PR-05.
+- **Handoff:** endpoint behavior + replay trace fixture cho M1/M5/M6.
+
+### PR-14 — Agent evaluation/red-team (H+31→38)
+- **Problem:** Agentic chỉ là claim mạnh khi chứng minh được tool choice, safety và fallback, không chỉ có demo đẹp.
+- **Actions:** chạy tool-selection fixtures, prompt injection, 12 personas, gender/region/school pairs, missing provenance, budget/latency, replay; ghi failures/fix/retest.
+- **Expected:** `EVALUATION_RESULTS.md` có model/prompt/tool/policy/snapshot versions, calls/turn, p95, pass/fail, limitation.
+- **Tests:** toàn bộ bảng §8 `AGENTIC_RUNTIME.md`; fail không được xoá fixture hay nới threshold.
+- **Handoff:** scorecard/pitch evidence cho M1; M1 xác nhận deterministic replay.
+
 ## Hard-stop rules
 
 - No recommendation if profile completeness below mode threshold; ask/correct instead.
 - No exact readiness probability, hiring prediction or personal salary prediction.
 - User correction outranks model inference.
 - LLM never selects candidates or invents requirements; code/data do.
+- Agent chỉ chọn tool trong allowlist; policy code, không phải prompt, là authority cuối.

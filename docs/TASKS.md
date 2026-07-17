@@ -106,6 +106,9 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | PR-09 | Trang "Cách hệ thống hoạt động" — nội dung dữ liệu, scoring, giới hạn, autonomy | H+35→36 | PR-08 | ≤300 từ; M6 thay copy draft không đổi layout |
 | PR-10 | Tune chất lượng theo feedback test E2E của M1 (câu hỏi lặp, gợi ý nhạt, evidence sai...) | H+34→40 | L-07 | Các bug label `ai-quality` đóng hết |
 | PR-11 | Tổng hợp AI evaluation: profiler, 12 personas, grounding, latency/cost, paired bias; gửi số thật cho M1 | H+35→38 | PR-06,08 | Phần AI trong `EVALUATION_RESULTS.md` có pass/fail + limitations |
+| PR-12 | **Bounded ReAct policy + tool registry:** định nghĩa 10 typed internal tools, stage allowlist, planner JSON schema, privacy/provenance/budget gates; không thêm browser/shell/external side effect | H+4→12 | PR-01 | Tool contract/Pydantic + policy matrix; invalid tool/args bị deny/repair, không chạm session/data trái phép |
+| PR-13 | **Agent orchestrator + degradation:** tích hợp planner → gate → tool observation → composer vào shared profiler/recommend flow; tối đa 2 tools/turn, trace sanitize, replay/fallback | H+12→20 | PR-02,03,12 | Explore + Launch chạy agent mode; LLM/tool failure không 5xx, output vẫn đúng API contract |
+| PR-14 | **Agent evaluation/red-team:** tool-selection fixtures, injection, paired bias, provenance, budget/latency/replay; ghi pass/fail thật | H+31→38 | PR-05,06,08,13 | `EVALUATION_RESULTS.md` có agent metrics + failures/fix; không claim autonomous khi gate fail |
 
 **Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render).
 **⚠️ Rule riêng:** mọi prompt để trong `backend/app/prompts/*.py` có version comment — không giấu prompt trong code logic.
@@ -127,6 +130,7 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | F1-07 | Polish: micro-animations, empty states, copy TV thân thiện (xưng "em/mình", không phán xét), skeleton loading | H+30→38 | — | Người ngoài team dùng thử không hỏi "giờ làm gì tiếp?" |
 | F1-08 | Hỗ trợ M6 responsive + cross-browser check toàn app | H+38→42 | — | Chạy tốt trên Chrome + 1 mobile viewport |
 | F1-09 | Điều phối usability test cùng M1: quan sát không gợi ý, đo completion/time, kiểm tra copy privacy + nút xóa phiên | H+31→38 | L-11 | Report ẩn danh; không lưu PII; blocker UX được fix trước freeze |
+| F1-10 | Agent transparency trong chat: map phase sang trạng thái ngắn (VD “Mình đang cập nhật điều bạn vừa chia sẻ”), evidence có thể sửa; tuyệt đối không hiển thị chain-of-thought/tool JSON | H+18→24 | PR-13, F1-03 | Explore/Launch có status rõ + correction UX; timeout/deny vẫn nói rõ bước tiếp theo |
 
 **Handoff nhận:** PR-01 (schema), PR-04 (chat API). **Handoff giao:** F1-06 → M6 (điểm nối flow).
 **⚠️ Rule riêng:** không tự chế field ngoài contract — thiếu gì thì yêu cầu M4 qua M1.
@@ -147,6 +151,7 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | F2-06 | Landing có hai journey + trang "Cách hoạt động": draft H+22→28, final transparency copy H+36 | H+22→28; H+36 | PR-09 final copy | Hiểu problem/two modes/not-a-verdict trong 15s |
 | F2-07 | Polish dashboard: màu nhất quán (xem `frontend/CLAUDE.md` §design tokens), số format kiểu VN ("12–18 triệu"), tooltips giải thích thuật ngữ | H+30→38 | — | Screenshot đủ đẹp để đưa thẳng vào pitch deck |
 | F2-08 | Hỗ trợ M1 pitch deck: chụp screens, vẽ 1 slide architecture, 1 slide mock "counselor view" (future) | H+38→44 | L-09 | Deck có hình sản phẩm thật, không lorem ipsum |
+| F2-09 | Agent provenance trên kết quả: panel “Dựa trên gì?” hiển thị profile evidence, snapshot/source/date/confidence, factors và alternatives; không đưa private reasoning | H+28→34 | PR-13, PR-06, MI-09 | Mọi số/caveat trace được; low confidence/fallback label rõ, mock/replay parity |
 
 **Handoff nhận:** F1-06 (flow), PR-06/07 + MI-04 (data thật). **Handoff giao:** F2-08 → M1.
 **⚠️ Rule riêng:** chart nào cũng phải có nhãn nguồn dữ liệu — "số thật, truy được nguồn" là điểm ăn tiền.
