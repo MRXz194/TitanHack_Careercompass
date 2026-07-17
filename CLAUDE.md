@@ -17,6 +17,9 @@
 - `docs/ARCHITECTURE.md` — component layout; put new files where §4 says.
 - `docs/AI_DESIGN.md` — prompt/scoring/bias design. Do not invent alternative scoring or prompt schemes.
 - `docs/TASKS.md` — task IDs; the user will tell you which task (e.g. PR-05) they're on.
+- `docs/HANDOFF.md` — required handoff template and artifact versions.
+- `docs/EVALUATION.md` — fixed quality gates; do not weaken thresholds to make results pass.
+- `docs/SECURITY_PRIVACY.md` — minors' data, source-use and logging rules.
 
 ## Tech stack (FIXED — do not suggest alternatives or add dependencies without asking)
 
@@ -36,6 +39,8 @@
 6. Salary unit = million VND/month (`*_trieu`).
 7. Secrets only via env vars; `.env` is gitignored.
 8. Keep the FE mock mode working at all times — it is the demo safety net.
+9. Job postings measure observed hiring demand, not labor-supply shortage. UI says “Radar nhu cầu kỹ năng”; never overclaim `gap_score`.
+10. Do not log raw student messages/profile or put real test transcripts in replay fixtures.
 
 ## Conventions
 

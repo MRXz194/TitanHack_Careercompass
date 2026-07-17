@@ -92,6 +92,8 @@ class MarketStats(BaseModel):
     salary_p50_trieu: Optional[float] = None
     salary_p75_trieu: Optional[float] = None
     trend_pct: Optional[float] = None
+    salary_sample_count: int = 0
+    low_confidence: bool = True
     top_regions: list[str] = []
     top_skills: list[str] = []
     source_note: str = ""
@@ -134,6 +136,7 @@ class RisingCareer(BaseModel):
     title: str
     trend_pct: float
     demand_count: int
+    low_confidence: bool = True
 
 
 class TopPayingCareer(BaseModel):
@@ -147,6 +150,7 @@ class MarketOverview(BaseModel):
     postings_count: int
     window_days: int
     updated_at: str
+    source_note: str = ""
     rising_careers: list[RisingCareer]
     top_paying: list[TopPayingCareer]
 
@@ -156,9 +160,19 @@ class SkillGapItem(BaseModel):
     gap_score: float
     demand_count: int
     trend_pct: Optional[float] = None
+    low_confidence: bool = True
     related_careers: list[str] = []
 
 
 class SkillGapResponse(BaseModel):
     region: Region
     skills: list[SkillGapItem]
+    source_note: str = ""
+
+
+class CareerDetail(BaseModel):
+    career_id: str
+    title: str
+    description: str
+    market: MarketStats
+    routes: list[Route]

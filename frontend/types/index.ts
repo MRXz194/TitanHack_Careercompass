@@ -63,6 +63,8 @@ export interface MarketStats {
   salary_p50_trieu: number | null;
   salary_p75_trieu: number | null;
   trend_pct: number | null;
+  salary_sample_count?: number;
+  low_confidence?: boolean;
   top_regions: string[];
   top_skills: string[];
   source_note: string;
@@ -100,7 +102,8 @@ export interface MarketOverview {
   postings_count: number;
   window_days: number;
   updated_at: string;
-  rising_careers: { career_id: string; title: string; trend_pct: number; demand_count: number }[];
+  source_note?: string;
+  rising_careers: { career_id: string; title: string; trend_pct: number; demand_count: number; low_confidence?: boolean }[];
   top_paying: { career_id: string; title: string; salary_p50_trieu: number }[];
 }
 
@@ -109,10 +112,20 @@ export interface SkillGapItem {
   gap_score: number;
   demand_count: number;
   trend_pct: number | null;
+  low_confidence?: boolean;
   related_careers: string[];
 }
 
 export interface SkillGapResponse {
   region: Region;
   skills: SkillGapItem[];
+  source_note?: string;
+}
+
+export interface CareerDetail {
+  career_id: string;
+  title: string;
+  description: string;
+  market: MarketStats;
+  routes: Route[];
 }

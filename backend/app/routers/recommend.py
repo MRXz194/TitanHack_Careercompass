@@ -42,9 +42,12 @@ def _to_rec(c: dict, score: float, stretch: bool = False) -> Recommendation:
 
 @router.post("/recommendations", response_model=RecommendationResponse)
 def recommendations(body: dict) -> RecommendationResponse:
+    # STUB ONLY: picks by seed order, not real matching. PR-05 replaces this whole
+    # function with the scoring engine in docs/AI_DESIGN.md §4 — do not extend this
+    # index-based logic once the career KB grows past 10 entries (D-07).
     careers = load_careers()
     top5 = [_to_rec(c, round(0.9 - i * 0.06, 2)) for i, c in enumerate(careers[:5])]
-    stretch = _to_rec(careers[5], 0.61, stretch=True)
+    stretch = _to_rec(careers[min(5, len(careers) - 1)], 0.61, stretch=True)
     return RecommendationResponse(
         generated_at=datetime.now(timezone.utc).isoformat(),
         disclaimer=DISCLAIMER, recommendations=top5, stretch=stretch,

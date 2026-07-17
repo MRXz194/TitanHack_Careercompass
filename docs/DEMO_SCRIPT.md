@@ -4,7 +4,7 @@
 
 1. **Problem (30s):** 1 con số thật về mismatch cung-cầu lao động VN + 1 câu chuyện học sinh chọn nghề theo "trend/gia đình".
 2. **Demo live (4 phút)** — theo user journey trong PLAN.md §2. Persona: *Minh, lớp 12, Quảng Nam, thích vẽ + hay sửa đồ điện, nhà không dư dả* → hệ thống gợi ý cả nghề kỹ thuật (route trung cấp nghề) lẫn hướng sáng tạo, kèm dữ liệu Đà Nẵng thật.
-3. **Differentiators (60s):** Skill Gap Radar theo vùng · Evidence 2 chiều + counterfactual · Anti-bias by design (mở BIAS_AUDIT.md thật trên màn hình).
+3. **Differentiators (60s):** Radar nhu cầu kỹ năng theo vùng (hiring-demand proxy, không overclaim supply gap) · Evidence 2 chiều + counterfactual · Anti-bias by design.
 4. **Data & kiến trúc (45s):** N postings thật, pipeline chạy lại được mỗi đêm → real-time là thêm scheduler, không viết lại (slide từ ARCHITECTURE.md §5).
 5. **Future (30s):** counselor view, tích hợp trường học, mở rộng nguồn data.
 
@@ -25,6 +25,8 @@
 6. "LLM bịa thì sao?" → evidence chỉ được diễn đạt số từ stats, có regex check + fallback template (mở AI_DESIGN.md §4).
 7. "Business model?" → freemium học sinh, B2B trường học/trung tâm hướng nghiệp, báo cáo thị trường cho trường nghề.
 8. "Scale thế nào?" → ARCHITECTURE.md §5, mỗi thành phần có đường thăng cấp.
+9. "Posting nhiều có nghĩa thị trường thiếu người không?" → Không. Đây là observed hiring demand; UI có sample/confidence. Đo skill shortage thật cần thêm dữ liệu supply/time-to-fill — đó là phase pilot.
+10. "Doanh nghiệp/trường học được lợi gì?" → học sinh có bản nháp có bằng chứng trước buổi tư vấn; tư vấn viên dùng thời gian 1:1 cho thảo luận sâu, không làm lại bước khám phá cơ bản.
 
 ## Checklist trước giờ demo
 

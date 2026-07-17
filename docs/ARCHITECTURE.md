@@ -24,7 +24,7 @@ graph TB
   subgraph "Frontend — Next.js :3000"
     N[Landing /] --> O[/explore<br/>Chat + Profile Card live/]
     O --> P[/results<br/>Career cards + Evidence + Pathway/]
-    Q[/market<br/>Skill Gap Radar/]
+    Q[/market<br/>Radar nhu cầu kỹ năng/]
   end
 
   O <-->|REST JSON| J
@@ -143,3 +143,18 @@ Thiết kế hiện tại cố tình để mỗi thành phần có "đường th
 - Rate limit thô cho `/api/chat` (chống trẻ em spam lúc demo booth): 30 req/phút/session.
 - Log mọi LLM call (model, tokens, latency) ra console — debug chi phí và chậm ở đâu.
 - `/api/health` trả `{status, llm_ok, data_loaded}` — M1 check sau mỗi deploy.
+- Student-data retention, source-use và release checklist: `docs/SECURITY_PRIVACY.md`.
+
+## 7. Capacity assumptions & NFR
+
+| Dimension | MVP assumption | Gate |
+|---|---|---|
+| Career KB | P0 ≥25, target 40–60 careers | cosine in-memory, artifact khớp KB hash |
+| Market snapshot | target 3k postings, 3 regions | aggregate offline; API không scan raw JSONL mỗi request |
+| Demo concurrency | 1–10 sessions | rate limit 30 chat req/min/session; SQLite đủ |
+| Latency | chat p95 <5s; recommendation p95 <8s | đo theo EVALUATION.md, replay khi provider fail |
+| Availability demo | 3 E2E runs, 0 unhandled 5xx | FE mock + BE replay + video backup |
+| Data freshness | snapshot có `built_at`/window/source | không dùng từ “real-time” trong MVP |
+| Privacy | không PII, TTL 24h mục tiêu | raw chat không vào log/replay |
+
+Các con số production trong §5 là đường nâng cấp, không phải tuyên bố MVP đã chịu tải production.
