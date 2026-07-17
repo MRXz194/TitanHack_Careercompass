@@ -1,52 +1,62 @@
-# 🚀 DEPLOY — checklist cho M1 (task L-03)
+# DEPLOY — L-03 deploy skeleton + L-02 GitHub guardrails checklist
 
-> FE = Vercel, BE = Render. Toàn bộ đã verify chạy local end-to-end (mock + live) trước khi viết file này.
+> M1 sở hữu file này. Checklist dưới đây là thao tác bấm tay trong GitHub/Vercel/Render UI —
+> không tự động hoá được từ CLI trong môi trường build hiện tại vì cần credentials cá nhân
+> của leader. Điền URL/kết quả thật vào cuối file sau khi xong, và tick lại `docs/PREFLIGHT.md`.
 
-## 0. Trạng thái sẵn sàng (M5 bàn giao)
+## A. GitHub guardrails (L-02)
 
-- FE: `npm run test` (61 unit), `npm run typecheck`, `npm run build` — đều xanh.
-- BE: `python -m compileall app scripts` + `pytest -q tests` (15 test) — xanh; `/api/health` trả `{"status":"ok",...}`.
-- Live FE↔BE đã verify local: chat 2 chiều explore/launch, profile PATCH, error envelope `{"error":{code,message}}` đúng contract §5, timeout 45s có retry UI.
-- FE parse lỗi BE qua `lib/api-core.ts`; mock mode vẫn nguyên vẹn (lưới an toàn demo).
+Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLATE/`, `.github/labels.yml`
+(danh sách tham chiếu — GitHub không tự import label từ YAML trên free plan, tạo tay theo bảng đó).
 
-## 1. Deploy BE lên Render (~5 phút)
+1. **Branch protection**: repo → Settings → Branches → Add rule → branch name pattern `main`.
+   - [ ] Require a pull request before merging (require 1 approval).
+   - [ ] Require status checks to pass before merging → chọn `backend` và `frontend` (từ `ci.yml`) — cần mở ít nhất 1 PR trước để 2 check này xuất hiện trong danh sách.
+   - [ ] Do not allow bypassing the above settings (bỏ qua nếu free plan không có, dùng convention "chỉ M1 merge" thay thế — xem fallback trong `M1_LEAD_INTEGRATION.md` L-02).
+   - [ ] Block force pushes / Block deletions.
+2. **Labels**: Settings → Labels → tạo từng label theo `.github/labels.yml` (name/color/description).
+3. **Verify**: mở 1 PR nhỏ (VD: PR này) → xác nhận không push thẳng được lên `main`, CI trigger, PR template hiển thị đúng, issue template hiển thị khi bấm "New issue".
 
-1. Render dashboard → **New + → Blueprint** → chọn repo → Render tự đọc [render.yaml](../render.yaml).
-2. Điền env vars khi được hỏi:
-   - `CORS_ORIGINS` = `https://<domain-vercel>.vercel.app,http://localhost:3000` (điền lại sau khi có domain FE thật — bước 3)
-   - `CHAT_*`/`EMBED_*`: bỏ trống được ở giai đoạn stub; điền khi PR-03 merge (key lấy trong group chat riêng).
-3. Chờ deploy xong → mở `https://<app>.onrender.com/api/health` → phải thấy `"status":"ok"`.
+## B. Deploy skeleton (L-03)
 
-⚠️ Free tier Render ngủ sau 15' không có traffic — lần gọi đầu chậm ~30s. Trước demo: mở health URL để đánh thức, hoặc để M1 setup ping 10'/lần.
+### Backend → Render (Blueprint, dùng `render.yaml` ở root repo)
+1. [ ] Render dashboard → New → Blueprint → connect repo `MRXz194/TitanHack_Careercompass` → Render đọc `render.yaml`.
+2. [ ] Điền các env var đánh dấu `sync: false` (`CHAT_API_KEY`, `EMBED_API_KEY`, ...) — copy giá trị thật từ `.env` local, KHÔNG paste vào chat/issue/log.
+3. [ ] Deploy xong → mở `https://<service>.onrender.com/api/health` → phải trả `{"status":"ok",...}`.
+4. **Known limitation cần ghi vào pitch/runbook**: Render free plan spin-down khi idle (cold start ~30-50s) và SQLite (`market.db`, `sessions.db`) là ephemeral disk — mất dữ liệu khi service restart/redeploy. Nếu ảnh hưởng demo, dùng `DEMO_MODE=replay` làm lưới an toàn (L-08) thay vì phụ thuộc DB sống.
 
-## 2. Deploy FE lên Vercel (~5 phút)
+### Frontend → Vercel
+1. [ ] Vercel dashboard → Add New → Project → import repo, **Root Directory = `frontend`**.
+2. [ ] Env vars: `NEXT_PUBLIC_API_BASE` = URL backend Render ở trên; `NEXT_PUBLIC_USE_MOCK` = `0` cho bản live (giữ `1` cho preview an toàn nếu BE chưa sẵn sàng).
+3. [ ] Deploy → verify trang chào mở được ở URL Vercel công khai, thử trên trình duyệt ẩn danh + 1 thiết bị mobile.
 
-1. Vercel → **Add New → Project** → import repo → **Root Directory = `frontend`** (quan trọng).
-2. Environment Variables:
-   | Key | Value |
-   |---|---|
-   | `NEXT_PUBLIC_API_BASE` | `https://<app>.onrender.com` |
-   | `NEXT_PUBLIC_USE_MOCK` | `0` (đổi thành `1` = demo bằng mock khi BE có sự cố) |
-3. Deploy → lấy domain → quay lại Render sửa `CORS_ORIGINS` thêm domain này → redeploy BE (Render tự restart khi đổi env).
+### Sau khi có cả hai URL
+1. [ ] Quay lại Render → env var `CORS_ORIGINS` → set đúng bằng URL Vercel thật (không dùng `*`, xem `backend/app/main.py` CORS middleware đọc `settings.cors_origins`).
+2. [ ] Redeploy backend, verify FE gọi API thật không bị chặn CORS (Network tab, không có lỗi CORS trong console).
+3. [ ] Ghi rollback version: Render/Vercel đều giữ deployment history — biết cách bấm "Redeploy" bản trước nếu bản mới lỗi.
 
-## 3. Smoke test sau deploy (bắt buộc, 3 phút)
+## Env matrix (dev vs demo)
+
+| Var | Dev (local) | Demo (Render/Vercel) |
+|---|---|---|
+| `NEXT_PUBLIC_API_BASE` | `http://localhost:8000` | URL Render thật |
+| `NEXT_PUBLIC_USE_MOCK` | `1` khi FE chưa cần BE thật | `0` cho live path, có nút/flag chuyển `1` làm fallback |
+| `CORS_ORIGINS` | `http://localhost:3000` | URL Vercel thật (exact origin) |
+| `DEMO_MODE` | `off` | `off` cho live demo; `replay` là fallback bấm tay nếu mạng/LLM chết (L-08) |
+| `AGENT_MODE` | `deterministic` | `deterministic` (chỉ đổi `langgraph` sau khi PR-12/13 pass gate) |
+
+## Smoke test sau deploy (bắt buộc, ~3 phút — chạy lại sau MỌI redeploy)
 
 - [ ] `GET /api/health` trên Render: `status: ok`
 - [ ] Mở FE → `/explore` → lượt chào xuất hiện (không phải lỗi mạng) → trả lời 2 lượt → profile nhích %
 - [ ] `/explore?mode=launch` → câu mở đầu launch khác explore
-- [ ] Xóa 1 skill trong profile card → không có banner lỗi đỏ
+- [ ] Xóa 1 skill trong profile card → không có banner lỗi đỏ (verify optimistic-patch rollback không kích hoạt sai)
 - [ ] DevTools Console: không có lỗi CORS
-- [ ] Đổi `NEXT_PUBLIC_USE_MOCK=1` trên Vercel → redeploy → FE chạy độc lập không cần BE (drill lưới an toàn — làm 1 lần cho biết đường lui)
+- [ ] Đổi `NEXT_PUBLIC_USE_MOCK=1` trên Vercel → redeploy → FE chạy độc lập không cần BE (drill lưới an toàn — làm 1 lần cho biết đường lui, rồi đổi lại `0`)
 
-## 4. Chạy local (nhắc lại nhanh cho thành viên mới)
+## Kết quả thật (điền sau khi bấm)
 
-```bash
-# BE (từ backend/, cần .env — copy từ .env.example)
-python -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-
-# FE (từ frontend/, .env.local: NEXT_PUBLIC_USE_MOCK=0|1)
-npm install && npm run dev
-```
-
-Lỗi build Next `EXDEV cross-device link` trên Windows/OneDrive → thêm `NEXT_TELEMETRY_DISABLED=1` vào `.env.local`.
+- Backend URL: `TBD`
+- Frontend URL: `TBD`
+- Ngày deploy lần đầu: `TBD`
+- Known limitations: `TBD`

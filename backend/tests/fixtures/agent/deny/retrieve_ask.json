@@ -1,0 +1,19 @@
+{
+  "id": "deny-retrieve-ask",
+  "stage": "retrieve",
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "ask_clarifying_question",
+    "arguments": {
+      "phase": "interests",
+      "turn_index": 0
+    },
+    "public_rationale": "agent must not select tools in retrieve",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "DENY_TOOL",
+    "reason_contains": "STAGE"
+  },
+  "notes": "retrieve/explain/ready have empty agent allowlist"
+}

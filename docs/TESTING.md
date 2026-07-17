@@ -30,7 +30,8 @@ backend/
     ├── integration/                # FastAPI + service + local storage/seed
     ├── e2e/                        # Explore, Launch, replay journeys
     └── fixtures/                   # fictional/sanitized/versioned artifacts
-        ├── agent/                  # PR-12: allow/deny/fallback traces
+        ├── agent/                  # PR-12/14: allow|deny|fallback|injection|personas|replay
+        ├── profiler/               # PR-02 transcript fixtures
         └── market/                 # M2/M3 golden records
 ```
 
@@ -84,6 +85,7 @@ python -m pytest -q tests/integration/test_api_smoke.py
 | PR-05 matching | weights/cap/diversity/stretch | persona + region invariants | M4 |
 | PR-12 policy/tools | stage allowlist, args, privacy, budget | LangChain tool schema + graph compile/invoke | M4 |
 | PR-13 graph | node routing/deadline/fallback | `/api/chat` deterministic/agent parity | M4/M1 |
+| PR-14 red-team | tool-selection fixtures, injection, 12 personas, provenance, budget/replay | scorecard writeback `EVALUATION_RESULTS.md` | M4 |
 | API contract | model/OpenAPI fields/enums/units | FE fixture/API smoke | endpoint owner/M1 |
 | Demo | — | Explore + Launch + replay E2E ba lần | M1 |
 

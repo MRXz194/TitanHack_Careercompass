@@ -1,0 +1,36 @@
+# Labels chuẩn cho repo — tạo tay qua Settings → Labels (GitHub free plan không có import
+# label từ YAML sẵn có, nên đây là danh sách tham chiếu, không phải file được GitHub đọc tự động).
+
+- name: area/data
+  color: "0e8a16"
+  description: D-xx — crawl/normalize/dataset
+- name: area/market-ai
+  color: "1d76db"
+  description: MI-xx — skill extraction/market stats
+- name: area/profiler
+  color: "5319e7"
+  description: PR-xx — profiler/recommender/agent
+- name: area/frontend-explore
+  color: "fbca04"
+  description: F1-xx — chat & profile UI
+- name: area/frontend-results
+  color: "f9d0c4"
+  description: F2-xx — results/dashboard/landing
+- name: area/lead
+  color: "d93f0b"
+  description: L-xx — lead/integration/devops
+- name: priority/p0
+  color: "b60205"
+  description: Bắt buộc cho demo
+- name: priority/p1
+  color: "e99695"
+  description: Quan trọng, có thể cắt nếu kẹt giờ
+- name: priority/p2
+  color: "c5def5"
+  description: Nice-to-have, cắt đầu tiên khi block
+- name: status/blocked
+  color: "000000"
+  description: Đang chờ handoff/quyết định khác
+- name: ai-quality
+  color: "bfd4f2"
+  description: Bug về chất lượng câu hỏi/gợi ý/evidence AI (PR-10 dùng để đóng)

@@ -18,8 +18,6 @@ out/
 *.tsbuildinfo
 
 # Data (raw & processed are rebuilt by pipeline; seed/ IS committed)
-data/raw/*
-data/processed/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 backend/*.db
@@ -30,3 +28,5 @@ backend/.cache/
 Thumbs.db
 .vscode/
 .idea/
+
+test/
