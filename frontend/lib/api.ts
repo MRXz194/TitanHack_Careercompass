@@ -27,14 +27,45 @@ export function getSessionId(): string {
   return id;
 }
 
-const post = <T,>(path: string, body: unknown) =>
-  requestJson<T>(`${API_BASE}${path}`, {
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  if (!res.ok) {
+    try {
+      const errBody = await res.json();
+      if (errBody?.error?.message) {
+        throw new Error(errBody.error.message);
+      }
+    } catch (e) {
+      if (e instanceof Error && !e.message.startsWith("API")) {
+        throw e;
+      }
+    }
+    throw new Error(`Kết nối tới ${path} thất bại (Mã: ${res.status})`);
+  }
+  return res.json();
+}
 
-const get = <T,>(path: string) => requestJson<T>(`${API_BASE}${path}`);
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`);
+  if (!res.ok) {
+    try {
+      const errBody = await res.json();
+      if (errBody?.error?.message) {
+        throw new Error(errBody.error.message);
+      }
+    } catch (e) {
+      if (e instanceof Error && !e.message.startsWith("API")) {
+        throw e;
+      }
+    }
+    throw new Error(`Kết nối tới ${path} thất bại (Mã: ${res.status})`);
+  }
+  return res.json();
+}
 
 // ---------- Public API ----------
 
