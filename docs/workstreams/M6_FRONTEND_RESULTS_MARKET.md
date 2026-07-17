@@ -4,6 +4,12 @@
 
 **Owned:** `/results`, `/market`, `/how-it-works`, landing/results/market components. **Buddy:** M5.
 
+## Card contract
+
+Mỗi task phải làm rõ user problem, action, expected UI/artifact, render/accessibility tests,
+risk/fallback và handoff. Handoff phải ghi rõ API/fixture version, source/confidence display và
+consumer; mọi chart/stat bắt buộc có provenance label theo `TESTING.md`.
+
 ## Task cards
 
 ### F2-01 — Results shell on contract mock (H+0→6)

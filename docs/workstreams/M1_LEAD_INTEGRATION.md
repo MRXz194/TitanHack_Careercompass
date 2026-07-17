@@ -4,6 +4,12 @@
 
 **Đọc:** `PLAN.md`, `TASKS.md`, `AGENT_WORKFLOW.md`, `HANDOFF.md`, `TESTING.md`, `EVALUATION.md`, `SECURITY_PRIVACY.md`, `BUSINESS_CASE.md`.
 
+## Card contract
+
+Mỗi task phải có outcome cụ thể, action, expected artifact, verify/test, risk/fallback và handoff.
+Task nào dùng `Verify` thay cho `Tests` vẫn phải ghi command/evidence theo `TESTING.md`; không có
+evidence thì trạng thái là `NOT_VERIFIED`, không phải `DONE`.
+
 ## Task cards
 
 ### L-01 — Kickoff và contract alignment (H+0→2)
