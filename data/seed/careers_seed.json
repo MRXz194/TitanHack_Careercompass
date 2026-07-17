@@ -1,0 +1,176 @@
+{
+  "_readme": "Career KB + seed demo data. Đây là file CHUẨN SCHEMA — D-07 mở rộng lên 40-60 nghề theo đúng format. seed_market là số placeholder cho FE dev, sẽ bị thay bằng số thật từ market.db sau MI-04. dimensions: chiều chủ đạo của nghề (0..1) khớp 5 chiều trong Profile.",
+  "careers": [
+    {
+      "career_id": "lap-trinh-vien-web",
+      "title": "Lập trình viên Web",
+      "description": "Xây dựng website và ứng dụng web cho doanh nghiệp. Làm việc với code, giải quyết vấn đề logic, sản phẩm thấy được ngay.",
+      "title_patterns": ["lập trình", "developer", "web dev", "frontend", "backend", "fullstack"],
+      "dimensions": {"ky_thuat": 0.6, "phan_tich": 0.8, "sang_tao": 0.4, "xa_hoi": 0.2, "quan_ly": 0.2},
+      "routes": [
+        {"type": "university", "label": "ĐH ngành CNTT/KTPM (4 năm)", "detail": "Nền tảng rộng, dễ chuyển hướng trong ngành", "first_steps": ["Học tốt Toán", "Thử học Python/JS miễn phí trên freeCodeCamp"]},
+        {"type": "college", "label": "Cao đẳng CNTT (2.5-3 năm)", "detail": "Thực hành nhiều, đi làm sớm hơn", "first_steps": ["Tìm hiểu CĐ FPT Polytechnic hoặc CĐ nghề địa phương"]},
+        {"type": "certificate", "label": "Bootcamp/chứng chỉ (6-12 tháng)", "detail": "Phù hợp khi cần đi làm nhanh, học phí theo đợt", "first_steps": ["Làm 1 dự án nhỏ để thử độ thích trước khi đóng tiền"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "HTML/CSS/JavaScript", "status": "nen-hoc-truoc"},
+        {"skill": "React hoặc framework tương đương", "status": "hoc-trong-truong"},
+        {"skill": "Git & làm việc nhóm", "status": "hoc-trong-truong"}
+      ],
+      "seed_market": {"demand_count_90d": 1850, "salary_p25_trieu": 12, "salary_p50_trieu": 18, "salary_p75_trieu": 28, "trend_pct": 15, "top_regions": ["hcm", "hanoi", "danang"], "top_skills": ["JavaScript", "React", "SQL", "Git", "tiếng Anh đọc tài liệu"]}
+    },
+    {
+      "career_id": "data-analyst",
+      "title": "Chuyên viên phân tích dữ liệu",
+      "description": "Biến số liệu thành insight giúp doanh nghiệp ra quyết định. Kết hợp toán, công cụ và kể chuyện bằng dữ liệu.",
+      "title_patterns": ["data analyst", "phân tích dữ liệu", "business analyst", "bi analyst"],
+      "dimensions": {"ky_thuat": 0.3, "phan_tich": 0.9, "sang_tao": 0.3, "xa_hoi": 0.4, "quan_ly": 0.3},
+      "routes": [
+        {"type": "university", "label": "ĐH Toán/Kinh tế/CNTT (4 năm)", "detail": "Nhiều ngành dẫn đến nghề này", "first_steps": ["Học tốt Toán", "Thử Excel + SQL cơ bản"]},
+        {"type": "certificate", "label": "Chứng chỉ Data (Google/Coursera, 6-9 tháng)", "detail": "Kết hợp với ĐH ngành khác hoặc chuyển nghề", "first_steps": ["Google Data Analytics Certificate", "Làm 1 dashboard từ dữ liệu công khai"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Excel nâng cao", "status": "nen-hoc-truoc"},
+        {"skill": "SQL", "status": "hoc-trong-truong"},
+        {"skill": "Trực quan hóa (Power BI/Tableau)", "status": "hoc-trong-truong"}
+      ],
+      "seed_market": {"demand_count_90d": 720, "salary_p25_trieu": 12, "salary_p50_trieu": 16, "salary_p75_trieu": 25, "trend_pct": 28, "top_regions": ["hcm", "hanoi"], "top_skills": ["SQL", "Excel", "Power BI", "tư duy phản biện", "thuyết trình"]}
+    },
+    {
+      "career_id": "digital-marketing",
+      "title": "Chuyên viên Digital Marketing",
+      "description": "Quảng bá sản phẩm trên kênh số: nội dung, quảng cáo, mạng xã hội, đo lường hiệu quả bằng số liệu.",
+      "title_patterns": ["digital marketing", "content marketing", "performance marketing", "seo", "social media"],
+      "dimensions": {"ky_thuat": 0.2, "phan_tich": 0.5, "sang_tao": 0.7, "xa_hoi": 0.6, "quan_ly": 0.4},
+      "routes": [
+        {"type": "university", "label": "ĐH Marketing/Truyền thông (4 năm)", "detail": "", "first_steps": ["Thử tự chạy 1 kênh TikTok/blog về chủ đề mình thích"]},
+        {"type": "certificate", "label": "Khóa nghề + chứng chỉ Google/Meta (3-6 tháng)", "detail": "Ngành coi trọng portfolio hơn bằng cấp", "first_steps": ["Google Digital Garage (miễn phí)", "Làm content cho quán/shop người quen"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Viết nội dung", "status": "nen-hoc-truoc"},
+        {"skill": "Chạy quảng cáo cơ bản", "status": "hoc-trong-truong"},
+        {"skill": "Đọc số liệu (GA4)", "status": "hoc-trong-truong"}
+      ],
+      "seed_market": {"demand_count_90d": 1320, "salary_p25_trieu": 9, "salary_p50_trieu": 13, "salary_p75_trieu": 20, "trend_pct": 8, "top_regions": ["hcm", "hanoi", "danang"], "top_skills": ["content", "quảng cáo Facebook/Google", "Canva", "phân tích số liệu", "nắm trend"]}
+    },
+    {
+      "career_id": "dieu-duong",
+      "title": "Điều dưỡng viên",
+      "description": "Chăm sóc người bệnh tại bệnh viện, phòng khám, viện dưỡng lão. Nhu cầu rất lớn trong nước và cả xuất khẩu lao động (Nhật, Đức).",
+      "title_patterns": ["điều dưỡng", "y tá", "nurse", "chăm sóc bệnh nhân"],
+      "dimensions": {"ky_thuat": 0.4, "phan_tich": 0.3, "sang_tao": 0.1, "xa_hoi": 0.9, "quan_ly": 0.2},
+      "routes": [
+        {"type": "university", "label": "ĐH Điều dưỡng (4 năm)", "detail": "Lên được vị trí quản lý điều dưỡng", "first_steps": ["Học tốt Sinh", "Tìm hiểu tổ hợp xét tuyển khối B"]},
+        {"type": "college", "label": "Cao đẳng Điều dưỡng (3 năm)", "detail": "Đường phổ biến nhất, đủ điều kiện hành nghề và đi Nhật/Đức", "first_steps": ["Tìm hiểu CĐ Y tế địa phương", "Tìm hiểu chương trình điều dưỡng Đức (miễn phí + lương học việc)"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Kiến thức Sinh học", "status": "nen-hoc-truoc"},
+        {"skill": "Kỹ năng chăm sóc lâm sàng", "status": "hoc-trong-truong"},
+        {"skill": "Ngoại ngữ (nếu muốn đi nước ngoài)", "status": "hoc-them"}
+      ],
+      "seed_market": {"demand_count_90d": 640, "salary_p25_trieu": 8, "salary_p50_trieu": 11, "salary_p75_trieu": 16, "trend_pct": 19, "top_regions": ["hcm", "hanoi", "danang"], "top_skills": ["chăm sóc bệnh nhân", "tỉ mỉ", "giao tiếp", "chịu áp lực", "tiếng Nhật/Đức (đi nước ngoài)"]}
+    },
+    {
+      "career_id": "ky-thuat-vien-dien-lanh",
+      "title": "Kỹ thuật viên điện lạnh",
+      "description": "Lắp đặt, bảo trì, sửa chữa điều hòa, tủ lạnh, kho lạnh. Nghề thực hành, khát nhân lực quanh năm, thợ giỏi có thể mở tiệm riêng.",
+      "title_patterns": ["điện lạnh", "điều hòa", "hvac", "bảo trì điện"],
+      "dimensions": {"ky_thuat": 0.9, "phan_tich": 0.4, "sang_tao": 0.2, "xa_hoi": 0.4, "quan_ly": 0.3},
+      "routes": [
+        {"type": "vocational", "label": "Trung cấp nghề Điện lạnh (18-24 tháng)", "detail": "Vừa học vừa làm từ năm 2, chi phí thấp", "first_steps": ["Tìm hiểu trường nghề gần nhà", "Xin phụ việc tiệm điện lạnh dịp hè"]},
+        {"type": "college", "label": "Cao đẳng Điện - Điện lạnh (2.5-3 năm)", "detail": "Thêm nền tảng để lên giám sát kỹ thuật tòa nhà", "first_steps": ["Tìm hiểu CĐ nghề địa phương"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Điện cơ bản", "status": "nen-hoc-truoc"},
+        {"skill": "Điện lạnh dân dụng", "status": "hoc-trong-truong"},
+        {"skill": "Kỹ năng khách hàng", "status": "hoc-them"}
+      ],
+      "seed_market": {"demand_count_90d": 412, "salary_p25_trieu": 9, "salary_p50_trieu": 12, "salary_p75_trieu": 15, "trend_pct": 23, "top_regions": ["danang", "hcm"], "top_skills": ["điện lạnh dân dụng", "đọc sơ đồ mạch", "kỹ năng khách hàng", "cẩn thận an toàn điện"]}
+    },
+    {
+      "career_id": "thiet-ke-do-hoa",
+      "title": "Thiết kế đồ họa",
+      "description": "Thiết kế ấn phẩm, thương hiệu, nội dung số. Nghề của portfolio — sản phẩm nói thay bằng cấp.",
+      "title_patterns": ["thiết kế đồ họa", "graphic design", "designer", "ui designer"],
+      "dimensions": {"ky_thuat": 0.3, "phan_tich": 0.2, "sang_tao": 0.9, "xa_hoi": 0.3, "quan_ly": 0.2},
+      "routes": [
+        {"type": "university", "label": "ĐH Mỹ thuật ứng dụng/Thiết kế (4 năm)", "detail": "", "first_steps": ["Luyện vẽ tay cơ bản", "Làm quen Canva rồi Photoshop/Illustrator"]},
+        {"type": "vocational", "label": "Trung tâm thiết kế (Arena, FPT Arena... 12-24 tháng)", "detail": "Tập trung portfolio, đi làm nhanh", "first_steps": ["Làm 5 sản phẩm đầu tay cho CLB/quán quen", "Tham khảo học phí trả góp theo kỳ"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Nguyên lý thị giác, phối màu", "status": "nen-hoc-truoc"},
+        {"skill": "Photoshop/Illustrator/Figma", "status": "hoc-trong-truong"},
+        {"skill": "Xây portfolio", "status": "hoc-them"}
+      ],
+      "seed_market": {"demand_count_90d": 580, "salary_p25_trieu": 8, "salary_p50_trieu": 12, "salary_p75_trieu": 18, "trend_pct": 5, "top_regions": ["hcm", "hanoi"], "top_skills": ["Photoshop", "Illustrator", "Figma", "tư duy thẩm mỹ", "nhận feedback"]}
+    },
+    {
+      "career_id": "logistics-van-hanh",
+      "title": "Nhân viên vận hành Logistics",
+      "description": "Điều phối hàng hóa, kho bãi, chứng từ xuất nhập khẩu. Ngành tăng trưởng mạnh theo thương mại điện tử và FDI, đặc biệt ở các thành phố cảng.",
+      "title_patterns": ["logistics", "xuất nhập khẩu", "kho vận", "supply chain", "chứng từ"],
+      "dimensions": {"ky_thuat": 0.3, "phan_tich": 0.6, "sang_tao": 0.1, "xa_hoi": 0.5, "quan_ly": 0.6},
+      "routes": [
+        {"type": "university", "label": "ĐH Logistics/Ngoại thương (4 năm)", "detail": "", "first_steps": ["Học tốt tiếng Anh", "Tìm hiểu ngành qua kênh về xuất nhập khẩu"]},
+        {"type": "college", "label": "Cao đẳng Logistics (2.5-3 năm)", "detail": "Đi làm vận hành sớm, học tiếp lên sau", "first_steps": ["Tìm hiểu CĐ có liên kết doanh nghiệp cảng/kho"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Tiếng Anh giao dịch", "status": "nen-hoc-truoc"},
+        {"skill": "Nghiệp vụ chứng từ", "status": "hoc-trong-truong"},
+        {"skill": "Excel quản lý kho", "status": "hoc-trong-truong"}
+      ],
+      "seed_market": {"demand_count_90d": 890, "salary_p25_trieu": 9, "salary_p50_trieu": 13, "salary_p75_trieu": 19, "trend_pct": 31, "top_regions": ["hcm", "danang", "hanoi"], "top_skills": ["tiếng Anh", "Excel", "chứng từ XNK", "cẩn thận", "xử lý tình huống"]}
+    },
+    {
+      "career_id": "ke-toan",
+      "title": "Kế toán",
+      "description": "Ghi nhận, kiểm soát dòng tiền và sổ sách doanh nghiệp. Mọi công ty đều cần — nghề ổn định, đường lên kế toán trưởng/kiểm toán rõ ràng.",
+      "title_patterns": ["kế toán", "accountant", "kiểm toán", "thuế"],
+      "dimensions": {"ky_thuat": 0.2, "phan_tich": 0.8, "sang_tao": 0.1, "xa_hoi": 0.3, "quan_ly": 0.4},
+      "routes": [
+        {"type": "university", "label": "ĐH Kế toán - Kiểm toán (4 năm)", "detail": "", "first_steps": ["Học tốt Toán", "Làm quen Excel"]},
+        {"type": "college", "label": "Cao đẳng Kế toán (2.5-3 năm)", "detail": "Đi làm kế toán viên sớm, học chứng chỉ nâng sau", "first_steps": ["Tìm hiểu CĐ kinh tế địa phương"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Excel", "status": "nen-hoc-truoc"},
+        {"skill": "Phần mềm kế toán (MISA)", "status": "hoc-trong-truong"},
+        {"skill": "Luật thuế cơ bản", "status": "hoc-trong-truong"}
+      ],
+      "seed_market": {"demand_count_90d": 1050, "salary_p25_trieu": 8, "salary_p50_trieu": 11, "salary_p75_trieu": 17, "trend_pct": 2, "top_regions": ["hcm", "hanoi", "danang"], "top_skills": ["Excel", "MISA", "tỉ mỉ", "luật thuế", "trung thực"]}
+    },
+    {
+      "career_id": "dau-bep",
+      "title": "Đầu bếp",
+      "description": "Nấu ăn chuyên nghiệp tại nhà hàng, khách sạn, resort. Ngành F&B - du lịch phục hồi mạnh; tay nghề + thái độ quyết định thu nhập, không phải bằng cấp.",
+      "title_patterns": ["đầu bếp", "chef", "bếp", "phụ bếp", "bếp trưởng"],
+      "dimensions": {"ky_thuat": 0.7, "phan_tich": 0.2, "sang_tao": 0.7, "xa_hoi": 0.4, "quan_ly": 0.4},
+      "routes": [
+        {"type": "vocational", "label": "Trung cấp nghề Bếp (12-24 tháng)", "detail": "Học nhanh, thực hành là chính", "first_steps": ["Nấu thử theo công thức và nhờ người nhà chấm", "Xin phụ bếp part-time"]},
+        {"type": "certificate", "label": "Khóa nghiệp vụ bếp (3-6 tháng) + học việc", "detail": "Đường vào nghề chi phí thấp nhất", "first_steps": ["Tìm khóa nghiệp vụ tại trung tâm dạy nghề địa phương"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Kỹ thuật bếp cơ bản, vệ sinh ATTP", "status": "hoc-trong-truong"},
+        {"skill": "Quản lý nguyên liệu", "status": "hoc-them"},
+        {"skill": "Chịu áp lực giờ cao điểm", "status": "ren-khi-lam"}
+      ],
+      "seed_market": {"demand_count_90d": 470, "salary_p25_trieu": 8, "salary_p50_trieu": 12, "salary_p75_trieu": 20, "trend_pct": 26, "top_regions": ["danang", "hcm"], "top_skills": ["kỹ thuật bếp", "vệ sinh ATTP", "làm việc nhóm", "chịu áp lực", "sáng tạo món"]}
+    },
+    {
+      "career_id": "co-khi-cnc",
+      "title": "Kỹ thuật viên cơ khí CNC",
+      "description": "Vận hành máy gia công chính xác trong nhà máy sản xuất. FDI đổ vào sản xuất khiến nghề này khát nhân lực, lương khởi điểm tốt so với thời gian học.",
+      "title_patterns": ["cnc", "cơ khí", "vận hành máy", "tiện phay", "gia công"],
+      "dimensions": {"ky_thuat": 0.9, "phan_tich": 0.5, "sang_tao": 0.2, "xa_hoi": 0.2, "quan_ly": 0.2},
+      "routes": [
+        {"type": "vocational", "label": "Trung cấp Cơ khí - CNC (18-24 tháng)", "detail": "Doanh nghiệp thường tuyển thẳng từ trường nghề", "first_steps": ["Tìm trường nghề có xưởng máy CNC thật", "Hỏi về chương trình liên kết tuyển dụng"]},
+        {"type": "college", "label": "Cao đẳng Cơ khí chế tạo (3 năm)", "detail": "Thêm nền tảng lập trình CNC nâng cao", "first_steps": ["Tìm hiểu CĐ kỹ thuật địa phương"]}
+      ],
+      "skill_roadmap": [
+        {"skill": "Đọc bản vẽ kỹ thuật", "status": "hoc-trong-truong"},
+        {"skill": "Vận hành máy CNC", "status": "hoc-trong-truong"},
+        {"skill": "An toàn lao động", "status": "hoc-trong-truong"}
+      ],
+      "seed_market": {"demand_count_90d": 530, "salary_p25_trieu": 10, "salary_p50_trieu": 14, "salary_p75_trieu": 19, "trend_pct": 18, "top_regions": ["hcm", "hanoi", "other"], "top_skills": ["đọc bản vẽ", "vận hành CNC", "đo lường chính xác", "kỷ luật", "an toàn lao động"]}
+    }
+  ]
+}

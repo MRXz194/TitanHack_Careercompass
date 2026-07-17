@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Design tokens — dùng các biến này thay vì màu tùy hứng (xem frontend/CLAUDE.md) */
+:root {
+  --cc-primary: #2563eb;      /* blue-600 — hành động chính */
+  --cc-primary-soft: #dbeafe; /* blue-100 */
+  --cc-accent: #f59e0b;       /* amber-500 — stretch card, highlight */
+  --cc-success: #16a34a;      /* green-600 — trend tăng */
+  --cc-danger: #dc2626;       /* red-600 — trend giảm */
+  --cc-ink: #0f172a;          /* slate-900 — chữ chính */
+  --cc-muted: #64748b;        /* slate-500 — chữ phụ */
+  --cc-bg: #f8fafc;           /* slate-50 — nền */
+}
+
+body {
+  background: var(--cc-bg);
+  color: var(--cc-ink);
+}
