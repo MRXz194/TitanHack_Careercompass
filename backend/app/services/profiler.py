@@ -646,9 +646,32 @@ def handle_turn(
     if _user_declines_constraint(user_text):
         state.constraint_declined = True
 
+    # PR-13: optional agent path for discover/confirm (langgraph mode only).
+    # Classic path always remains fallback; API shape unchanged; no CoT in response.
+    from app.services import agent_chat
+
+    agent_reply: str | None = None
+    agent_delta = None
+    if agent_chat.agent_enabled_for_chat():
+        enrich = agent_chat.run_agent_enrichment(state, user_text)
+        agent_delta = enrich.get("delta")
+        if not enrich.get("fallback"):
+            agent_reply = enrich.get("reply")
+        # never expose enrich["trace"] on ChatResponse
+    else:
+        # Deterministic: may still use local extract tool (no graph/network planner)
+        agent_delta = agent_chat.maybe_run_extract_tools_only(state, user_text)
+
     turn_out = _produce_turn_output(state, user_text)
+    # Prefer agent-extracted delta when present (then classic delta fills gaps)
+    delta = turn_out.profile_delta
+    if agent_delta is not None:
+        # merge agent delta first so classic can add more signals
+        state.profile = merge_delta(
+            state.profile, agent_delta, state.corrections, state.turn
+        )
     state.profile = merge_delta(
-        state.profile, turn_out.profile_delta, state.corrections, state.turn
+        state.profile, delta, state.corrections, state.turn
     )
     state.profile.session_id = session_id
     state.profile.journey_mode = state.journey_mode
@@ -690,12 +713,16 @@ def handle_turn(
         if state.turn >= 12:
             state.done = True
 
-    reply = turn_out.reply.strip() or get_fallback_question(
-        state.journey_mode,
-        state.phase,
-        state.fallback_index,
-        recent_replies=_recent_assistant(),
-    )
+    # Prefer agent-composed reply only when non-empty and not done CTA phase
+    if agent_reply and not state.done and state.phase != "wrapup":
+        reply = agent_reply.strip()
+    else:
+        reply = turn_out.reply.strip() or get_fallback_question(
+            state.journey_mode,
+            state.phase,
+            state.fallback_index,
+            recent_replies=_recent_assistant(),
+        )
     # Final de-dupe against last assistant message
     recent = _recent_assistant()
     if reply in recent:

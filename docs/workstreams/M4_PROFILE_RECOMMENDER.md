@@ -315,6 +315,17 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Risk/fallback:** `AGENT_MODE=deterministic` quay về question bank; retrieval/ranking luôn deterministic PR-05.
 - **Handoff:** endpoint behavior + replay trace fixture cho M1/M5/M6.
 
+#### Status (M4)
+- **State:** DONE
+- **Code:** `services/agent_chat.py` wired in `profiler.handle_turn`
+- **Handoff:** `docs/handoffs/M4_PR-13_CHAT_AGENT_HANDOFF.md`
+- **Default:** `AGENT_MODE=deterministic` (classic + local extract tool); `langgraph` enables agent loop on discover/confirm only
+
+#### Verify evidence
+- `pytest -q tests/unit/test_agent_chat.py tests/integration/test_agent_chat_api.py` → PASS
+- full unit/contract/integration → PASS
+- ChatResponse never includes trace/CoT; recommendations have no planner fields
+
 ### PR-14 — Agent evaluation/red-team (H+31→38)
 - **Problem:** Agentic chỉ là claim mạnh khi chứng minh được tool choice, safety và fallback, không chỉ có demo đẹp.
 - **Actions:** chạy tool-selection fixtures, prompt injection, 12 personas, gender/region/school pairs, missing provenance, budget/latency, replay; ghi failures/fix/retest.
