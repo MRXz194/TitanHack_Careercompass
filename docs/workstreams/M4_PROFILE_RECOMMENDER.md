@@ -333,6 +333,26 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Tests:** toàn bộ bảng §8 `AGENTIC_RUNTIME.md`; fail không được xoá fixture hay nới threshold.
 - **Handoff:** scorecard/pitch evidence cho M1; M1 xác nhận deterministic replay.
 
+#### Status (M4)
+- **State:** DONE (offline §8 red-team + scorecard writeback)
+- **Fixtures:** `backend/tests/fixtures/agent/{allow,deny,fallback,injection,personas,replay}/`
+- **Replay:** `backend/app/data/replay/agent_sanitized_trace.json`
+- **Tests:** `tests/unit/test_agent_redteam.py`
+- **Harness:** `scripts/run_m4_evaluation.py` fills agent gates (no permanent N/A)
+- **Handoff:** `docs/handoffs/M4_PR-14_AGENT_REDTEAM_HANDOFF.md`
+- **Versions:** policy `agent-policy-v1`, tools `agent-tools-v1`, default `AGENT_MODE=deterministic`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_agent_redteam.py` → PASS (31)
+- agent suite unit+contract+integration → PASS (61)
+- `PYTHONPATH=. python scripts/run_m4_evaluation.py` → exit 0; `agent_langgraph_gates` = PASS
+- full `pytest -q tests/unit tests/contract tests/integration` → PASS
+- No fixture deleted; no threshold lowered
+
+#### Claim boundary
+- Offline allowlist/policy/fallback/replay: PASS
+- Live multi-turn LLM planner: NOT_RUN — do **not** claim fully autonomous agent
+
 ## Hard-stop rules
 
 - No recommendation if profile completeness below mode threshold; ask/correct instead.

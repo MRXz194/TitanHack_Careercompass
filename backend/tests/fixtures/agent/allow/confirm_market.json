@@ -1,0 +1,19 @@
+{
+  "id": "allow-confirm-market",
+  "stage": "confirm_profile",
+  "plan": {
+    "intent": "confirm",
+    "next_tool": "get_market_context",
+    "arguments": {
+      "session_id_hash": "fixturehash0004",
+      "career_id": "data-analyst",
+      "region": "hanoi"
+    },
+    "public_rationale": "Mình lấy ngữ cảnh thị trường đã có nguồn.",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "ALLOW"
+  },
+  "notes": "Market read-only only at confirm_profile; not at discover"
+}

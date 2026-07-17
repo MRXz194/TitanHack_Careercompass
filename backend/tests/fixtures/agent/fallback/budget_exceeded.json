@@ -1,0 +1,26 @@
+{
+  "id": "fallback-budget-exceeded",
+  "stage": "discover",
+  "budget": {
+    "agent_tools_used": 2,
+    "max_agent_tools": 2,
+    "policy_denies": 0,
+    "max_policy_denies": 2,
+    "deadline_ms": 8000
+  },
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "inspect_profile_gaps",
+    "arguments": {
+      "session_id_hash": "fixturehash0006",
+      "stage": "discover",
+      "journey_mode": "explore",
+      "phase": "interests"
+    },
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "STOP_FALLBACK",
+    "reason_contains": "BUDGET"
+  }
+}

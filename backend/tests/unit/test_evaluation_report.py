@@ -37,6 +37,25 @@ def test_m4_gates_not_all_not_run() -> None:
     assert "human_recommendation_rubric" in text or "dual" in text.lower() or "NOT_RUN" in text
 
 
+def test_agent_gates_present_after_pr14() -> None:
+    """PR-14: agent metrics must be real pass/fail, not permanent N/A placeholders."""
+    text = RESULTS.read_text(encoding="utf-8")
+    for needle in (
+        "agent_langgraph_gates",
+        "agent_tool_selection_allowlist",
+        "agent_prompt_injection",
+        "agent_personas_n12",
+        "agent_orchestrator_p95",
+        "agent-policy-v1",
+        "agent-tools-v1",
+    ):
+        assert needle in text, f"missing {needle}"
+    # Must not still claim agent gates unimplemented
+    assert "PR-12/13/14 not implemented" not in text
+    # Must not overclaim autonomy
+    assert "autonomous" in text.lower() or "không claim" in text.lower()
+
+
 def test_no_cherry_pick_disclaimer_present() -> None:
     text = RESULTS.read_text(encoding="utf-8").lower()
     assert "không cherry-pick" in text or "proxy" in text

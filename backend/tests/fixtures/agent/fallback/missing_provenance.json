@@ -1,0 +1,13 @@
+{
+  "id": "fallback-missing-provenance",
+  "kind": "observation",
+  "tool": "get_market_context",
+  "result": {
+    "demand_count_90d": 42
+  },
+  "expect": {
+    "policy_code": "DENY_TOOL",
+    "reason_contains": "PROVENANCE"
+  },
+  "notes": "Market observation without provenance must be denied post-tool"
+}

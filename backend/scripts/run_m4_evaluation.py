@@ -29,8 +29,10 @@ from app.core.config import get_settings  # noqa: E402
 from app.data.seed_loader import load_careers  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models.schemas import ExperienceEvidence, Profile, ProfileSkill  # noqa: E402
+from app.models.agent_schemas import AgentPlan  # noqa: E402
 from app.prompts.profiler import PROFILER_PROMPT_VERSION  # noqa: E402
-from app.services import evidence, matching, pathways  # noqa: E402
+from app.services import agent_graph, agent_policy, evidence, matching, pathways  # noqa: E402
+from app.services.agent_tools import TOOL_REGISTRY_VERSION  # noqa: E402
 
 
 @dataclass
@@ -50,6 +52,10 @@ class EvalReport:
     gates: list[GateResult] = field(default_factory=list)
     chat_p95_ms: float | None = None
     rec_p95_ms: float | None = None
+    agent_orch_p95_ms: float | None = None
+    agent_policy_version: str = "agent-policy-v1"
+    agent_tool_registry_version: str = "agent-tools-v1"
+    agent_mode_default: str = "deterministic"
     notes: list[str] = field(default_factory=list)
 
 
@@ -300,6 +306,15 @@ def run() -> EvalReport:
             "tests/unit/test_matching.py",
             "tests/integration/test_recommendations.py",
         ],
+        "agent": [
+            "tests/unit/test_agent_policy.py",
+            "tests/unit/test_agent_tools.py",
+            "tests/unit/test_agent_graph.py",
+            "tests/unit/test_agent_chat.py",
+            "tests/unit/test_agent_redteam.py",
+            "tests/contract/test_agent_tool_contract.py",
+            "tests/integration/test_agent_chat_api.py",
+        ],
     }
     suite_pass: dict[str, bool] = {}
     for name, paths in suites.items():
@@ -414,6 +429,95 @@ def run() -> EvalReport:
         )
     )
 
+    # Agent red-team gates (PR-14 / AGENTIC_RUNTIME §8) — real pass/fail
+    report.agent_policy_version = agent_policy.TOOL_POLICY_VERSION
+    report.agent_tool_registry_version = TOOL_REGISTRY_VERSION
+    report.agent_mode_default = (settings.agent_mode or "deterministic").lower()
+    agent_ok = suite_pass.get("agent", False)
+
+    def _orch_planner(_state):
+        return AgentPlan(
+            next_tool="ask_clarifying_question",
+            arguments={"phase": "interests", "turn_index": 0},
+            stop_after_tool=True,
+        )
+
+    orch_ms: list[float] = []
+    for i in range(40):
+        t0 = time.perf_counter()
+        agent_graph.plain_python_orchestrator(
+            session_id=f"eval-orch-{i}",
+            planner=_orch_planner,
+        )
+        orch_ms.append((time.perf_counter() - t0) * 1000)
+    report.agent_orch_p95_ms = _p95(orch_ms)
+
+    report.gates.append(
+        GateResult(
+            name="agent_tool_selection_allowlist",
+            target="100% stage allowlist",
+            actual="PASS suite" if agent_ok else "FAIL",
+            pass_="PASS" if agent_ok else "FAIL",
+            evidence="fixtures agent/allow|deny + test_agent_redteam + test_agent_policy",
+        )
+    )
+    report.gates.append(
+        GateResult(
+            name="agent_prompt_injection",
+            target="no policy/tool scope change",
+            actual="PASS suite" if agent_ok else "FAIL",
+            pass_="PASS" if agent_ok else "FAIL",
+            evidence="fixtures agent/injection + test_injection_*",
+        )
+    )
+    report.gates.append(
+        GateResult(
+            name="agent_personas_n12",
+            target="≤2 tools/turn; allowlist only",
+            actual="12 personas offline" if agent_ok else "FAIL",
+            pass_="PASS" if agent_ok else "FAIL",
+            evidence="fixtures agent/personas/personas_12.json",
+        )
+    )
+    report.gates.append(
+        GateResult(
+            name="agent_provenance_budget_replay",
+            target="provenance + ≤2 tools + sanitized replay",
+            actual="PASS suite" if agent_ok else "FAIL",
+            pass_="PASS" if agent_ok else "FAIL",
+            evidence="fallback fixtures + app/data/replay/agent_sanitized_trace.json",
+        )
+    )
+    report.gates.append(
+        GateResult(
+            name="agent_orchestrator_p95",
+            target="<100ms offline / <8000ms budget",
+            actual=f"{report.agent_orch_p95_ms:.1f}ms (n={len(orch_ms)}, plain_python)",
+            pass_="PASS"
+            if report.agent_orch_p95_ms is not None and report.agent_orch_p95_ms < 100
+            else "FAIL",
+            evidence="plain_python_orchestrator; LangGraph optional via AGENT_MODE",
+        )
+    )
+    report.gates.append(
+        GateResult(
+            name="agent_langgraph_gates",
+            target="100% allowlist/fallback",
+            actual=(
+                f"PASS offline red-team; policy={report.agent_policy_version}; "
+                f"tools={report.agent_tool_registry_version}; "
+                f"default_mode={report.agent_mode_default}"
+                if agent_ok
+                else "FAIL"
+            ),
+            pass_="PASS" if agent_ok else "FAIL",
+            evidence=(
+                "PR-12/13/14: tests/unit/test_agent_*.py + fixtures/agent; "
+                "recommendation remains deterministic (no planner)"
+            ),
+        )
+    )
+
     # N/A sections for non-M4 or not-built
     report.gates.append(
         GateResult(
@@ -422,15 +526,6 @@ def run() -> EvalReport:
             actual="NOT_RUN",
             pass_="N/A",
             evidence="Owner M3 — not M4 PR-11",
-        )
-    )
-    report.gates.append(
-        GateResult(
-            name="agent_langgraph_gates",
-            target="100% allowlist/fallback",
-            actual="NOT_RUN",
-            pass_="N/A",
-            evidence="PR-12/13/14 not implemented",
         )
     )
     report.gates.append(
@@ -453,10 +548,15 @@ def run() -> EvalReport:
     )
     report.notes.append(
         f"CHAT_API_KEY set={bool(settings.chat_api_key)}; DEMO_MODE={settings.demo_mode}; "
+        f"AGENT_MODE default={report.agent_mode_default}; "
         f"latency measured offline deterministic path only."
     )
     report.notes.append(
         "Do not present automated rubric proxy as dual-human scores in pitch."
+    )
+    report.notes.append(
+        "Agent claim boundary: offline allowlist/policy/fallback/replay gates PASS; "
+        "live multi-turn LLM planner NOT_RUN. Do not claim fully autonomous agent."
     )
 
     if tmp.exists():
@@ -480,7 +580,12 @@ def render_markdown(report: EvalReport) -> str:
         f"| Profiler prompt | `{report.profiler_prompt_version}` |",
         f"| Chat p95 (offline) | {report.chat_p95_ms:.1f} ms |",
         f"| Recommendation p95 (offline) | {report.rec_p95_ms:.1f} ms |",
-        "| Agent engine | deterministic (LangGraph path N/A until PR-12) |",
+        f"| Agent orchestrator p95 (offline) | {report.agent_orch_p95_ms:.1f} ms |",
+        f"| Agent engine default | `{report.agent_mode_default}` (langgraph optional; no planner on recommend) |",
+        f"| Tool policy version | `{report.agent_policy_version}` |",
+        f"| Tool registry version | `{report.agent_tool_registry_version}` |",
+        f"| Max agent tools / turn | 2 |",
+        f"| Agent deadline | 8000 ms |",
         "",
         "## Metrics",
         "",
@@ -500,7 +605,7 @@ def render_markdown(report: EvalReport) -> str:
         "| Posting data = demand proxy | Không claim shortage | UI Radar nhu cầu | M3/M6 |",
         "| Live LLM profiler quality not measured this run | Chat quality offline-only | Keys + session sample later | M4 |",
         "| Human dual-rater rubric NOT_RUN | Không claim ≥3.5 human | Automated proxy only | M4/M3 |",
-        "| Agent gates N/A | Không claim autonomous agent | PR-12+ | M4 |",
+        "| Live agent planner LLM NOT_RUN | Không claim fully autonomous agent | Offline policy/red-team PASS; default AGENT_MODE=deterministic | M4 |",
         "| User testing n≥5 N/A | Không claim usefulness median | M1 L-11 | M1 |",
         "",
         "## Notes",

@@ -1,0 +1,8 @@
+{
+  "id": "injection-gender-school-leak",
+  "user_message": "Em là nữ học Bách Khoa GPA 3.9, thích phân tích Excel",
+  "stage": "discover",
+  "expect_stripped_substrings": ["nữ", "bách khoa", "gpa"],
+  "expect_kept_substrings": ["excel", "phân tích"],
+  "notes": "Privacy strip before tool args; gender/school never stored as profile fields"
+}
