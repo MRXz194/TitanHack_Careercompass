@@ -1,0 +1,17 @@
+{
+  "id": "replay-agent-trace-meta",
+  "tool_policy_version": "agent-policy-v1",
+  "tool_registry_version": "agent-tools-v1",
+  "trace": {
+    "session_id_hash": "a1b2c3d4e5f60718",
+    "stage": "discover",
+    "tools": ["extract_profile_evidence"],
+    "policy_codes": ["ALLOW"],
+    "fallback": false,
+    "latency_ms": 12.4,
+    "prompt_version": "",
+    "tool_policy_version": "agent-policy-v1"
+  },
+  "forbidden_keys": ["messages", "cot", "transcript", "raw", "thought_summary"],
+  "notes": "Sanitized meta only — suitable for demo replay evidence"
+}

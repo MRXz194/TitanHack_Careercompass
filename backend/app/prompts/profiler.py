@@ -168,16 +168,27 @@ def build_profiler_system(journey_mode: str = "explore", phase: str = "warmup") 
     )
 
 
-def get_fallback_question(journey_mode: str, phase: str, turn_index: int = 0) -> str:
-    """Deterministic question bank lookup; rotates when multiple options exist."""
+def get_fallback_question(
+    journey_mode: str,
+    phase: str,
+    turn_index: int = 0,
+    *,
+    recent_replies: list[str] | None = None,
+) -> str:
+    """Deterministic question bank lookup; rotates and avoids recent repeats (PR-10)."""
     mode = (journey_mode or "explore").lower()
     ph = (phase or "warmup").lower()
     bank = LAUNCH_FALLBACK_QUESTIONS if mode == "launch" else FALLBACK_QUESTIONS
-    options = bank.get(ph) or bank["warmup"]
+    options = list(bank.get(ph) or bank["warmup"])
     if not options:
         return "Bạn chia sẻ thêm một chút về bản thân được không?"
-    idx = turn_index % len(options)
-    return options[idx]
+    recent = {(r or "").strip() for r in (recent_replies or []) if (r or "").strip()}
+    # Prefer a question not used in recent assistant turns
+    for offset in range(len(options)):
+        cand = options[(turn_index + offset) % len(options)]
+        if cand not in recent:
+            return cand
+    return options[turn_index % len(options)]
 
 
 # Backward-compatible default (opening Explore warmup).
