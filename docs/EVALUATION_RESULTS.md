@@ -1,48 +1,61 @@
 # EVALUATION RESULTS — điền số thật, không cherry-pick
 
-> Status: `NOT_RUN`. M1 đổi thành `PASS | CONDITIONAL | FAIL` tại H+42. Không đưa placeholder lên slide như kết quả thật.
+> Status: `M4_PARTIAL` — automated M4 gates measured at commit `dcfc09e`. M1 owns final PASS/CONDITIONAL/FAIL at release. Không đưa proxy như human score lên slide.
 
 ## Snapshot
 
 | Field | Value |
 |---|---|
-| Commit SHA | TBD |
-| Dataset hash / built_at | `192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430` / `2026-07-17` |
-| Postings / sources / regions | 298 / topcv, vietnamworks, itviec / hanoi, hcm, danang, other |
-| Career KB / taxonomy version | 25 careers / skills_vi_v1.0 |
-| Chat model / embed model | `deepseek-v4-flash` / `text-embedding-3-small` |
-| Agent engine / versions | `deterministic|langgraph`; LC Core `1.4.9`, LC OpenAI `1.3.5`, LangGraph `1.2.9` |
+| Commit SHA | `dcfc09e` |
+| Career KB count | 25 |
+| Profiler prompt | `profiler-v2` |
+| Chat p95 (offline) | 8.1 ms |
+| Recommendation p95 (offline) | 7.2 ms |
+| Agent engine | deterministic (LangGraph path N/A until PR-12) |
 
 ## Metrics
 
 | Gate | Target | Actual | Pass? | Evidence |
 |---|---:|---:|---|---|
-| Skill precision / recall / F1 | ≥.80 / ≥.65 / ≥.70 | NOT_RUN | ⬜ | |
-| Career mapping accuracy (n=50) | report | NOT_RUN | ⬜ | |
-| Profiler valid JSON after retry | ≥99% | NOT_RUN | ⬜ | |
-| Agent stage/tool allowlist + ≤2 tools/turn | 100% | NOT_RUN | ⬜ | PR-12/14 fixtures |
-| Agent deny/timeout → fallback, session preserved | 100% | NOT_RUN | ⬜ | PR-13 failure matrix |
-| LangGraph overhead p95 (no model, n=100) | <100ms | NOT_RUN | ⬜ | |
-| Recommendation rubric (n=12) | ≥3.5/5 | NOT_RUN | ⬜ | |
-| Launch readiness invariants (n=4) | 100% | NOT_RUN | ⬜ | |
-| Evidence number grounding | 100% | NOT_RUN | ⬜ | |
-| Route structural check | 100% | 100% | ✅ | check_routes.py |
-| Gender paired top-5 overlap | ≥4/5 | NOT_RUN | ⬜ | `BIAS_AUDIT.md` |
-| Chat / recommendation p95 | <5s / <8s | NOT_RUN | ⬜ | |
-| 3 E2E + replay | 0 unhandled 5xx | NOT_RUN | ⬜ | |
-| Student usefulness (n≥5) | median ≥4/5 | NOT_RUN | ⬜ | anonymized notes |
-| Launch: ≥2 new job queries + actionable first step | ≥60% launch testers | NOT_RUN | ⬜ | |
+| pytest:profiler_unit | all green | 44 passed in 0.38s | PASS | tests/unit/test_profiler_engine.py tests/unit/test_profiler_prompts.py tests/unit/test_profiler_transcripts.py tests/unit/test_quality_tuning.py |
+| pytest:profiler_integration | all green | 15 passed in 0.42s | PASS | tests/integration/test_profiler_session.py tests/integration/test_quality_chat.py tests/integration/test_api_smoke.py |
+| pytest:grounding | all green | 9 passed in 0.12s | PASS | tests/unit/test_evidence.py tests/integration/test_evidence_grounding.py |
+| pytest:readiness | all green | 12 passed in 0.17s | PASS | tests/unit/test_pathways.py tests/integration/test_launch_pathways.py |
+| pytest:bias | all green | 17 passed in 0.28s | PASS | tests/unit/test_bias_audit.py |
+| pytest:matching | all green | 13 passed in 0.19s | PASS | tests/unit/test_matching.py tests/integration/test_recommendations.py |
+| route_structural | 100% | 100% | PASS | scripts/check_routes.py |
+| recommendation_rubric_automated_proxy_n12 | ≥3.5/5 human (proxy automated) | 4.25/5 mean criteria; hard_fail_personas=0 | PASS | 8 Explore + 4 Launch structural gold profiles |
+| chat_p95 | <5000ms | 8.1ms (n=40, deterministic) | PASS | TestClient offline path |
+| recommendation_p95 | <8000ms | 7.2ms (n=10, deterministic) | PASS | TestClient offline path |
+| profiler_valid_structured_path | ≥99% JSON valid after retry | 100% offline structured/fixtures (no live LLM this run) | PASS | profiler unit+integration; live LLM NOT_RUN |
+| evidence_number_grounding | 100% | 100% | PASS | test_evidence + test_evidence_grounding |
+| launch_readiness_invariants | 100% | 100% | PASS | test_pathways + test_launch_pathways |
+| gender_paired_top5_overlap | ≥4/5 | PASS suite | PASS | docs/BIAS_AUDIT.md + test_bias_audit |
+| skill_extraction_prf | ≥.80/.65/.70 | NOT_RUN | N/A | Owner M3 — not M4 PR-11 |
+| agent_langgraph_gates | 100% allowlist/fallback | NOT_RUN | N/A | PR-12/13/14 not implemented |
+| human_recommendation_rubric_dual_rater | ≥3.5/5 by ≥2 humans | NOT_RUN | NOT_RUN | Requires M3 dual human raters; automated proxy reported separately |
+| student_usefulness_n5 | median ≥4/5 | NOT_RUN | N/A | Owner M1 user testing L-11 |
 
 ## Failures, fixes, limitations
 
 | Failure/limitation | Impact | Fix/fallback | Owner/status |
 |---|---|---|---|
-| Posting data measures demand, not labor supply | Không kết luận shortage | UI/pitch ghi hiring-demand proxy | M3/M6 |
-| | | | |
+| Posting data = demand proxy | Không claim shortage | UI Radar nhu cầu | M3/M6 |
+| Live LLM profiler quality not measured this run | Chat quality offline-only | Keys + session sample later | M4 |
+| Human dual-rater rubric NOT_RUN | Không claim ≥3.5 human | Automated proxy only | M4/M3 |
+| Agent gates N/A | Không claim autonomous agent | PR-12+ | M4 |
+| User testing n≥5 N/A | Không claim usefulness median | M1 L-11 | M1 |
 
-## Release decision
+## Notes
+
+- CHAT_API_KEY set=False; DEMO_MODE=off; latency measured offline deterministic path only.
+- Do not present automated rubric proxy as dual-human scores in pitch.
+
+## Release decision (M1)
 
 - P0 demo: ⬜ PASS / ⬜ FAIL
 - Live mode: ⬜ allowed / ⬜ replay only
 - Claims removed from pitch: TBD
 - M1 sign-off + time: TBD
+
+_Generated by `backend/scripts/run_m4_evaluation.py` at commit dcfc09e._

@@ -274,6 +274,20 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Expected:** actual metrics + commit/model/prompt/artifact versions in `EVALUATION_RESULTS.md`.
 - **Verify:** M3/M1 reproduce sample; no cherry-pick.
 
+#### Status (M4)
+- **State:** DONE (M4 automated gates filled; status `M4_PARTIAL` until M1 release)
+- **Report:** `docs/EVALUATION_RESULTS.md`
+- **Harness:** `backend/scripts/run_m4_evaluation.py`
+- **Handoff:** `docs/handoffs/M4_PR-11_EVALUATION_REPORT_HANDOFF.md`
+
+#### Verify evidence
+- `PYTHONPATH=. python scripts/run_m4_evaluation.py` → exit 0
+- `pytest -q tests/unit/test_evaluation_report.py` → PASS
+- full unit/contract/integration → PASS
+
+#### Honest gaps
+- Human dual-rater rubric NOT_RUN; live LLM NOT_RUN; agent N/A; user testing N/A (M1/M3)
+
 ### PR-12 — LangChain tool layer + LangGraph spike + bounded policy registry (H+4→12)
 - **Problem:** Flow hỏi đáp không được hard-code kịch bản, nhưng agent tự do sẽ không test/replay/bảo vệ được ethics.
 - **Actions:** đọc ADR/TESTING; verify pinned LangChain/LangGraph install và `llm.py` gateway; timebox 90' tạo custom StateGraph fake structured planner → policy → fake LangChain tool → fallback. Sau đó tạo `agent_graph.py`/`agent_policy.py`/`agent_tools.py`, `@tool(args_schema=PydanticModel)`, stage allowlist, planner schema, pre/post policy privacy/provenance/autonomy/cost.
