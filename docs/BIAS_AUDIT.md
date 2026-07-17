@@ -2,7 +2,7 @@
 
 > File này được mở TRỰC TIẾP trong pitch. Ghi kết quả thật, kể cả fail + cách đã sửa — trung thực là điểm cộng.
 >
-> **Owner:** M4 · **Commit baseline:** 4832994 · **Runner:** `cd backend && PYTHONPATH=. python scripts/run_bias_audit.py`
+> **Owner:** M4 · **Commit baseline:** re-verify on tip `kaguya` (PR-08 land `4832994`; agent privacy §4.1 = PR-14) · **Runner:** `cd backend && PYTHONPATH=. python scripts/run_bias_audit.py`
 
 ## 1. Gender-invariance test (5 cặp)
 

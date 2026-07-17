@@ -2,7 +2,53 @@
 
 **Mission:** tạo profile có evidence và recommendation mở rộng cơ hội; cùng core phục vụ Explore và Launch.
 
-**Owned:** profiler state/session, prompts, matching, evidence, pathways/readiness, recommend router. **Buddy:** M3.
+**Owned:** profiler state/session, prompts, matching, evidence, pathways/readiness, recommend router, bounded agent. **Buddy:** M3.
+
+## Rollup status (tip `kaguya`)
+
+| PR | Title | State | Primary handoff / report |
+|---|---|---|---|
+| PR-01 | Profile/Launch contract freeze | **DONE** | inline status below + contract tests |
+| PR-02 | Adaptive prompts two modes | **DONE** | `profiler-v2` + fixtures/profiler |
+| PR-03 | Profiler/session engine | **DONE** | SQLite sessions + handle_turn |
+| PR-04 | Chat handoff samples | **DONE** | `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` |
+| PR-05 | Explainable matching | **DONE** | `matching.py` + recommend router |
+| PR-06 | Grounded evidence | **DONE** | `docs/handoffs/M4_PR-06_EVIDENCE_HANDOFF.md` |
+| PR-07 | Pathways + Launch readiness | **DONE** | `docs/handoffs/M4_PR-07_PATHWAYS_LAUNCH_HANDOFF.md` |
+| PR-08 | Bias / opportunity audit | **DONE** | `docs/BIAS_AUDIT.md` + `M4_PR-08_*` |
+| PR-09 | Transparency copy | **DONE** | `docs/handoffs/M4_PR-09_TRANSPARENCY_COPY_HANDOFF.md` |
+| PR-10 | Quality tuning | **DONE** | `docs/handoffs/M4_PR-10_QUALITY_TUNING_HANDOFF.md` |
+| PR-11 | AI evaluation report | **DONE** | `docs/EVALUATION_RESULTS.md` + `M4_PR-11_*` |
+| PR-12 | Agent tools/policy/graph | **DONE** | `docs/handoffs/M4_PR-12_AGENT_RUNTIME_HANDOFF.md` |
+| PR-13 | Chat agent orchestrator | **DONE** | `docs/handoffs/M4_PR-13_CHAT_AGENT_HANDOFF.md` |
+| PR-14 | Agent red-team | **DONE** | `docs/handoffs/M4_PR-14_AGENT_REDTEAM_HANDOFF.md` |
+
+**M4 product chain on branch:** complete. **M1 still owns:** release PASS/CONDITIONAL/FAIL, human dual-rater, usefulness n≥5, pitch claim freeze.
+
+### Validate from repo root (canonical)
+
+```bash
+cd backend
+python -m compileall -q app scripts tests
+python -m pytest -q tests/unit tests/contract tests/integration
+python scripts/check_routes.py
+PYTHONPATH=. python scripts/run_m4_evaluation.py   # rewrites docs/EVALUATION_RESULTS.md
+cd ../frontend && npm run typecheck
+```
+
+### Runtime defaults (demo-safe)
+
+| Flag | Default | Notes |
+|---|---|---|
+| `AGENT_MODE` | `deterministic` | `langgraph` optional for bounded chat agent |
+| `DEMO_MODE` | `off` | `replay` disables agent graph + live model path |
+| Recommend planner | **none** | PR-05…07 code only |
+| Tool policy / registry | `agent-policy-v1` / `agent-tools-v1` | |
+
+### Claim boundary (pitch)
+
+- **OK:** conversational profiler + explainable recommend + offline agent allowlist/policy/fallback gates.
+- **Not OK without live/human gates:** fully autonomous agent; dual-human rubric ≥3.5; student usefulness median.
 
 ## Card contract
 

@@ -160,27 +160,34 @@ backend/
 │   │   ├── config.py         # Settings từ env (pydantic-settings) — MỌI config ở đây
 │   │   └── db.py             # SQLAlchemy engine/session
 │   ├── models/
-│   │   └── schemas.py        # Pydantic models = mirror của API_CONTRACT.md
+│   │   ├── schemas.py        # public API = mirror API_CONTRACT.md
+│   │   ├── profiler_io.py    # internal profiler delta
+│   │   ├── agent_schemas.py  # internal agent plan/policy/trace meta
+│   │   └── session_orm.py    # SQLAlchemy session rows
 │   ├── routers/
 │   │   ├── chat.py           # POST /api/chat, profile endpoints
 │   │   ├── recommend.py      # POST /api/recommendations
 │   │   └── market.py         # GET /api/market/*
 │   ├── services/
 │   │   ├── llm.py            # LangChain Gateway — MỌI model/embedding instance ở đây
-│   │   ├── profiler.py       # state machine hội thoại
-│   │   ├── agent_graph.py    # PR-12 planned: LangGraph StateGraph, /api/chat only
-│   │   ├── agent_policy.py   # PR-12 planned: privacy/provenance/budget decisions
-│   │   ├── agent_tools.py    # PR-12 planned: LangChain typed local tools
-│   │   ├── matching.py       # scoring engine
+│   │   ├── profiler.py       # state machine hội thoại (+ PR-13 agent enrich)
+│   │   ├── session_store.py  # SQLite session persistence
+│   │   ├── agent_chat.py     # PR-13: wire bounded agent into /api/chat
+│   │   ├── agent_graph.py    # PR-12: StateGraph or plain_python orchestrator
+│   │   ├── agent_policy.py   # PR-12: stage allowlist, privacy, budget, provenance
+│   │   ├── agent_tools.py    # PR-12: 10 local typed tools (registry v1)
+│   │   ├── matching.py       # scoring engine (deterministic; no agent planner)
+│   │   ├── evidence.py       # grounded why + counterfactual
+│   │   ├── pathways.py       # study routes + Launch readiness
 │   │   └── market.py         # đọc market.db
 │   ├── prompts/              # MỌI prompt ở đây, có version comment
 │   └── data/seed_loader.py   # load seed khi chưa có data thật
 ├── tests/
-│   ├── unit/                 # pure domain/policy/parser/scoring tests
-│   ├── contract/             # Pydantic/OpenAPI/fixture parity
+│   ├── unit/                 # pure domain/policy/parser/scoring/agent red-team
+│   ├── contract/             # Pydantic/OpenAPI/fixture parity + agent tools
 │   ├── integration/          # FastAPI + services + seed/temp storage
 │   ├── e2e/                  # Explore/Launch/replay journeys
-│   └── fixtures/             # fictional, sanitized, versioned artifacts
+│   └── fixtures/             # fictional, sanitized (profiler/, agent/)
 ├── pytest.ini                # strict markers; canonical testpaths
 ├── scripts/test_chat.py      # test hội thoại từ terminal, không cần FE
 └── requirements.txt
