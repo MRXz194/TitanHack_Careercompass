@@ -38,4 +38,6 @@ def test_launch_opening_preserves_mode_in_profile() -> None:
     profile = response.json()["profile"]
     assert profile["journey_mode"] == "launch"
     assert profile["education_stage"] is None
+    assert profile["job_goal"] is None
+    assert all(value == 0.0 for value in profile["dimensions"].values())
     assert profile["experiences"] == []

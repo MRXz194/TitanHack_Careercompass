@@ -20,11 +20,30 @@ User message + session state + policy context
 
 **Authority boundary P0:** Agent chọn *cách thu thập hoặc xác nhận evidence* trong chat. Code deterministic chọn candidate, tính score, stretch, routes, readiness và action plan. Không có LLM planner trên `/api/recommendations`.
 
+### Runtime đã chọn: LangGraph tối giản
+
+MVP dùng LangGraph `StateGraph` như lớp điều phối node/conditional edge cho `/api/chat`. Xem quyết định và spike gate tại `ADR_AGENT_ORCHESTRATION.md`. LangGraph không sở hữu domain rules hay session state; graph nhận state đã sanitize, gọi policy/tool hiện có và trả update để service persist.
+
+```python
+graph = StateGraph(AgentState)
+graph.add_node("plan", plan_node)
+graph.add_node("policy", policy_node)
+graph.add_node("tool", tool_node)
+graph.add_node("compose", compose_node)
+graph.add_node("fallback", fallback_node)
+graph.add_conditional_edges("policy", route_policy, {
+    "allow": "tool",
+    "fallback": "fallback",
+})
+```
+
+Code trên là topology example. PR-12 chỉ pin dependency sau khi spike 90 phút pass; không dùng prebuilt agent/checkpointer/LangSmith. `AGENT_MODE=deterministic` bỏ qua graph và dùng question bank cùng API contract.
+
 ### Vì sao phù hợp bài toán
 
 | Nút thắt thực tế | Agent xử lý tốt hơn flow cứng | Ràng buộc để không gây hại |
 |---|---|---|
-| User nói mơ hồ hoặc đổi ý | Chọn `ask_clarifying_question`, `update_profile_from_evidence` hoặc `show_profile_for_confirmation` theo bằng chứng đang thiếu | Một câu hỏi/lượt; correction của user luôn thắng inference |
+| User nói mơ hồ hoặc đổi ý | Chọn `inspect_profile_gaps`, `extract_profile_evidence`, `apply_profile_correction` hoặc `ask_clarifying_question` theo bằng chứng đang thiếu | Một câu hỏi/lượt; correction của user luôn thắng inference |
 | Cần nối cá nhân với market đang có | Agent có thể đọc market context để hỏi follow-up hữu ích; sau đó deterministic pipeline tạo kết quả | Tool chỉ đọc snapshot có source/date/confidence; không crawl trong request |
 | Cần mở rộng lựa chọn | Deterministic scorer luôn chạy `diversify_with_stretch` | Bắt buộc 1 stretch + >=1 route ngoài đại học, không chốt “nghề phù hợp nhất” |
 | Graduate chưa biết apply gì | Agent thu project/tool/job-goal evidence; deterministic presenter tính readiness + actions | Band deterministic; không phải xác suất được tuyển, action phải có deliverable |
@@ -56,6 +75,16 @@ Mọi tool là hàm backend typed, idempotent nếu có thể, gọi qua `AgentT
 | `assess_launch_readiness` | Deterministic result only | Tính matched/missing/band **và 4 actions có deliverable** | Profile evidence + role skills -> typed readiness | No hiring probability; no GPA/school/gender/region input |
 | `compose_grounded_explanation` | Deterministic result invokes wording only | Diễn đạt từ inputs đã chọn | quotes + typed stats -> Vietnamese evidence | regex/allowed-key number grounding; template fallback |
 | `prepare_result` | Deterministic result only | Ghép `RecommendationResponse` theo contract | validated artifacts -> response | route/readiness/bias invariants phải pass |
+
+### Stage allowlist P0
+
+| Stage | Agent được chọn | Ghi chú |
+|---|---|---|
+| `discover` | `inspect_profile_gaps`, `extract_profile_evidence`, `apply_profile_correction`, `ask_clarifying_question` | Không đọc market trước khi có evidence tối thiểu |
+| `confirm_profile` | bốn tool profile + `get_market_context` | Market chỉ để hỏi/xác nhận context; không rank hoặc loại nghề |
+| `retrieve`, `explain`, `ready` | không có agent-selected tool | Chuyển sang deterministic recommendation pipeline |
+
+Policy reject mọi tool ngoài hàng tương ứng, kể cả tool tồn tại trong registry.
 
 ## 4. Policy, state và giới hạn vòng lặp
 
@@ -136,6 +165,7 @@ class AgentPlan(BaseModel):
     next_tool: Literal[
         "inspect_profile_gaps", "ask_clarifying_question",
         "extract_profile_evidence", "apply_profile_correction",
+        "get_market_context",
     ]
     arguments: dict[str, Any]
     stop_after_tool: bool = False
@@ -148,7 +178,7 @@ def authorize(plan: AgentPlan, stage: AgentStage, budget: TurnBudget) -> PolicyD
     return validate_privacy_and_args(plan)
 ```
 
-Tên model thực tế đặt tại `backend/app/models/` hoặc `services/agent.py`; code block này chỉ là ví dụ thiết kế, không phải schema source thứ hai.
+Tên model thực tế đặt tại `backend/app/models/` hoặc `services/agent_graph.py`; code block này chỉ là ví dụ thiết kế, không phải schema source thứ hai.
 
 - Timeout tổng chat là 8 giây; tool lỗi/deny -> deterministic next question hoặc template result, không trả 500.
 - Khi policy reject 2 lần, stop agent loop, trả câu hỏi/CTA rõ ràng và log reason code (không log raw message).
@@ -190,7 +220,7 @@ Sau policy/tool execution, composer chỉ nhận `AgentObservation[]` đã sanit
 
 | Owner | Phần chịu trách nhiệm | Deliverable phải bàn giao |
 |---|---|---|
-| M1 | feature flag, replay, release gate | `AGENT_MODE=bounded`, recorded safe trace fixtures, go/no-go |
+| M1 | feature flag, replay, release gate | `AGENT_MODE=langgraph|deterministic`, recorded safe trace fixtures, go/no-go |
 | M2 | snapshot/provenance phù hợp tool read-only | market manifest/source/confidence contracts |
 | M3 | market/retrieval tools + tool test fixtures | typed read tools, stable artifact/hash, offline evaluation |
 | M4 | planner, policy, registry, orchestration, explanation | tool schemas, policy matrix, agent tests, fallback |
@@ -214,7 +244,7 @@ Task chính cần thêm: `PR-12` (policy/registry/planner), `PR-13` (chat orches
 
 ## 9. Scope quyết định trong 48h
 
-**In scope:** one chat orchestrator, one bounded agent, 4 agent-selectable tools + 6 deterministic result tools, tool-plan JSON, policy gate, compact user-facing provenance, replay, evaluation/red-team.
+**In scope:** one minimal LangGraph chat orchestrator, one bounded agent, 5 agent-selectable tools (4 profile + 1 market read-only) + 5 deterministic result tools, tool-plan JSON, policy gate, compact user-facing provenance, replay, evaluation/red-team.
 
 **Out of scope:** multiple autonomous agents tranh luận với nhau; tool tự crawl web; agent tự sửa taxonomy/KB/config; long-term memory; counselor automation; job application; agent tự deploy/code; external tool marketplace; autonomous follow-up notifications.
 

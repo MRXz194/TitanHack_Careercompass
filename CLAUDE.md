@@ -25,6 +25,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 - `docs/ARCHITECTURE.md` — component layout; put new files where §4 says.
 - `docs/AI_FOCUS.md` — why this is an AI-centered hackathon product, what AI claims are allowed, and where the product applies.
 - `docs/AGENTIC_RUNTIME.md` — bounded ReAct agent, tool allowlist, policy gates, budgets and agent evaluation. Read before touching profiler, LLM, matching or agent UI.
+- `docs/ADR_AGENT_ORCHESTRATION.md` — accepted minimal LangGraph boundary + 90-minute go/no-go gate. Read before adding any agent dependency/import.
 - `docs/AI_DESIGN.md` — prompt/scoring/bias design. Do not invent alternative scoring or prompt schemes.
 - `docs/TASKS.md` — task IDs; the user will tell you which task (e.g. PR-05) they're on.
 - `docs/HANDOFF.md` — required handoff template and artifact versions.
@@ -41,6 +42,7 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 
 - Frontend: Next.js 15 (App Router) + TypeScript + Tailwind v4 + Recharts. API calls only via `frontend/lib/api.ts` (has mock mode `NEXT_PUBLIC_USE_MOCK=1`).
 - Backend: FastAPI + Pydantic v2 + SQLAlchemy + SQLite. Python 3.11.
+- Agent orchestration: minimal LangGraph `StateGraph` for `/api/chat` only, behind `AGENT_MODE`; no LangChain prebuilt agent, LangSmith, checkpointer or graph-based recommendation.
 - LLM: OpenAI-compatible client ONLY via `backend/app/services/llm.py` (chat = DeepSeek via env `CHAT_*`, embeddings = OpenAI `text-embedding-3-small` via env `EMBED_*`). Never import an LLM SDK elsewhere. Never hardcode model names or API keys.
 - Vector search: NumPy cosine in-process. Do NOT add a vector DB.
 - All prompts live in `backend/app/prompts/` with a version comment.

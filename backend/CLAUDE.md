@@ -6,7 +6,7 @@ Read root `CLAUDE.md` first. Backend = FastAPI + Pydantic v2 + SQLAlchemy + SQLi
 
 - `app/routers/*` — HTTP layer only: parse request, call a service, return schema. No business logic here.
 - `app/services/*` — business logic. `llm.py` is the ONLY file that talks to LLM/embedding APIs.
-- `app/services/agent.py` + `agent_tools.py` — bounded ReAct orchestrator and typed local tools. Read `docs/AGENTIC_RUNTIME.md`; never add arbitrary execution or an external side-effect tool.
+- `app/services/agent_graph.py` + `agent_policy.py` + `agent_tools.py` — minimal LangGraph StateGraph, policy and typed local tools. Read `docs/AGENTIC_RUNTIME.md` + `docs/ADR_AGENT_ORCHESTRATION.md`; never add arbitrary execution or an external side-effect tool.
 - `app/models/schemas.py` — Pydantic models, MUST mirror `docs/API_CONTRACT.md` exactly (field names, enums, units).
 - `app/prompts/*` — all prompt strings, each with a `# vN — date — change` comment on top.
 - `app/core/config.py` — all settings from env. Never read `os.environ` elsewhere.
@@ -16,6 +16,7 @@ Read root `CLAUDE.md` first. Backend = FastAPI + Pydantic v2 + SQLAlchemy + SQLi
 
 - Every LLM call: structured output parsed into a Pydantic model, retry ≤2 with error feedback, then a deterministic fallback (canned question / template evidence). An unhandled LLM failure that 500s the API is a demo-killer — never allow it.
 - Agent planner can choose only the tool/stage allowlist. Policy code validates input, privacy, provenance, autonomy and per-turn budget before/after every call; it is the authority, not prompt text. Never store/expose chain-of-thought or raw transcript in an agent trace.
+- LangGraph is orchestration only for `/api/chat`. Do not use prebuilt autonomous agents, LangSmith/checkpointer state, or route recommendation/matching through the graph. `AGENT_MODE=deterministic` must remain a tested fallback.
 - Explore and Launch share profiler/matching/services. `journey_mode` selects prompt/completeness/presenter only; never duplicate routers or scoring engines.
 - Launch readiness is deterministic and explainable: matched skills require profile/experience evidence; missing skills come from role top skills; LLM only verbalizes validated inputs.
 - Evidence generation must pass the number-check: every digit in LLM output must exist in the stats dict passed in (see `services/` when implemented, design in docs/AI_DESIGN.md §4).

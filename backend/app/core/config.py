@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     sessions_db_url: str = "sqlite:///./sessions.db"
     cors_origins: str = "http://localhost:3000"
     demo_mode: str = "off"  # off | replay
+    agent_mode: str = "deterministic"  # deterministic | langgraph (enable only after PR-12 gate)
 
     # Matching weights — judge-explainable, tunable (docs/AI_DESIGN.md §4)
     w_cosine: float = 0.5

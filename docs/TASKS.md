@@ -106,8 +106,8 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Một ta
 | PR-09 | Trang "Cách hệ thống hoạt động" — nội dung dữ liệu, scoring, giới hạn, autonomy | H+35→36 | PR-08 | ≤300 từ; M6 thay copy draft không đổi layout |
 | PR-10 | Tune chất lượng theo feedback test E2E của M1 (câu hỏi lặp, gợi ý nhạt, evidence sai...) | H+34→40 | L-07 | Các bug label `ai-quality` đóng hết |
 | PR-11 | Tổng hợp AI evaluation: profiler, 12 personas, grounding, latency/cost, paired bias; gửi số thật cho M1 | H+35→38 | PR-06,08 | Phần AI trong `EVALUATION_RESULTS.md` có pass/fail + limitations |
-| PR-12 | **Bounded ReAct policy + tool registry:** định nghĩa 10 typed internal tools, stage allowlist, planner JSON schema, privacy/provenance/budget gates; không thêm browser/shell/external side effect | H+4→12 | PR-01 | Tool contract/Pydantic + policy matrix; invalid tool/args bị deny/repair, không chạm session/data trái phép |
-| PR-13 | **Chat agent orchestrator + degradation:** tích hợp planner → gate → tool observation → composer vào `/api/chat`; recommendation giữ deterministic; tối đa 2 agent-selected tools/turn, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore + Launch chat chạy agent mode; LLM/tool failure không 5xx, output vẫn đúng API contract |
+| PR-12 | **LangGraph spike + bounded policy/tool registry:** trong 90' compile/invoke StateGraph fake planner và gate theo ADR; pass mới pin dependency. Định nghĩa 10 typed tools, stage allowlist, planner schema, privacy/provenance/budget; không browser/shell/side effect | H+4→12 | PR-01 | Spike gate + tool contracts + policy matrix pass; `AGENT_MODE=deterministic` không import graph; invalid tool/args deny/repair |
+| PR-13 | **LangGraph chat orchestrator + degradation:** nối StateGraph planner → policy → tool → composer vào `/api/chat`; recommendation deterministic; tối đa 2 agent-selected tools/turn, deadline tổng 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent pass; timeout/LLM/tool failure không 5xx; deterministic mode cùng contract; không LangSmith/checkpointer |
 | PR-14 | **Agent evaluation/red-team:** tool-selection fixtures, injection, paired bias, provenance, budget/latency/replay; ghi pass/fail thật | H+31→38 | PR-05,06,08,13 | `EVALUATION_RESULTS.md` có agent metrics + failures/fix; không claim autonomous khi gate fail |
 
 **Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render).
@@ -184,7 +184,8 @@ graph LR
 
 - H+10 data <1k hoặc source không hợp lệ → Plan B, không cố bypass.
 - H+18 chat chưa stable → khóa prompt, dùng deterministic phase fallback + replay; không thêm conversational flourish.
-- H+22 agent chưa pass tool/policy tests → tắt `AGENT_MODE`, giữ deterministic profiler/replay; không trì hoãn recommendation hoặc UI core.
+- H+5.5 LangGraph spike chưa pass CI/fallback/overhead → dừng framework, dùng plain Python bounded orchestrator; không kéo dài spike.
+- H+22 agent chưa pass tool/policy tests → đặt `AGENT_MODE=deterministic`, giữ profiler/replay; không trì hoãn recommendation hoặc UI core.
 - H+26 matching chưa pass unit test → bỏ market weight tạm thời, dùng cosine + skill overlap; không hardcode kết quả persona.
 - H+32 live evidence/radar chưa ready → demo P0 bằng grounded template + snapshot đã validate; cắt mini-chart/animation.
 - H+38 một hard rule/evaluation gate fail → replay-only hoặc bỏ claim liên quan khỏi pitch; không “vá số” trong slide.

@@ -15,7 +15,7 @@ graph TB
   subgraph "Backend — FastAPI :8000"
     E --> H[/api/market/*<br/>stats, skill gap/]
     G --> I[Matching Engine<br/>cosine + skill overlap + market signal]
-    J[/api/chat<br/>Bounded ReAct Profiler/] --> R[Agent Orchestrator<br/>policy + typed tools + budget]
+    J[/api/chat<br/>Bounded ReAct Profiler/] --> R[LangGraph StateGraph<br/>policy + typed tools + budget]
     R --> K[(SQLite<br/>sessions.db)]
     I --> L[/api/recommendations<br/>top5 + stretch + evidence + pathway/]
     R -.->|structured planner/composer| M[LLM Gateway<br/>OpenAI-compatible client<br/>DeepSeek chat + OpenAI embed]
@@ -129,7 +129,7 @@ flowchart LR
 | 7 | Profile schema KHÔNG có field giới tính | Anti-bias by design — không thể leak thứ không tồn tại | Không cá nhân hóa xưng hô — dùng "em/bạn" trung tính |
 | 8 | Explore/Launch dùng shared core | Bám cả chọn ngành và thất nghiệp sau tốt nghiệp mà không nhân đôi architecture | Launch MVP không match vacancy/công ty cụ thể |
 | 9 | Readiness dùng 3 band deterministic, không xác suất | Giải thích/test được; tránh false precision và hiring prediction | Ít “wow” hơn % score nhưng đáng tin hơn |
-| 10 | Bounded ReAct agent thay chatbot tuyến tính | Hỏi/kiểm chứng linh hoạt theo evidence thật, vẫn replay/test được | Không làm agent tự do hay multi-agent trong 48h |
+| 10 | LangGraph `StateGraph` tối giản cho bounded chat agent | Conditional edge/policy/fallback rõ, vẫn replay/test được | Dependency mới; spike 90 phút, không prebuilt/multi-agent/checkpointer |
 
 ## 4. Cấu trúc thư mục (chuẩn — đặt file mới đúng chỗ)
 
@@ -149,8 +149,9 @@ backend/
 │   ├── services/
 │   │   ├── llm.py            # LLM Gateway — MỌI call LLM/embedding đi qua đây
 │   │   ├── profiler.py       # state machine hội thoại
-│   │   ├── agent.py          # bounded ReAct orchestrator, policy, tool registry
-│   │   ├── agent_tools.py    # typed read/write tools, no external side effects
+│   │   ├── agent_graph.py    # minimal LangGraph StateGraph for /api/chat only
+│   │   ├── agent_policy.py   # allowlist, privacy/provenance/budget decisions
+│   │   ├── agent_tools.py    # typed local tools, no external side effects
 │   │   ├── matching.py       # scoring engine
 │   │   └── market.py         # đọc market.db
 │   ├── prompts/              # MỌI prompt ở đây, có version comment
@@ -187,7 +188,7 @@ Thiết kế hiện tại cố tình để mỗi thành phần có "đường th
 | Skill extraction | Batch script + cache | Queue worker (Celery), chỉ xử lý posting mới | Logic giữ nguyên, bọc vào worker |
 | Market stats | Build lại toàn bộ | Materialized views, refresh theo lịch | Query giữ nguyên |
 | LLM | Gọi trực tiếp | Thêm cache layer theo (prompt-hash), rate limit, fallback model tự động | Gateway đã là 1 module — chèn middleware |
-| Agent | 1 bounded orchestrator + typed local tools | durable workflow engine + approved integrations after audit | Keep policy/tool contracts; never expose arbitrary execution |
+| Agent | LangGraph StateGraph, no checkpointer; session in SQLAlchemy | optional durable execution/HITL only after privacy review | Keep policy/tool contracts; never expose arbitrary execution |
 | Serving | 1 instance Render | Backend stateless → scale ngang sau load balancer; session sang Redis | Đổi session store |
 | FE | Vercel | Vercel (giữ nguyên) + ISR cho trang market | — |
 | Mới | — | Counselor dashboard, school integration, API cho trường học | Feature mới trên nền data đã có |

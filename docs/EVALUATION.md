@@ -20,6 +20,7 @@ Kết quả ghi `command | environment | commit | PASS/FAIL/NOT_RUN | evidence`.
 | Crawl/normalize | parser fixtures/idempotence | M3 sample read/hash | M1 source/data go-no-go |
 | Extraction/stats | gold + aggregate fixtures | M2 trace raw→stat | M1 metric/claim audit |
 | Profiler/matching | state/scoring/invariants | M3 persona/number grounding | M1 E2E/bias/replay |
+| LangGraph chat runtime | M4 graph/policy/tool/deadline fixtures | M1 deterministic-mode + privacy review | M1 CI/E2E/kill switch |
 | FE explore/results | component states + typecheck | M5↔M6 browser task | M1 usability/demo run |
 | Contract/deploy | smoke/OpenAPI/CI | affected consumer | M1 merge/deploy |
 
@@ -88,6 +89,10 @@ Pass: trung bình mỗi tiêu chí ≥3.5/5, không output nào vi phạm hard r
 | JSON valid sau retry | ≥99% |
 | Unhandled 5xx trong 3 demo runs | 0 |
 | Replay mode không gọi mạng LLM | 100% |
+| Agent tool calls / chat turn | ≤2; 100% tool thuộc stage allowlist |
+| Policy deny/invalid JSON/timeout fixtures | 100% về deterministic fallback, session không mất |
+| LangGraph overhead không LLM (100 fixtures) | <100ms p95; ghi version đã pin |
+| `AGENT_MODE=deterministic` | cùng API contract; không invoke graph/LLM planner |
 | Chi phí 1 full session | ghi số thật; cảnh báo nếu vượt budget M1 chốt |
 
 Log chỉ metadata model/tokens/latency; không ghi nội dung hội thoại học sinh.

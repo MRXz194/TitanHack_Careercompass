@@ -11,7 +11,7 @@ Mỗi task mở một AI session mới và đọc theo thứ tự:
 1. `CLAUDE.md` hoặc `AGENTS.md` ở root.
 2. `frontend/CLAUDE.md` hoặc `backend/CLAUDE.md` nếu chạm package đó.
 3. Task card của member trong `docs/workstreams/`.
-4. Chỉ các source-of-truth liên quan: API contract, architecture, AI design, data pipeline, evaluation/security. Nếu task chạm agent/tool/LLM flow, bắt buộc đọc thêm `docs/AGENTIC_RUNTIME.md`.
+4. Chỉ các source-of-truth liên quan: API contract, architecture, AI design, data pipeline, evaluation/security. Nếu task chạm agent/tool/LLM flow, bắt buộc đọc thêm `docs/AGENTIC_RUNTIME.md` và `docs/ADR_AGENT_ORCHESTRATION.md`.
 5. Code hiện tại của đúng files `Allowed files`; không load cả repo nếu không cần.
 
 Agent phải nhắc lại trước khi code: `Task ID`, expected artifact, files sẽ sửa, test sẽ chạy, contract có đổi không và stop condition.
@@ -66,7 +66,7 @@ Không được ghi “done” nếu test chưa chạy. Nếu môi trường thi
 | Data | M2 | `data/pipeline/crawl*`, `normalize.py`, manifests | API/UI |
 | Market AI | M3 | taxonomy, extract/stats/embed, `services/market.py` | profiler/UI |
 | Profile/recommend | M4 | profiler/matching/prompts/recommend router | crawler/charts |
-| Agent runtime | M4 | `services/agent.py`, `services/agent_tools.py`, policy/tool schemas | arbitrary integration, FE rendering |
+| Agent runtime | M4 | `services/agent_graph.py`, `agent_policy.py`, `agent_tools.py`, policy/tool schemas | arbitrary integration, FE rendering |
 | FE explore | M5 | chat/profile components, `/explore` | market algorithms |
 | FE results | M6 | results/market/landing components | backend scoring |
 

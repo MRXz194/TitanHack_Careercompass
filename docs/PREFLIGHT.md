@@ -38,6 +38,7 @@
 - [ ] M1 chốt crawl/API/LLM budget và ngưỡng 70% chuyển fallback.
 - [ ] LLM/embedding keys test bằng call tối thiểu, không paste key vào chat/issue.
 - [ ] Cache/artifact/replay directories và hash/version rule rõ.
+- [ ] M4/M1 chốt LangGraph spike gate: 90 phút, `/api/chat` only, no prebuilt/checkpointer/LangSmith; `AGENT_MODE=deterministic` fallback chạy được.
 
 ## F. Ethics/security/evaluation
 
