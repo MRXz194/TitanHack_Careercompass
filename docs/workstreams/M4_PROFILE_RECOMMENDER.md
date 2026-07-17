@@ -4,6 +4,12 @@
 
 **Owned:** profiler state/session, prompts, matching, evidence, pathways/readiness, recommend router. **Buddy:** M3.
 
+## Card contract
+
+Mỗi task phải có problem, action, expected artifact, tests, risk/fallback và handoff. Agent task
+phải thêm allowlist/policy/trace/replay fields trong `AGENT_WORKFLOW.md`; mọi recommendation và
+ethics invariant vẫn do deterministic code sở hữu.
+
 ## Task cards
 
 ### PR-01 — Profile/Launch contract freeze (H+0→3)

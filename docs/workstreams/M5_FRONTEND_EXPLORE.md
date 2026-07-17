@@ -4,6 +4,12 @@
 
 **Owned:** `/explore`, chat/profile components, session/mode UI. **Buddy:** M6; API consumer M4.
 
+## Card contract
+
+Mỗi task phải làm rõ user problem, action, expected UI/artifact, interaction tests, risk/fallback
+và handoff tới M4/M6/M1. Test phải bao phủ mock/live/error/replay tương ứng; không tự tạo field ngoài
+API contract.
+
 ## Task cards
 
 ### F1-01 — Mode-aware explore shell (H+0→4)
