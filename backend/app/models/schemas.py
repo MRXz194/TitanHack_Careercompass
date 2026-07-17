@@ -181,7 +181,7 @@ class RecommendationResponse(BaseModel):
 class RisingCareer(BaseModel):
     career_id: str
     title: str
-    trend_pct: float
+    trend_pct: Optional[float] = None
     demand_count: int
     low_confidence: bool = True
 

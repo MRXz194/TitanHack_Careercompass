@@ -140,7 +140,7 @@ export interface MarketOverview {
   window_days: number;
   updated_at: string;
   source_note: string;
-  rising_careers: { career_id: string; title: string; trend_pct: number; demand_count: number; low_confidence: boolean }[];
+  rising_careers: { career_id: string; title: string; trend_pct: number | null; demand_count: number; low_confidence: boolean }[];
   top_paying: { career_id: string; title: string; salary_p50_trieu: number }[];
 }
 

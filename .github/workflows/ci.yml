@@ -39,4 +39,6 @@ jobs:
           node-version: "20"
       - run: npm install
       - run: npm run typecheck
+      - name: Unit tests (chat state machine, profile diff/patch, components)
+        run: npm run test
       - run: npm run build

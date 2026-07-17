@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.config import get_settings
 from app.data.seed_loader import load_careers
 from app.routers import chat, market, recommend
+from app.services import market as market_service
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
 
@@ -54,12 +55,26 @@ app.include_router(market.router)
 app.include_router(recommend.router)
 
 
+# A never-real key some devs leave in place after copying .env.example — don't report
+# llm_ok:true for it (see docs/DEPLOY.md; a truthy-but-fake key made every chat turn
+# attempt a doomed live call before falling back).
+_PLACEHOLDER_KEYS = {"", "sk-REPLACE_ME"}
+
+
 @app.get("/api/health")
 def health() -> dict:
     careers = load_careers()
+    try:
+        market_meta = market_service.get_market_meta()
+        market_db_loaded = True
+        postings_count = market_meta["postings_count"]
+    except market_service.MarketDataUnavailable:
+        market_db_loaded = False
+        postings_count = sum(c["seed_market"]["demand_count_90d"] for c in careers)
     return {
         "status": "ok",
-        "llm_ok": bool(settings.chat_api_key),  # key configured; real ping added in L-07 if needed
+        "llm_ok": settings.chat_api_key not in _PLACEHOLDER_KEYS,
         "data_loaded": len(careers) > 0,
-        "postings_count": sum(c["seed_market"]["demand_count_90d"] for c in careers),
+        "market_db_loaded": market_db_loaded,
+        "postings_count": postings_count,
     }

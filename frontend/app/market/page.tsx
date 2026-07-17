@@ -167,8 +167,12 @@ export default function MarketPage() {
                       overview.rising_careers.map((c, idx) => (
                         <div key={idx} className="flex justify-between items-center rounded-xl border border-[var(--cc-border)]/50 bg-white p-3 text-xs hover:border-[var(--cc-primary)] transition-all">
                           <span className="font-medium text-[var(--cc-ink)]">{c.title}</span>
-                          <span className={`font-bold ${c.low_confidence ? "text-amber-800/80 italic text-[10px]" : "text-[var(--cc-success)]"}`}>
-                            {c.low_confidence ? "Độ tin cậy thấp" : `▲ ${c.trend_pct}%`}
+                          <span className={`font-bold ${c.low_confidence || c.trend_pct == null ? "text-amber-800/80 italic text-[10px]" : "text-[var(--cc-success)]"}`}>
+                            {c.low_confidence
+                              ? "Độ tin cậy thấp"
+                              : c.trend_pct == null
+                                ? `${c.demand_count} tin (chưa đủ dữ liệu xu hướng)`
+                                : `▲ ${c.trend_pct}%`}
                           </span>
                         </div>
                       ))

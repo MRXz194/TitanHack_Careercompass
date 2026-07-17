@@ -11,8 +11,10 @@
 `GET /api/health`
 
 ```json
-{ "status": "ok", "llm_ok": true, "data_loaded": true, "postings_count": 3412 }
+{ "status": "ok", "llm_ok": true, "data_loaded": true, "market_db_loaded": true, "postings_count": 3412 }
 ```
+
+`market_db_loaded`: whether `/api/market/*` is reading real pipeline output (`market.db`) vs seed fallback — check this before assuming market numbers are live during demo prep. `postings_count` reflects whichever source is active (real count when `market_db_loaded`, seed sum otherwise).
 
 ---
 
