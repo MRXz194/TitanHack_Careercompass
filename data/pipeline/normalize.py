@@ -161,11 +161,18 @@ def parse_posted_date(posted_raw: str, crawled_at_str: str) -> str:
         return crawled_at.date().isoformat()
         
     # 3. Matches explicit date dd/mm/yyyy or yyyy-mm-dd
-    match_date = re.search(r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})', s)
-    if match_date:
-        day = int(match_date.group(1))
-        month = int(match_date.group(2))
-        year = int(match_date.group(3))
+    match_date_dmy = re.search(r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})', s)
+    if match_date_dmy:
+        day = int(match_date_dmy.group(1))
+        month = int(match_date_dmy.group(2))
+        year = int(match_date_dmy.group(3))
+        return f"{year:04d}-{month:02d}-{day:02d}"
+        
+    match_date_ymd = re.search(r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})', s)
+    if match_date_ymd:
+        year = int(match_date_ymd.group(1))
+        month = int(match_date_ymd.group(2))
+        day = int(match_date_ymd.group(3))
         return f"{year:04d}-{month:02d}-{day:02d}"
         
     return crawled_at.date().isoformat()
