@@ -33,14 +33,8 @@ import numpy as np
 
 from app.core.config import get_settings
 from app.data.seed_loader import get_career, load_careers
-from app.models.schemas import (
-    MarketStats,
-    Profile,
-    Recommendation,
-    Why,
-    WhyFromMarket,
-    WhyFromYou,
-)
+from app.models.schemas import MarketStats, Profile, Recommendation
+from app.services import evidence as evidence_service
 from app.services import pathways
 
 log = logging.getLogger("matching")
@@ -330,44 +324,6 @@ def _market_stats(career: dict) -> MarketStats:
     )
 
 
-def _template_why(profile: Profile, career: dict, market: MarketStats) -> Why:
-    quote = ""
-    if profile.evidence_quotes:
-        quote = profile.evidence_quotes[0].quote
-    elif profile.skills:
-        quote = profile.skills[0].source_quote or profile.skills[0].name
-    elif profile.interests:
-        quote = profile.interests[0]
-    else:
-        quote = "hồ sơ hiện tại của bạn"
-
-    from_you = [
-        WhyFromYou(
-            quote=quote[:200],
-            reason=f"khớp với hướng {career['title']} qua sở thích/kỹ năng đã ghi nhận",
-        )
-    ]
-    from_market = [
-        WhyFromMarket(
-            stat=f"{market.demand_count_90d} tin tuyển trong 90 ngày (snapshot)",
-            stat_key="demand_count",
-        ),
-    ]
-    if market.salary_p50_trieu is not None:
-        from_market.append(
-            WhyFromMarket(
-                stat=(
-                    f"Lương quan sát khoảng {market.salary_p25_trieu}–{market.salary_p75_trieu} "
-                    f"triệu, trung vị {market.salary_p50_trieu} triệu"
-                ),
-                stat_key="salary",
-            )
-        )
-    # Counterfactual via re-rank (true scoring, not prose-only)
-    cf = _counterfactual_text(profile, career["career_id"])
-    return Why(from_you=from_you, from_market=from_market, counterfactual=cf)
-
-
 def _counterfactual_text(profile: Profile, current_id: str) -> str:
     """Flip dominant dimension ±0.3 and re-score; report new top if different."""
     dom = dominant_dimension(profile.dimensions)
@@ -409,12 +365,20 @@ def build_recommendation(
     market = _market_stats(career)
     routes = pathways.ensure_routes(career, journey_mode=profile.journey_mode)
     roadmap = pathways.ensure_skill_roadmap(career)
+    # PR-06: grounded evidence (code selects quotes/stats; LLM optional; template fallback)
+    cf = _counterfactual_text(profile, career_id)
+    why = evidence_service.build_why(
+        profile=profile,
+        career=career,
+        market=market,
+        counterfactual=cf,
+    )
     return Recommendation(
         career_id=career_id,
         title=career["title"],
         match_score=round(float(score), 4),
         is_stretch=is_stretch,
-        why=_template_why(profile, career, market),
+        why=why,
         market=market,
         routes=routes,
         skill_roadmap=roadmap,
