@@ -241,6 +241,19 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Expected:** ≤300 words main page + tooltips; student-readable Vietnamese.
 - **Verify:** 2 outsiders paraphrase correctly; no “AI knows best/guaranteed job”.
 
+#### Status (M4)
+- **State:** DONE (copy + page wire + automated gates; human 2-outsider paraphrase ⬜)
+- **Source of truth:** `frontend/lib/copy/transparency.ts` (`transparency-v1`)
+- **Page:** `frontend/app/how-it-works/page.tsx`
+- **Docs mirror:** `docs/copy/M4_transparency_vi.md`
+- **Handoff:** `docs/handoffs/M4_PR-09_TRANSPARENCY_COPY_HANDOFF.md`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_transparency_copy.py` → PASS
+- `cd frontend && npm run typecheck` → PASS
+- full backend unit/contract/integration → PASS
+
+
 ### PR-10 — Quality tuning only (H+34→40)
 - **Actions:** fix labeled issues from E2E/user test; prompt/config changes one at a time; rerun gold personas.
 - **Expected:** no open Sev-1/2 `ai-quality`; before/after evidence.
