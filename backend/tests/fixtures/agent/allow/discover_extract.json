@@ -1,0 +1,22 @@
+{
+  "id": "allow-discover-extract",
+  "stage": "discover",
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "extract_profile_evidence",
+    "arguments": {
+      "session_id_hash": "fixturehash0001",
+      "message": "Em hay sửa quạt và hàn dây điện",
+      "journey_mode": "explore",
+      "phase": "interests",
+      "turn": 2
+    },
+    "public_rationale": "Mình đang cập nhật hồ sơ theo điều bạn vừa chia sẻ.",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "ALLOW",
+    "reason_contains": "OK"
+  },
+  "notes": "Primary discover path for non-empty user message"
+}

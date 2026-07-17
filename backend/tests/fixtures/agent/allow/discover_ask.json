@@ -1,0 +1,20 @@
+{
+  "id": "allow-discover-ask",
+  "stage": "discover",
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "ask_clarifying_question",
+    "arguments": {
+      "session_id_hash": "fixturehash0002",
+      "journey_mode": "explore",
+      "phase": "abilities",
+      "focus_slot": "abilities",
+      "turn_index": 3
+    },
+    "public_rationale": "Mình hỏi thêm để hiểu bạn hơn.",
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "ALLOW"
+  }
+}

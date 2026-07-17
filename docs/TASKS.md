@@ -111,7 +111,9 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Test lay
 | PR-13 | **LangChain/LangGraph chat orchestrator + degradation:** nối custom StateGraph planner → policy → typed tool → composer vào `/api/chat`; recommendation deterministic; tối đa 2 agent-selected tools/turn, deadline 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent integration pass; timeout/model/tool failure không 5xx; deterministic mode cùng contract; không `create_agent`/LangSmith/checkpointer |
 | PR-14 | **Agent evaluation/red-team:** tool-selection fixtures, injection, paired bias, provenance, budget/latency/replay; ghi pass/fail thật | H+31→38 | PR-05,06,08,13 | `EVALUATION_RESULTS.md` có agent metrics + failures/fix; không claim autonomous khi gate fail |
 
-**Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render).
+**M4 implementation status (branch `kaguya`, post PR-14):** PR-01…PR-14 **DONE** offline. Scorecard `docs/EVALUATION_RESULTS.md` = `M4_PARTIAL` until M1 release sign-off. Consumer ack checkboxes on handoffs remain open for M5/M1. Detail: `docs/workstreams/M4_PROFILE_RECOMMENDER.md` rollup.
+
+**Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render); PR-12…14 → M1/M5 (agent status + claim boundary).
 **⚠️ Rule riêng:** mọi prompt để trong `backend/app/prompts/*.py` có version comment — không giấu prompt trong code logic.
 
 ---

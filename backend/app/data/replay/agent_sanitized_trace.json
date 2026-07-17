@@ -1,0 +1,46 @@
+{
+  "fixture_version": "agent-replay-v1",
+  "description": "Sanitized agent turn metadata for offline demo evidence (PR-14). No CoT, no raw messages.",
+  "tool_policy_version": "agent-policy-v1",
+  "tool_registry_version": "agent-tools-v1",
+  "agent_mode": "deterministic",
+  "demo_mode": "replay",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "discover",
+      "engine": "plain_python",
+      "tools": ["ask_clarifying_question"],
+      "policy_codes": ["ALLOW"],
+      "fallback": false,
+      "latency_ms": 8.1,
+      "public_rationale": "Mình hỏi thêm để hiểu bạn hơn."
+    },
+    {
+      "turn": 2,
+      "stage": "discover",
+      "engine": "plain_python",
+      "tools": ["extract_profile_evidence"],
+      "policy_codes": ["ALLOW"],
+      "fallback": false,
+      "latency_ms": 11.2,
+      "public_rationale": "Mình đang cập nhật hồ sơ theo điều bạn vừa chia sẻ."
+    },
+    {
+      "turn": 3,
+      "stage": "confirm_profile",
+      "engine": "plain_python",
+      "tools": ["inspect_profile_gaps"],
+      "policy_codes": ["ALLOW"],
+      "fallback": false,
+      "latency_ms": 9.0,
+      "public_rationale": "Mình đang kiểm tra hồ sơ còn thiếu gì."
+    }
+  ],
+  "invariants": {
+    "max_agent_tools_per_turn": 2,
+    "deadline_ms": 8000,
+    "recommendation_uses_planner": false,
+    "api_exposes_trace": false
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "fallback-deadline-exceeded",
+  "stage": "discover",
+  "budget": {
+    "agent_tools_used": 0,
+    "max_agent_tools": 2,
+    "policy_denies": 0,
+    "max_policy_denies": 2,
+    "deadline_ms": 1,
+    "started_monotonic_ms": 0
+  },
+  "plan": {
+    "intent": "collect_evidence",
+    "next_tool": "ask_clarifying_question",
+    "arguments": {
+      "phase": "interests",
+      "turn_index": 0
+    },
+    "stop_after_tool": true
+  },
+  "expect": {
+    "policy_code": "STOP_FALLBACK",
+    "reason_contains": "DEADLINE"
+  },
+  "notes": "started_monotonic_ms=0 forces budget_expired when wall clock is large"
+}
