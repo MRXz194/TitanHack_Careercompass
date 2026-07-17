@@ -27,7 +27,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 #### Status (M4)
 - **State:** DONE (prompts + delta + fixtures locked offline)
 - **Prompt version:** `profiler-v2`
-- **Branch tip:** see `feat/PR-02-adaptive-prompts` latest commit
+- **Commit:** `41f489f` (impl) + `c5c6968` (design/plan)
 
 #### Verify evidence
 - `python -m compileall app scripts tests` → PASS
