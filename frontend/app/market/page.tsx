@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import { fetchMarketOverview, fetchSkillGaps } from "@/lib/api";
 import type { MarketOverview, Region, SkillGapResponse } from "@/types";
+import Tooltip from "@/components/ui/Tooltip";
+import { TOOLTIPS } from "@/lib/copy/transparency";
 
 const REGIONS: { value: Region; label: string }[] = [
   { value: "all", label: "Toàn quốc" },
@@ -104,7 +106,11 @@ export default function MarketPage() {
           {gaps && (
             <section className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-5 shadow-sm space-y-4">
               <div>
-                <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Kỹ năng có nhu cầu tuyển dụng cao</h2>
+                <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">
+                  <Tooltip content={TOOLTIPS.demand_proxy.text}>
+                    Kỹ năng có nhu cầu tuyển dụng cao
+                  </Tooltip>
+                </h2>
                 <p className="text-[10px] text-[var(--cc-muted)] italic mt-0.5">Xếp hạng theo điểm nhu cầu trích xuất (Gap Score)</p>
               </div>
 
@@ -146,7 +152,7 @@ export default function MarketPage() {
               </div>
 
               <p className="text-[10px] text-[var(--cc-muted)] border-t border-[var(--cc-border)]/40 pt-3 italic font-serif">
-                ℹ {gaps.source_note}
+                ℹ <Tooltip content={TOOLTIPS.source_note.text}>{gaps.source_note}</Tooltip>
               </p>
             </section>
           )}
