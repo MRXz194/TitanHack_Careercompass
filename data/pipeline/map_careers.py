@@ -375,7 +375,7 @@ def build_mapping_report(
         "coverage_by_source": _coverage_by(mapped_postings, "source"),
         "coverage_by_region": _coverage_by(mapped_postings, "region"),
         "limitations": [
-            "Provisional 10-career seed KB; D-07 has not been consumed.",
+            "Provisional mapping against the versioned career KB pinned by kb_hash.",
             "Title-pattern only; bounded LLM fallback is not configured.",
             "Accuracy is NOT_RUN until 50 independent labels are available.",
         ],

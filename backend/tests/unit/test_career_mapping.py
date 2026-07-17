@@ -57,7 +57,9 @@ def test_kb_hash_ignores_career_and_pattern_order(career_kb: dict) -> None:
         career["title_patterns"].reverse()
 
     assert career_kb_hash(reordered) == career_kb["kb_hash"]
-    assert len(career_kb["career_ids"]) == 10
+    assert career_kb["career_ids"] == {
+        career["career_id"] for career in career_kb["careers"]
+    }
 
 
 @pytest.mark.unit
@@ -155,8 +157,8 @@ def test_mapping_outputs_every_posting_and_resume_is_zero_cost_idempotent(
 
     assert len(first) == len({posting["id"] for posting in first}) == 10
     assert all(posting["career_id"] for posting in first)
-    assert first_stats.mapped_postings == 7
-    assert first_stats.unmapped_postings == 3
+    assert first_stats.mapped_postings == 8
+    assert first_stats.unmapped_postings == 2
     assert resumed == first
     assert resumed_stats.resumed_postings == 10
     assert resumed_versions == versions
@@ -169,7 +171,7 @@ def test_mapping_outputs_every_posting_and_resume_is_zero_cost_idempotent(
         versions,
         allow_unpinned_input=True,
     )
-    assert report["mapping_coverage"] == 0.7
+    assert report["mapping_coverage"] == 0.8
     assert report["mapping_coverage_denominator"] == 10
     assert report["mapping_accuracy"] == "NOT_RUN"
     assert report["mapping_accuracy_denominator"] == 0
