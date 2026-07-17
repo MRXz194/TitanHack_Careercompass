@@ -28,3 +28,22 @@ python data/pipeline/evaluate_skill_extraction.py
 
 Until the 100 records are independently labeled and handed off, extraction precision,
 recall and F1 remain `NOT_RUN`.
+
+## MI-03 career mapping evaluation
+
+`career_mapping_gold.jsonl` is a separate, independently reviewed sample of exactly
+50 unique postings from the same D-05 snapshot used by the mapper. Keep labels out of
+rule tuning until the baseline is frozen. Each line contains only evaluation metadata:
+
+```json
+{"posting_id":"source_123","source":"source-name","region":"hanoi","career_id":"ke-toan"}
+```
+
+`career_id` must be a D-07 KB ID or `unmapped`. Do not commit descriptions, company
+names or applicant data. Report exact-match accuracy with denominator 50 plus mapped
+coverage by source and region. The 10-record fictional fixture is wiring evidence only;
+it must never be reported as the MI-03 accuracy metric.
+
+Until D-05, D-07 and the 50 independent labels are handed off, career mapping accuracy
+remains `NOT_RUN`. The `career-mapping-v1-stub` output is explicitly provisional and
+must not be used to claim the ≥85% fallback threshold.
