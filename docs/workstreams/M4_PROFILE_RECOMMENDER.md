@@ -153,6 +153,26 @@ See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, error
 - **Tests:** weight/unit; identical human profile different region keeps candidate set; market spike cannot dominate low fit; 12 personas rubric.
 - **Fallback:** cosine + skill overlap only; market shown as information, not score.
 
+#### Status (M4)
+- **State:** DONE (seed KB + dim/cosine fallback; npy path ready when MI-06 lands)
+- **Code:** `backend/app/services/matching.py`, `routers/recommend.py` wired
+
+#### Verify evidence
+- `pytest -q tests/unit/test_matching.py tests/integration/test_recommendations.py` → PASS
+- full unit/contract/integration → PASS
+
+#### Notes
+- `profile_text` excludes region/gender; region only mild market boost, never filters candidate set
+- Market contribution capped (`MARKET_SIGNAL_CAP=0.35`)
+- Stretch = different dominant dimension outside top-5
+- Launch `job_readiness` lite (matched needs evidence; actions present); PR-07 may polish
+- 12-persona human rubric = PR-11/eval, not automated here
+
+#### Cannot do / deferred
+- Real embeddings until `data/processed/careers.npy` (MI-06)
+- Live market.db stats until MI-04 (still seed_market)
+- LLM evidence wording polish (PR-06)
+
 ### PR-06 — Grounded evidence + counterfactual (H+26→31)
 - **Actions:** code selects quotes/stats; LLM verbalizes; digit/stat-key validator; counterfactual from rerun scoring; template fallback.
 - **Expected:** why-from-you, why-from-market, true counterfactual, no unsupported claim.
