@@ -132,7 +132,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 
 #### Status (M4)
 - **State:** DONE
-- **Handoff doc:** `docs/handoffs/PR-04_CHAT_HANDOFF.md`
+- **Handoff doc:** `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md`
 - **Samples:** `backend/app/data/replay/explore_sample_session.json`, `launch_sample_session.json`
 
 #### Verify evidence
@@ -141,7 +141,7 @@ ethics invariant vẫn do deterministic code sở hữu.
 - Capture: `PYTHONPATH=. python scripts/capture_chat_samples.py`
 
 #### Handoff → M5 / M1
-See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, errors, fallback, consumer checklist).
+See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, errors, fallback, consumer checklist).
 
 #### Cannot do / deferred
 - Full `DEMO_MODE=replay` router short-circuit (M1 L-08 uses samples as seed)
@@ -179,11 +179,44 @@ See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, error
 - **Tests:** 100% number grounding; quote belongs session; null/low-confidence; injection; timeout.
 - **Fallback:** deterministic Vietnamese templates.
 
+#### Status (M4)
+- **State:** DONE
+- **Code:** `services/evidence.py`, `prompts/evidence.py` (v1); wired in `matching.build_recommendation`
+- **Handoff:** `docs/handoffs/M4_PR-06_EVIDENCE_HANDOFF.md`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_evidence.py tests/integration/test_evidence_grounding.py` → PASS
+- full unit/contract/integration → PASS
+
+#### Notes
+- Digit grounding enforced on market stats text; salary/trend omitted when null/low-confidence/sample&lt;5
+- Counterfactual from re-score (PR-05), not free prose
+- LLM optional; template always safe for demo
+
+#### Deferred
+- PR-07 pathways/readiness polish
+- Live market.db numbers (MI-04)
+
 ### PR-07 — Study pathways + Graduate Launch readiness (H+26→31)
 - **Actions:** ≥2 study routes; Launch matched/missing skills, readiness band, search queries, 4 deliverable actions.
 - **Expected:** Explore `job_readiness=null`; Launch object follows GRADUATE_LAUNCH.
 - **Tests:** route script; missing∩matched empty; missing⊆role top skills; matched evidence trace; actions weeks 1–4 + deliverable.
 - **Fallback:** deterministic roadmap from KB; no course/company names without source.
+
+#### Status (M4)
+- **State:** DONE
+- **Code:** `backend/app/services/pathways.py` (wired from `matching.build_recommendation`)
+- **Handoff:** `docs/handoffs/M4_PR-07_PATHWAYS_LAUNCH_HANDOFF.md`
+- **Branch:** `feat/PR-07-pathways-launch-readiness` → merge `kaguya`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_pathways.py tests/integration/test_launch_pathways.py` → PASS
+- full unit/contract/integration → PASS
+- `python scripts/check_routes.py` → PASS
+
+#### Invariants locked
+- Explore `job_readiness=null`; Launch matched evidence; missing⊆top_skills; 4 actions w/ deliverable
+- Region does not change readiness band; market demand cannot inflate low-evidence band
 
 ### PR-08 — Bias/opportunity audit (H+31→35)
 - **Actions:** gender paired, region paired, school-prestige mention ignored, route/stretch coverage, prompt audit.
@@ -191,10 +224,35 @@ See full template in `docs/handoffs/PR-04_CHAT_HANDOFF.md` (curl, latency, error
 - **Tests:** top-5 overlap ≥4/5 gender; region candidate set not poorer; readiness unchanged by gender/school name.
 - **Fallback:** remove offending field/weight/copy; do not lower threshold.
 
+#### Status (M4)
+- **State:** DONE
+- **Report:** `docs/BIAS_AUDIT.md` (real PASS tables)
+- **Tests:** `backend/tests/unit/test_bias_audit.py`
+- **Handoff:** `docs/handoffs/M4_PR-08_BIAS_AUDIT_HANDOFF.md`
+- **Code harden:** `matching.sanitize_scoring_text` strips gender/school prestige from ranking text
+
+#### Verify evidence
+- `pytest -q tests/unit/test_bias_audit.py` → PASS
+- `python scripts/check_routes.py` → PASS
+- full unit/contract/integration → PASS
+
 ### PR-09 — Transparency copy (H+35→36)
 - **Actions:** explain data, mode, scoring, demand proxy, limits, autonomy, readiness meaning.
 - **Expected:** ≤300 words main page + tooltips; student-readable Vietnamese.
 - **Verify:** 2 outsiders paraphrase correctly; no “AI knows best/guaranteed job”.
+
+#### Status (M4)
+- **State:** DONE (copy + page wire + automated gates; human 2-outsider paraphrase ⬜)
+- **Source of truth:** `frontend/lib/copy/transparency.ts` (`transparency-v1`)
+- **Page:** `frontend/app/how-it-works/page.tsx`
+- **Docs mirror:** `docs/copy/M4_transparency_vi.md`
+- **Handoff:** `docs/handoffs/M4_PR-09_TRANSPARENCY_COPY_HANDOFF.md`
+
+#### Verify evidence
+- `pytest -q tests/unit/test_transparency_copy.py` → PASS
+- `cd frontend && npm run typecheck` → PASS
+- full backend unit/contract/integration → PASS
+
 
 ### PR-10 — Quality tuning only (H+34→40)
 - **Actions:** fix labeled issues from E2E/user test; prompt/config changes one at a time; rerun gold personas.
