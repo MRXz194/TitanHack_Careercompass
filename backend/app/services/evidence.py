@@ -227,12 +227,20 @@ def template_why(
 ) -> Why:
     quote = select_quote_for_career(profile, career)
     title = career.get("title") or "nghề này"
-    from_you = [
-        WhyFromYou(
-            quote=quote,
-            reason=f"phù hợp với hướng {title} dựa trên điều bạn đã chia sẻ trong hồ sơ",
+    # PR-10: slightly more specific reason using skills/interests when available
+    skill_hint = next((s.name for s in profile.skills if s.source_quote), None)
+    interest_hint = profile.interests[0] if profile.interests else None
+    if skill_hint:
+        reason = (
+            f"bạn đã có bằng chứng «{skill_hint}» — tín hiệu này khớp với hướng {title}"
         )
-    ]
+    elif interest_hint:
+        reason = (
+            f"sở thích «{interest_hint}» trong hồ sơ gợi ý bạn có thể hợp với {title}"
+        )
+    else:
+        reason = f"phù hợp với hướng {title} dựa trên điều bạn đã chia sẻ trong hồ sơ"
+    from_you = [WhyFromYou(quote=quote, reason=reason)]
 
     stats = market_stats_dict(market)
     from_market: list[WhyFromMarket] = []

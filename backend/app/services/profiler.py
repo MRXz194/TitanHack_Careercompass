@@ -377,6 +377,92 @@ def _wants_done(message: str) -> bool:
 # ---------- deterministic LLM-free turn ----------
 
 
+def _compact_interest_label(text: str) -> str | None:
+    """PR-10: avoid dumping the full utterance as an interest (noise)."""
+    raw = re.sub(r"\s+", " ", (text or "").strip())
+    if len(raw) < 8 or _looks_like_injection(raw):
+        return None
+    lower = raw.lower()
+    # Prefer activity-like phrases
+    # Avoid false positives like "điện thoại"
+    if "điện thoại" in lower and "sửa" not in lower and "hàn" not in lower:
+        lower_for_activity = lower.replace("điện thoại", " ")
+    else:
+        lower_for_activity = lower
+    activity_keys = (
+        "sửa",
+        "vẽ",
+        "code",
+        "lập trình",
+        "dashboard",
+        "excel",
+        "nấu",
+        "dạy",
+        "thiết kế",
+        "chăm",
+        "phân tích",
+        "máy móc",
+        "đồ điện",
+        "hàn",
+        "game",
+        "viết",
+        "quay video",
+        "edit",
+    )
+    if any(k in lower_for_activity for k in activity_keys):
+        # keep a short clause, not the whole paragraph
+        label = raw
+        for sep in (".", "!", "?", ","):
+            if sep in label:
+                label = label.split(sep)[0].strip()
+                break
+        if len(label) > 40:
+            label = label[:37] + "…"
+        return label
+    # Generic long answers: do not invent a fake interest from whole sentence
+    if len(raw) > 60:
+        return None
+    if len(raw) > 40:
+        return raw[:37] + "…"
+    return raw
+
+
+def _extract_job_goal(text: str, phase: Phase) -> str | None:
+    """Only set job_goal on clear intent (not every message containing 'việc')."""
+    lower = text.lower()
+    if phase not in ("warmup", "interests", "constraints", "wrapup"):
+        # abilities turns usually describe tools, not goals
+        if not any(k in lower for k in ("muốn làm", "tìm việc", "ứng tuyển", "entry", "fresher")):
+            return None
+    goal_markers = (
+        "muốn làm",
+        "tìm việc",
+        "muốn tìm",
+        "entry-level",
+        "entry level",
+        "fresher",
+        "thực tập",
+        "data",
+        "dữ liệu",
+        "lập trình",
+        "marketing",
+        "kế toán",
+        "thiết kế",
+    )
+    if not any(k in lower for k in goal_markers):
+        return None
+    # Prefer short canned goals when keywords match
+    if "data" in lower or "dữ liệu" in lower or "excel" in lower or "dashboard" in lower:
+        return "việc dữ liệu / phân tích entry-level"
+    if any(k in lower for k in ("lập trình", "react", "python", "web", "code")):
+        return "việc lập trình / web entry-level"
+    if "marketing" in lower:
+        return "việc digital marketing entry-level"
+    # fallback: first 80 chars if short enough intent phrase
+    cleaned = re.sub(r"\s+", " ", text).strip()
+    return cleaned[:80] if len(cleaned) <= 80 else cleaned[:77] + "…"
+
+
 def deterministic_turn(
     *,
     journey_mode: JourneyMode,
@@ -384,6 +470,7 @@ def deterministic_turn(
     message: str,
     turn: int,
     fallback_index: int,
+    recent_replies: list[str] | None = None,
 ) -> ProfilerTurnOutput:
     """Build a structured turn without calling a model provider."""
     text = (message or "").strip()
@@ -395,9 +482,9 @@ def deterministic_turn(
             delta.education_stage = "final_year"
         if any(k in lower for k in ("mới tốt nghiệp", "moi tot nghiep", "tốt nghiệp")):
             delta.education_stage = "recent_graduate"
-        if any(k in lower for k in ("việc", "job", "data", "dữ liệu", "lập trình", "marketing")):
-            # capture short goal fragment
-            delta.job_goal = text[:120] if len(text) < 120 else "tìm việc entry-level"
+        goal = _extract_job_goal(text, phase)
+        if goal:
+            delta.job_goal = goal
         if any(k in lower for k in ("chưa có thực tập", "chưa có project", "chưa có kinh nghiệm", "không có project")):
             from app.models.profiler_io import ConstraintsDelta
 
@@ -411,7 +498,11 @@ def deterministic_turn(
             skills: list[str] = []
             for token in ("excel", "react", "python", "sql", "figma", "powerpoint", "word"):
                 if token in lower:
-                    skills.append(token.upper() if token == "sql" else token.capitalize() if token != "excel" else "Excel")
+                    skills.append(
+                        token.upper()
+                        if token == "sql"
+                        else ("Excel" if token == "excel" else token.capitalize())
+                    )
             delta.experiences = [
                 ExperienceEvidence(
                     title=title,
@@ -429,13 +520,17 @@ def deterministic_turn(
         if any(k in lower for k in ("lớp 12", "lớp 11", "cấp 3", "học sinh")):
             delta.education_stage = "high_school"
 
-    # Interests: keep short non-injection messages
-    if text and not _looks_like_injection(text) and len(text) >= 8:
-        # Use a compact interest label
-        label = re.sub(r"\s+", " ", text).strip()
-        if len(label) > 48:
-            label = label[:45] + "…"
-        delta.interests = [label]
+    # Interests: compact labels only (PR-10); skip pure ability/tool turns
+    if phase in ("warmup", "interests", "constraints") or journey_mode == "launch" and phase == "interests":
+        label = _compact_interest_label(text)
+        if label:
+            delta.interests = [label]
+    elif phase == "abilities" and not any(
+        k in lower for k in ("excel", "python", "react", "khen", "giỏi", "làm tốt")
+    ):
+        label = _compact_interest_label(text)
+        if label:
+            delta.interests = [label]
 
     # Dimension bumps from keywords
     dims: dict[str, float] = {}
@@ -452,6 +547,7 @@ def deterministic_turn(
         "figma": "Figma",
         "photoshop": "Photoshop",
         "javascript": "JavaScript",
+        "sql": "SQL",
     }
     existing = {s.name.lower() for s in delta.skills}
     for key, name in tool_map.items():
@@ -476,9 +572,22 @@ def deterministic_turn(
             )
         )
         if region:
-            delta.constraints = ConstraintsDelta(region_pref=region)
+            if delta.constraints is None:
+                delta.constraints = ConstraintsDelta(region_pref=region)
+            else:
+                delta.constraints.region_pref = region
 
-    reply = get_fallback_question(journey_mode, phase, fallback_index)
+    if any(k in lower for k in ("hạn chế", "eo hẹp", "không có nhiều tiền", "ngân sách thấp")):
+        from app.models.profiler_io import ConstraintsDelta
+
+        if delta.constraints is None:
+            delta.constraints = ConstraintsDelta(study_budget="hạn chế")
+        else:
+            delta.constraints.study_budget = "hạn chế"
+
+    reply = get_fallback_question(
+        journey_mode, phase, fallback_index, recent_replies=recent_replies
+    )
     return ProfilerTurnOutput(reply=reply, profile_delta=delta, phase_done=False)
 
 
@@ -497,12 +606,24 @@ def handle_turn(
         # Mode locked after opening — ignore later journey_mode changes
         journey_mode = state.journey_mode
 
+    def _recent_assistant() -> list[str]:
+        return [
+            m["content"]
+            for m in state.messages
+            if m.get("role") == "assistant" and m.get("content")
+        ][-4:]
+
     # Opening turn (no user message yet)
     if message is None or (isinstance(message, str) and message.strip() == "" and state.turn == 0):
         state.turn = 1
         state.phase = "warmup"
         state.turns_in_phase = 0
-        reply = get_fallback_question(state.journey_mode, "warmup", state.fallback_index)
+        reply = get_fallback_question(
+            state.journey_mode,
+            "warmup",
+            state.fallback_index,
+            recent_replies=_recent_assistant(),
+        )
         state.fallback_index += 1
         state.messages.append({"role": "assistant", "content": reply})
         state.profile.completeness = compute_completeness(
@@ -550,7 +671,10 @@ def handle_turn(
         # After phase change, prefer a question for the new phase
         if not done and state.phase != "wrapup":
             turn_out.reply = get_fallback_question(
-                state.journey_mode, state.phase, state.fallback_index
+                state.journey_mode,
+                state.phase,
+                state.fallback_index,
+                recent_replies=_recent_assistant() + [turn_out.reply],
             )
             state.fallback_index += 1
     else:
@@ -567,8 +691,21 @@ def handle_turn(
             state.done = True
 
     reply = turn_out.reply.strip() or get_fallback_question(
-        state.journey_mode, state.phase, state.fallback_index
+        state.journey_mode,
+        state.phase,
+        state.fallback_index,
+        recent_replies=_recent_assistant(),
     )
+    # Final de-dupe against last assistant message
+    recent = _recent_assistant()
+    if reply in recent:
+        reply = get_fallback_question(
+            state.journey_mode,
+            state.phase,
+            state.fallback_index + 1,
+            recent_replies=recent,
+        )
+        state.fallback_index += 1
     state.messages.append({"role": "assistant", "content": reply})
     # Keep only last 16 messages in session (demo memory bound)
     state.messages = state.messages[-16:]
@@ -586,6 +723,11 @@ def handle_turn(
 def _produce_turn_output(state: SessionState, user_text: str) -> ProfilerTurnOutput:
     settings = get_settings()
     use_llm = bool(settings.chat_api_key) and settings.demo_mode != "replay"
+    recent = [
+        m["content"]
+        for m in state.messages
+        if m.get("role") == "assistant" and m.get("content")
+    ][-4:]
 
     if use_llm:
         try:
@@ -606,6 +748,7 @@ def _produce_turn_output(state: SessionState, user_text: str) -> ProfilerTurnOut
         message=user_text,
         turn=state.turn,
         fallback_index=state.fallback_index,
+        recent_replies=recent,
     )
     state.fallback_index += 1
     return out

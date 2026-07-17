@@ -259,6 +259,16 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Expected:** no open Sev-1/2 `ai-quality`; before/after evidence.
 - **Forbidden:** new model/feature/contract after freeze without M1.
 
+#### Status (M4)
+- **State:** DONE (no open GitHub `ai-quality` labels; internal Q-01…Q-05 tuned)
+- **Handoff:** `docs/handoffs/M4_PR-10_QUALITY_TUNING_HANDOFF.md`
+- **Code:** profiler interest/job_goal compaction; fallback de-dupe; evidence reason hint; budget constraint cue
+
+#### Verify evidence
+- `pytest -q tests/unit/test_quality_tuning.py tests/integration/test_quality_chat.py` → PASS
+- full unit/contract/integration → PASS
+- Gold personas: tech top-5 + launch readiness + no consecutive question repeat
+
 ### PR-11 — AI evaluation report (H+35→38)
 - **Actions:** profiler validity, persona rubric, grounding, readiness invariants, latency/cost, paired bias.
 - **Expected:** actual metrics + commit/model/prompt/artifact versions in `EVALUATION_RESULTS.md`.
