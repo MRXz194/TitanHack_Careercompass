@@ -8,6 +8,11 @@ Weights come from app.core.config.Settings (w_cosine/w_skill_overlap/w_market_si
 never hardcode them here. profile_text must NOT include region or gender (there's no
 gender field to include). Stretch pick: highest score outside the user's dominant dimension.
 
+Explore and Launch use this same candidate engine. Launch readiness is a downstream
+deterministic presenter: matched skills need Profile evidence, missing skills come only
+from career top skills, and readiness thresholds come from Settings. Never treat the band
+as hiring probability or use school/GPA/region/gender to lower it.
+
 Loads data/processed/careers.npy + career_ids.json (built by MI-06/data/pipeline/embed_careers.py).
 Has a unit test requirement per TEAM_RULES.md §4 — this is where wrong output becomes a
 silently-fabricated recommendation, not just a bug.

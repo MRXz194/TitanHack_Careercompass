@@ -1,7 +1,7 @@
 # 🧭 CareerCompass — AI Career Guidance từ dữ liệu tuyển dụng thật
 
 > **TitanHack 48h — Đề bài "Career compass" (Duy Tan University)**
-> Hệ thống hướng nghiệp AI kết nối **năng lực & sở thích của học sinh/sinh viên Việt Nam** với **tín hiệu thật từ thị trường lao động** (job postings, kỹ năng, lương, xu hướng theo vùng).
+> Hệ thống hướng nghiệp AI kết nối **năng lực, sở thích và project/experience của người học Việt Nam** với **tín hiệu thật từ thị trường lao động**. Hai journey: **Explore** chọn hướng học/nghề; **Graduate Launch** chuyển sang nhóm việc entry-level, skill gaps và kế hoạch 30 ngày.
 
 ## Đọc gì trước tiên?
 
@@ -13,6 +13,11 @@
 | [docs/BUSINESS_CASE.md](docs/BUSINESS_CASE.md) | Product/Pitch | Bài toán tổ chức, buyer, KPI pilot, value proposition |
 | [docs/EVALUATION.md](docs/EVALUATION.md) | AI/Data/Lead | Quality gates định lượng và report bắt buộc |
 | [docs/SECURITY_PRIVACY.md](docs/SECURITY_PRIVACY.md) | Cả team | Dữ liệu học sinh, nguồn crawl, release checklist |
+| [docs/GRADUATE_LAUNCH.md](docs/GRADUATE_LAUNCH.md) | Product/AI/FE | Scope sinh viên sắp/đã tốt nghiệp tìm hướng việc làm |
+| [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) | Cả team dùng AI | Context bootstrap, file ownership, Builder–Reviewer–Verifier, cost control |
+| [docs/FEATURE_ROADMAP.md](docs/FEATURE_ROADMAP.md) | M1 | Feature được phép mở sau khi core pass |
+| [docs/PREFLIGHT.md](docs/PREFLIGHT.md) | M1 + cả team | Gate bắt buộc trước khi bấm giờ 48h |
+| [docs/workstreams/](docs/workstreams/) | M1–M6 | Task card chi tiết riêng từng người: output, test, risk, fallback, handoff |
 | [docs/TEAM_RULES.md](docs/TEAM_RULES.md) | Cả team | Git workflow, quy tắc làm việc, quy tắc dùng AI |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Dev | Kiến trúc hệ thống, data flow, scalability |
 | [docs/API_CONTRACT.md](docs/API_CONTRACT.md) | FE + BE | Contract API — **nguồn chân lý duy nhất** giữa FE/BE |
@@ -68,3 +73,4 @@ python pipeline/crawl_topcv.py        # xem docs/DATA_PIPELINE.md
 4. **Trước khi nhờ AI code**: paste nội dung CLAUDE.md + task ID của bạn vào context.
 5. **Sync 10 phút mỗi 4 tiếng** — theo lịch trong PLAN.md.
 6. **Không gọi demand là thiếu hụt cung–cầu** — mọi claim phải đúng với biến dữ liệu thực sự đo được.
+7. **AI task chưa chạy test = chưa done** — dùng workflow Builder–Reviewer–Verifier và handoff có consumer xác nhận.

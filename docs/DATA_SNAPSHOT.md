@@ -10,6 +10,7 @@
 | Raw / normalized / enriched count | TBD |
 | Count theo source và region | TBD |
 | Salary coverage | TBD |
+| Experience/seniority coverage + entry-level count | TBD |
 | Dedupe/drop rate | TBD |
 | Skill extraction version | TBD |
 | Career mapping coverage | TBD |

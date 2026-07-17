@@ -22,8 +22,8 @@ graph TB
   end
 
   subgraph "Frontend — Next.js :3000"
-    N[Landing /] --> O[/explore<br/>Chat + Profile Card live/]
-    O --> P[/results<br/>Career cards + Evidence + Pathway/]
+    N[Landing /<br/>Explore | Launch] --> O[/explore<br/>Chat + Profile/Experience live/]
+    O --> P[/results<br/>Career + Evidence + Pathway/Readiness/]
     Q[/market<br/>Radar nhu cầu kỹ năng/]
   end
 
@@ -38,13 +38,28 @@ graph TB
 2. **Backend (online)** — FastAPI stateless, chỉ ĐỌC dữ liệu pipeline đã build + gọi LLM cho chat/evidence. Không crawl, không batch trong request path.
 3. **Frontend** — Next.js gọi REST, có mock mode hoàn chỉnh (chạy được cả khi BE chết).
 
+### Runtime/state ownership
+
+| State/artifact | Writer | Readers | Lifetime/version rule |
+|---|---|---|---|
+| Browser `session_id`, selected mode | FE | FE/BE | reset/delete by user; no PII |
+| Session profile/messages | Profiler service | chat/recommender | SQLite demo, TTL target 24h; mode locked |
+| Raw/processed snapshot | M2 pipeline | M3 batch only | immutable snapshot ID + SHA-256 |
+| Taxonomy/career KB | M3 / M2+M4 | extraction/matching | semantic version/hash; refresh vectors together |
+| Market DB | stats builder | market/matching services read-only | atomic build then swap; meta has input hashes |
+| Career vectors | embed script | matching read-only | model + KB hash; mismatch refuses load |
+| Replay fixtures | M1/M4 | demo routers | fictional data; contract version/commit |
+
+Không service online nào ghi raw/processed/market stats. Không pipeline nào đọc session data.
+
 ## 2. Data flow chính (request path)
 
 ### Chat profiling
 ```
-FE POST /api/chat {session_id, message}
+FE POST /api/chat {session_id, message, journey_mode}
  → load session state (SQLite)
- → state machine chọn phase (warmup/interests/abilities/constraints/wrapup)
+ → lock journey_mode on opening turn
+ → state machine chọn phase (shared phases, mode-specific completeness/questions)
  → LLM call (structured output): {reply, profile_delta, phase, done}
  → validate bằng Pydantic; fail → retry tối đa 2 lần với error feedback
  → merge profile_delta vào profile, lưu session
@@ -61,8 +76,39 @@ FE POST /api/recommendations {session_id}
  → top 5 + 1 stretch (điểm cao nhất NGOÀI cluster sở thích chính)
  → với mỗi career: đính stats từ market.db + routes từ career KB
  → LLM sinh evidence (input = quotes của học sinh + stats; prompt cấm sinh số mới)
+ → nếu launch: code tính readiness band + matched/missing skills;
+   template/LLM sinh action wording nhưng deliverable/skill references được validate
  → trả RecommendationResponse (xem API_CONTRACT.md)
 ```
+
+### Mode composition — không fork hệ thống
+
+```mermaid
+flowchart LR
+  A[Shared Profile Evidence] --> B[Shared Candidate Retrieval + Scoring]
+  B --> C[Explore Presenter]
+  B --> D[Launch Presenter]
+  C --> E[Study/Vocational Routes]
+  D --> F[Readiness + Search Queries + 30-day Actions]
+  G[Shared Market Stats] --> B
+  G --> C
+  G --> D
+```
+
+`journey_mode` chỉ đổi câu hỏi, completeness và lớp trình bày/action; không tạo crawler, taxonomy, matching engine hoặc database riêng. Điều này giữ scope 48h và tránh hai sản phẩm không đồng bộ.
+
+### Service boundaries
+
+| Layer | Responsibility | Must not do |
+|---|---|---|
+| Router | validate HTTP, call service, map errors/schema | scoring, SQL aggregation, prompts |
+| Profiler service | state/completeness/merge/session | career ranking or UI copy |
+| Matching service | retrieve/score/diversify/readiness inputs | call crawler, invent evidence |
+| Market service | read typed stats/meta | scan raw JSON or call LLM |
+| LLM gateway | provider call/log/retry/timeout | business decisions/session persistence |
+| Presenter/evidence | validated wording/template | choose candidates or create numbers |
+| FE API client | network/mock/error normalization | render/component state |
+| Components | render/accessibility/interactions | direct fetch or contract transformation scattered across UI |
 
 ## 3. Quyết định kiến trúc & lý do (ADR rút gọn)
 
@@ -75,6 +121,8 @@ FE POST /api/recommendations {session_id}
 | 5 | Pipeline offline tách khỏi serving | Demo không phụ thuộc crawl; chạy lại từng bước; đúng câu chuyện scalability | "Real-time" thành "near-real-time" — chấp nhận, pitch rõ |
 | 6 | Session state server-side, session_id ở localStorage | Không cần auth trong 48h nhưng vẫn giữ được hội thoại khi F5 | Không cross-device — out of scope |
 | 7 | Profile schema KHÔNG có field giới tính | Anti-bias by design — không thể leak thứ không tồn tại | Không cá nhân hóa xưng hô — dùng "em/bạn" trung tính |
+| 8 | Explore/Launch dùng shared core | Bám cả chọn ngành và thất nghiệp sau tốt nghiệp mà không nhân đôi architecture | Launch MVP không match vacancy/công ty cụ thể |
+| 9 | Readiness dùng 3 band deterministic, không xác suất | Giải thích/test được; tránh false precision và hiring prediction | Ít “wow” hơn % score nhưng đáng tin hơn |
 
 ## 4. Cấu trúc thư mục (chuẩn — đặt file mới đúng chỗ)
 
@@ -133,8 +181,21 @@ Thiết kế hiện tại cố tình để mỗi thành phần có "đường th
 | Serving | 1 instance Render | Backend stateless → scale ngang sau load balancer; session sang Redis | Đổi session store |
 | FE | Vercel | Vercel (giữ nguyên) + ISR cho trang market | — |
 | Mới | — | Counselor dashboard, school integration, API cho trường học | Feature mới trên nền data đã có |
+| Graduate Launch | role-family + search query + action plan | vacancy API, CV evidence import, outcome feedback | Chỉ mở sau source permission/privacy/fairness gates |
 
 Điểm nhấn pitch: **"Mọi con số demo hôm nay đến từ pipeline có thể chạy mỗi đêm — real-time hóa là việc thêm scheduler, không phải viết lại."**
+
+### Scale trigger, không scale theo cảm tính
+
+| Trigger đo được | Upgrade |
+|---|---|
+| SQLite lock/error hoặc >50 concurrent sessions trong load test | Postgres sessions; Redis chỉ nếu latency/session TTL cần |
+| Career vectors >10k hoặc p95 retrieval >100ms | pgvector/ANN; trước đó giữ NumPy |
+| Daily new postings > batch window hoặc extraction >2h | queue workers + incremental jobs |
+| Source freshness SLA <24h | scheduler + source monitoring/contracts |
+| Multi-school pilot có PII/roles | auth/RBAC/audit log/tenant isolation trước dashboard |
+
+Không đưa production technology vào MVP nếu chưa có trigger; mỗi dependency là thêm failure mode.
 
 ## 6. Bảo mật & vận hành tối thiểu (mức hackathon)
 
@@ -144,6 +205,25 @@ Thiết kế hiện tại cố tình để mỗi thành phần có "đường th
 - Log mọi LLM call (model, tokens, latency) ra console — debug chi phí và chậm ở đâu.
 - `/api/health` trả `{status, llm_ok, data_loaded}` — M1 check sau mỗi deploy.
 - Student-data retention, source-use và release checklist: `docs/SECURITY_PRIVACY.md`.
+
+### Failure matrix và degradation
+
+| Failure | Detect | User behavior | Operator action |
+|---|---|---|---|
+| Chat provider timeout/JSON fail | gateway metric/retry exhausted | deterministic phase question, session preserved | replay for demo; inspect prompt/model |
+| Embedding API unavailable | startup/build error | use cached vectors/skill baseline | do not rebuild during demo |
+| Market DB missing/hash mismatch | health `data_loaded=false` | explicit seed/mock label, no “real data” claim | restore release artifact |
+| FE cannot reach BE | normalized API error | retry then mock/replay path for demo | check CORS/deploy health |
+| Low sample | schema `low_confidence` | hide trend/salary, explain limitation | collect more data later |
+| Contract mismatch | CI/type/schema fixture | block merge/deploy | contract owner fixes all 3 places |
+
+### Observability minimum
+
+- Request ID per API request; structured log event, status, latency, mode — no raw user content.
+- LLM metric: provider/model/prompt version, tokens, latency, retry/fallback, estimated cost.
+- Data metric: snapshot/hash/count/source/region/coverage; build duration/error count.
+- Product demo metric is manual/anonymized; no analytics SDK is required in 48h.
+- Health distinguishes service alive, market artifact loaded and LLM key configured; it does not claim provider is healthy without an actual bounded check.
 
 ## 7. Capacity assumptions & NFR
 
