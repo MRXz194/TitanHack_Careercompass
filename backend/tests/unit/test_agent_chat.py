@@ -1,6 +1,8 @@
 """PR-13 — stage mapping, agent enrichment, degradation, no CoT leak."""
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from app.core.config import get_settings
@@ -218,7 +220,10 @@ def test_live_langgraph_planner_can_choose_correction_tool(
     assert plan.arguments["session_id_hash"]
     assert plan.stop_after_tool is True
     assert len(plan.thought_summary) <= 40
-    assert "nữ" not in captured["messages"][0]["content"].lower()
+    planner_payload = captured["messages"][0]["content"].lower()
+    # Whole-word check: the normal Vietnamese word "nữa" must not be mistaken
+    # for a leaked standalone gender label "nữ".
+    assert re.search(r"(?<!\w)nữ(?!\w)", planner_payload) is None
 
 
 def test_live_planner_failure_falls_back_to_safe_extract(

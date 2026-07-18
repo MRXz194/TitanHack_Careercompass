@@ -897,7 +897,9 @@ def deterministic_turn(
                 current = float((profile.dimensions if profile else {}).get(dim, 0.0) or 0.0)
                 # Repeated concrete evidence should strengthen a signal instead of every
                 # persona collapsing to the same binary 0.55 dimension vector.
-                dims[dim] = min(0.9, max(0.55, current + 0.15))
+                # Keyword-only inference remains intentionally conservative; richer
+                # confidence must come from stronger/validated evidence, not repetition.
+                dims[dim] = min(0.8, max(0.55, current + 0.15))
     delta.dimensions = dims
 
     # Skills from tool keywords if not already added

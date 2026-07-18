@@ -37,6 +37,7 @@ PATCH_FIELDS = {
     "dimensions",
     "remove_skills",
     "add_interests",
+    "remove_interests",
     "education_stage",
     "job_goal",
     "add_experiences",
