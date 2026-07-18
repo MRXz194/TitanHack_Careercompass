@@ -9,6 +9,7 @@ sys.path.append(str(ROOT_DIR))
 
 from data.pipeline.crawl_jobs import (
     canonical_url,
+    _resume_offset,
     parse_args,
     parse_jsonld_job,
     parse_vietnamworks_job,
@@ -89,3 +90,13 @@ def test_limit_requires_explicit_source():
     args = parse_args(["--source", "all", "--limit", "10"])
     assert args.source == "all"
     assert args.limit == 10
+
+
+def test_resume_offset_continues_after_furthest_success():
+    urls = [f"https://example.com/jobs/{index}" for index in range(8)]
+    records = [
+        {"url": urls[1]},
+        {"url": urls[4] + "?tracking=x"},
+        {"url": "https://other.example/job"},
+    ]
+    assert _resume_offset(urls, records) == 5

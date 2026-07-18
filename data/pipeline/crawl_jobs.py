@@ -74,6 +74,7 @@ class CrawlReport:
     discovered_urls: int = 0
     attempted_urls: int = 0
     resumed_records: int = 0
+    resume_offset: int = 0
     unique_records: int = 0
     skipped_inactive: int = 0
     parse_errors: int = 0
@@ -415,6 +416,21 @@ def _load_existing(source: str) -> dict[str, dict[str, Any]]:
     return records
 
 
+def _resume_offset(urls: list[str], records: Iterable[dict[str, Any]]) -> int:
+    """Continue after the furthest successful URL in deterministic discovery order.
+
+    This avoids re-requesting inactive/unparsable URLs before a checkpoint. It is
+    valid because each discoverer has stable ordering (TopCV uses a fixed seed).
+    """
+    positions = {canonical_url(url): index for index, url in enumerate(urls)}
+    completed = [
+        positions[canonical_url(str(record.get("url") or ""))]
+        for record in records
+        if canonical_url(str(record.get("url") or "")) in positions
+    ]
+    return max(completed, default=-1) + 1
+
+
 def _snapshot_hash(records: Iterable[dict[str, Any]]) -> str:
     payload = "\n".join(
         json.dumps(record, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -459,7 +475,9 @@ def crawl_source(
     try:
         urls = DISCOVERERS[source](client, limit)
         report.discovered_urls = len(urls)
-        for index, url in enumerate(urls, start=1):
+        offset = _resume_offset(urls, records.values()) if resume else 0
+        report.resume_offset = offset
+        for index, url in enumerate(urls[offset:], start=offset + 1):
             job_id = stable_job_id(source, url)
             if job_id in records:
                 continue
