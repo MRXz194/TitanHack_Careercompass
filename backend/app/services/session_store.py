@@ -17,6 +17,7 @@ class Corrections:
 
     removed_skills: set[str] = field(default_factory=set)
     removed_experience_titles: set[str] = field(default_factory=set)
+    removed_interests: set[str] = field(default_factory=set)
     locked_education_stage: bool = False
     locked_job_goal: bool = False
     dimension_overrides: dict[str, float] = field(default_factory=dict)
@@ -26,6 +27,7 @@ class Corrections:
             {
                 "removed_skills": sorted(self.removed_skills),
                 "removed_experience_titles": sorted(self.removed_experience_titles),
+                "removed_interests": sorted(self.removed_interests),
                 "locked_education_stage": self.locked_education_stage,
                 "locked_job_goal": self.locked_job_goal,
                 "dimension_overrides": self.dimension_overrides,
@@ -41,6 +43,7 @@ class Corrections:
         return cls(
             removed_skills=set(data.get("removed_skills") or []),
             removed_experience_titles=set(data.get("removed_experience_titles") or []),
+            removed_interests=set(data.get("removed_interests") or []),
             locked_education_stage=bool(data.get("locked_education_stage")),
             locked_job_goal=bool(data.get("locked_job_goal")),
             dimension_overrides=dict(data.get("dimension_overrides") or {}),

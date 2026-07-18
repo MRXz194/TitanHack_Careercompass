@@ -47,6 +47,80 @@ _DIM_KEYWORDS: dict[str, tuple[str, ...]] = {
     "quan_ly": ("tổ chức", "lịch", "nhóm", "quản lý", "điều phối", "kinh doanh"),
 }
 
+# Cues that a user is retracting/contradicting something said earlier in the
+# conversation — never additive. Profile is visible/editable, so a correction must
+# also leave a trace in evidence_quotes (transparency), not just silently vanish.
+_NEGATION_CUES: tuple[str, ...] = (
+    "không thích",
+    "không muốn",
+    "hết thích",
+    "không còn thích",
+    "không còn",
+    "ghét",
+    "chán",
+    "không giỏi",
+    "không hợp",
+    "chưa biết",
+    "không biết",
+    "bỏ",
+    "xóa",
+)
+
+
+# Filler words to strip before comparing an interest label against a correction
+# message — interest labels are often a whole clause ("em thích vẽ"), not a compact
+# token like a skill name, so exact/full-string containment would almost never match
+# a later, differently-worded negation. Compare on remaining content words instead.
+_INTEREST_STOPWORDS = frozenset(
+    {
+        "em", "mình", "bạn", "thích", "rất", "khá", "cũng", "và", "là", "có",
+        "được", "hay", "nhiều", "một", "chút", "hơi", "thấy", "vui", "làm", "nữa",
+        "không", "à", "gì", "cái", "này", "đó", "the", "a",
+    }
+)
+
+
+def _interest_content_words(text: str) -> list[str]:
+    return [
+        w
+        for w in re.findall(r"[^\W\d_]+", (text or "").lower(), flags=re.UNICODE)
+        if w not in _INTEREST_STOPWORDS and len(w) >= 2
+    ]
+
+
+def _detect_corrections(text: str, profile: Optional[Profile]) -> Optional["CorrectionsDelta"]:
+    """Detect a verbal correction: negation cue + a skill/interest/dimension keyword
+    already present in this message. Never additive — only ever removes/resets."""
+    from app.models.profiler_io import CorrectionsDelta
+
+    lower = text.lower()
+    if not any(cue in lower for cue in _NEGATION_CUES):
+        return None
+
+    remove_skills: list[str] = []
+    remove_interests: list[str] = []
+    if profile is not None:
+        for skill in profile.skills:
+            if skill.name and skill.name.lower() in lower:
+                remove_skills.append(skill.name)
+        for interest in profile.interests:
+            words = _interest_content_words(interest)
+            if words and any(w in lower for w in words):
+                remove_interests.append(interest)
+
+    reset_dims: list[str] = []
+    for dim, kws in _DIM_KEYWORDS.items():
+        if any(k in lower for k in kws):
+            reset_dims.append(dim)
+
+    if not (remove_skills or remove_interests or reset_dims):
+        return None
+    return CorrectionsDelta(
+        remove_skills=remove_skills,
+        remove_interests=remove_interests,
+        reset_dimensions=reset_dims,
+    )
+
 
 # ---------- merge / completeness / phase (pure) ----------
 
@@ -58,6 +132,24 @@ def merge_delta(
     turn: int,
 ) -> Profile:
     """Merge validated delta into profile; corrections win."""
+    # Verbal corrections (retract/reset) apply BEFORE the additive merge below, so a
+    # same-turn "remove X, but here's evidence for Y" still lands Y correctly.
+    if delta.corrections is not None:
+        for name in delta.corrections.remove_skills:
+            corrections.removed_skills.add(name)
+        for name in delta.corrections.remove_interests:
+            corrections.removed_interests.add(name)
+        for dim in delta.corrections.reset_dimensions:
+            if dim in DIM_KEYS:
+                profile.dimensions[dim] = 0.15
+                corrections.dimension_overrides.pop(dim, None)
+        profile.skills = [
+            s for s in profile.skills if s.name.lower() not in {r.lower() for r in corrections.removed_skills}
+        ]
+        profile.interests = [
+            i for i in profile.interests if i.lower() not in {r.lower() for r in corrections.removed_interests}
+        ]
+
     # Dimensions
     for key, value in (delta.dimensions or {}).items():
         if key not in DIM_KEYS:
@@ -77,9 +169,15 @@ def merge_delta(
     # Interests (union) — same injection guard as skills/evidence_quotes, since an LLM-produced
     # delta is not otherwise re-checked past the skill-name filter below.
     seen_i = {i.lower() for i in profile.interests}
+    removed_i = {r.lower() for r in corrections.removed_interests}
     for interest in delta.interests or []:
         text = (interest or "").strip()
-        if text and text.lower() not in seen_i and not _looks_like_injection(text):
+        if (
+            text
+            and text.lower() not in seen_i
+            and text.lower() not in removed_i
+            and not _looks_like_injection(text)
+        ):
             profile.interests.append(text)
             seen_i.add(text.lower())
 
@@ -477,11 +575,16 @@ def deterministic_turn(
     turn: int,
     fallback_index: int,
     recent_replies: list[str] | None = None,
+    profile: Optional[Profile] = None,
 ) -> ProfilerTurnOutput:
     """Build a structured turn without calling a model provider."""
     text = (message or "").strip()
     delta = ProfileDelta()
     lower = text.lower()
+
+    corrections_delta = _detect_corrections(text, profile)
+    if corrections_delta is not None:
+        delta.corrections = corrections_delta
 
     if journey_mode == "launch":
         if any(k in lower for k in ("năm cuối", "nam cuoi", "final year")):
@@ -526,24 +629,32 @@ def deterministic_turn(
         if any(k in lower for k in ("lớp 12", "lớp 11", "cấp 3", "học sinh")):
             delta.education_stage = "high_school"
 
-    # Interests: compact labels only (PR-10); skip pure ability/tool turns
-    if phase in ("warmup", "interests", "constraints") or journey_mode == "launch" and phase == "interests":
-        label = _compact_interest_label(text)
-        if label:
-            delta.interests = [label]
-    elif phase == "abilities" and not any(
-        k in lower for k in ("excel", "python", "react", "khen", "giỏi", "làm tốt")
-    ):
-        label = _compact_interest_label(text)
-        if label:
-            delta.interests = [label]
+    # Interests: compact labels only (PR-10); skip pure ability/tool turns.
+    # A correction turn ("à không, em không thích vẽ nữa") must not immediately
+    # re-add the very interest it's retracting.
+    if corrections_delta is None:
+        if phase in ("warmup", "interests", "constraints") or journey_mode == "launch" and phase == "interests":
+            label = _compact_interest_label(text)
+            if label:
+                delta.interests = [label]
+        elif phase == "abilities" and not any(
+            k in lower for k in ("excel", "python", "react", "khen", "giỏi", "làm tốt")
+        ):
+            label = _compact_interest_label(text)
+            if label:
+                delta.interests = [label]
 
     # Dimension bumps from keywords — skip entirely if the whole message looks like an
     # injection attempt, even if it also contains a legit-sounding keyword substring
-    # (e.g. "code" inside an "ignore previous instructions... code" message).
+    # (e.g. "code" inside an "ignore previous instructions... code" message). Also skip
+    # any dimension this same turn is resetting via a correction — bumping and
+    # resetting the same dimension in one delta would fight each other in merge_delta.
     dims: dict[str, float] = {}
+    reset_now = set(corrections_delta.reset_dimensions) if corrections_delta else set()
     if not _looks_like_injection(text):
         for dim, kws in _DIM_KEYWORDS.items():
+            if dim in reset_now:
+                continue
             if any(k in lower for k in kws):
                 dims[dim] = 0.55
     delta.dimensions = dims
@@ -661,11 +772,18 @@ def handle_turn(
 
     agent_reply: str | None = None
     agent_delta = None
+    agent_applied_patch: ProfilePatch | None = None
     if agent_chat.agent_enabled_for_chat():
         enrich = agent_chat.run_agent_enrichment(state, user_text)
         agent_delta = enrich.get("delta")
         if not enrich.get("fallback"):
             agent_reply = enrich.get("reply")
+        raw_patch = enrich.get("applied_patch")
+        if raw_patch:
+            try:
+                agent_applied_patch = ProfilePatch.model_validate(raw_patch)
+            except Exception as exc:  # noqa: BLE001
+                log.warning("agent applied_patch invalid session=%s err=%s", state.session_id, type(exc).__name__)
         # never expose enrich["trace"] on ChatResponse
     else:
         # Deterministic: may still use local extract tool (no graph/network planner)
@@ -679,6 +797,9 @@ def handle_turn(
         state.profile = merge_delta(
             state.profile, agent_delta, state.corrections, state.turn
         )
+    if agent_applied_patch is not None:
+        # Same correction-precedence path as the REST PATCH /profile endpoint.
+        state.profile = apply_patch(state.profile, agent_applied_patch, state.corrections)
     state.profile = merge_delta(
         state.profile, delta, state.corrections, state.turn
     )
@@ -791,6 +912,7 @@ def _produce_turn_output(state: SessionState, user_text: str) -> ProfilerTurnOut
         turn=state.turn,
         fallback_index=state.fallback_index,
         recent_replies=recent,
+        profile=state.profile,
     )
     state.fallback_index += 1
     return out

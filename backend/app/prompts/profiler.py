@@ -1,3 +1,4 @@
+# v3 — 2026-07-18 — add profile_delta.corrections for verbal retraction (Day-3 Commit 4)
 # v2 — 2026-07-17 — adaptive Explore/Launch prompts + structured delta (PR-02)
 """System prompts for the conversational profiler. Design: docs/AI_DESIGN.md §1.
 
@@ -12,7 +13,7 @@ HARD RULES baked into every prompt version:
 """
 from __future__ import annotations
 
-PROFILER_PROMPT_VERSION = "profiler-v2"
+PROFILER_PROMPT_VERSION = "profiler-v3"
 
 PHASES = ("warmup", "interests", "abilities", "constraints", "wrapup")
 
@@ -48,13 +49,21 @@ Output (bắt buộc, JSON thuần, không markdown):
                      "description": "...", "skills": ["..."], "source_quote": "..."}],
     "education_stage": null,
     "job_goal": null,
-    "evidence_quotes": [{"turn": 1, "quote": "...", "mapped_to": "ky_thuat|...|skill name"}]
+    "evidence_quotes": [{"turn": 1, "quote": "...", "mapped_to": "ky_thuat|...|skill name"}],
+    "corrections": null
   },
   "phase_done": false
 }
 - Chỉ điền field có tín hiệu mới từ lượt này; field không chắc thì để rỗng/null.
 - dimensions chỉ tăng nhẹ khi có bằng chứng; không đoán bừa.
 - phase_done=true chỉ khi mục tiêu phase hiện tại đã đủ tín hiệu (code cũng sẽ kiểm).
+- Nếu user PHỦ NHẬN/RÚT LẠI điều đã nói trước đó (vd. "à không, em không thích vẽ nữa",
+  "thật ra em chưa biết Python đâu"), KHÔNG thêm lại vào interests/skills/dimensions —
+  thay vào đó điền "corrections": {"remove_skills": [...], "remove_interests": [...],
+  "reset_dimensions": [...]} với đúng tên/dimension đang bị rút lại. Ví dụ user từng nói
+  "em thích vẽ" rồi sau đó nói "à không, em không thích vẽ nữa" →
+  corrections: {"remove_interests": ["vẽ"], "reset_dimensions": ["sang_tao"]}, và
+  interests/dimensions của lượt này để rỗng (không set lại giá trị cũ).
 """.strip()
 
 EXPLORE_MODE_SECTION = """

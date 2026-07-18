@@ -8,7 +8,10 @@ from pathlib import Path
 import pytest
 
 from app.models.profiler_io import ProfilerTurnOutput
+from app.models.schemas import Profile, ProfileSkill
 from app.prompts.profiler import PROFILER_PROMPT_VERSION
+from app.services.profiler import merge_delta
+from app.services.session_store import Corrections
 
 
 pytestmark = pytest.mark.unit
@@ -103,6 +106,39 @@ def test_injection_transcript_strips_malicious_skills() -> None:
         # Reply should not claim to switch persona to DAN.
         assert "i am dan" not in combined
         assert "bạn là dan" not in combined
+
+
+def test_llm_produced_corrections_delta_merges_end_to_end() -> None:
+    """4b: profiler-v3's SHARED_RULES ask the LLM to populate profile_delta.corrections
+    on a retraction turn instead of silently omitting the field (which looks identical
+    to "no change"). Simulate exactly that LLM output — not a full new narrative
+    fixture, since only the corrections wiring is new here, not the conversation
+    format already covered by the six fixtures above — and confirm merge_delta
+    actually retracts the skill and resets the dimension."""
+    assistant_turn = {
+        "reply": "Không sao, mình bỏ Python khỏi hồ sơ nhé — bạn còn kỹ năng nào khác không?",
+        "profile_delta": {
+            "corrections": {
+                "remove_skills": ["Python"],
+                "remove_interests": [],
+                "reset_dimensions": ["ky_thuat"],
+            }
+        },
+        "phase_done": False,
+    }
+    parsed = ProfilerTurnOutput.model_validate(assistant_turn)
+    assert parsed.profile_delta.corrections is not None
+    assert parsed.profile_delta.corrections.remove_skills == ["Python"]
+
+    profile = Profile(
+        session_id="llm-corr-1",
+        journey_mode="launch",
+        skills=[ProfileSkill(name="Python", source_quote="em biết Python")],
+        dimensions={"ky_thuat": 0.6, "phan_tich": 0.2, "sang_tao": 0.1, "xa_hoi": 0.1, "quan_ly": 0.1},
+    )
+    out = merge_delta(profile, parsed.profile_delta, Corrections(), turn=3)
+    assert "python" not in {s.name.lower() for s in out.skills}
+    assert out.dimensions["ky_thuat"] == 0.15
 
 
 def test_no_experience_launch_records_constraint_note() -> None:

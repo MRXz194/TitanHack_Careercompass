@@ -140,6 +140,7 @@ def run_agent_enrichment(
         trace.pop(bad, None)
 
     delta: ProfileDelta | None = None
+    applied_patch: dict[str, Any] | None = None
     reply: str | None = out.get("reply")
     for obs in out.get("observations") or []:
         if not obs.get("ok"):
@@ -150,6 +151,10 @@ def run_agent_enrichment(
                 delta = ProfileDelta.model_validate(res["profile_delta"])
             except Exception:  # noqa: BLE001
                 delta = None
+        if "applied_patch" in res:
+            # apply_profile_correction builds a patch but never merges it itself —
+            # the caller (profiler.handle_turn) must merge it with correction precedence.
+            applied_patch = res["applied_patch"]
         if res.get("question"):
             reply = res["question"]
         if res.get("reply_hint"):
@@ -162,6 +167,7 @@ def run_agent_enrichment(
         "trace": trace,
         "public_rationale": out.get("public_rationale") or "",
         "engine": out.get("engine"),
+        "applied_patch": applied_patch,
     }
 
 

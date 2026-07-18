@@ -177,6 +177,70 @@ def test_produce_turn_output_falls_back_on_non_llmerror_exception(
     get_settings.cache_clear()
 
 
+def test_verbal_correction_removes_interest_and_resets_dimension() -> None:
+    """4b: turn 1 "em thích vẽ" adds interest + bumps sang_tao; turn 2 "à không, em
+    không thích vẽ nữa" must retract both, with both quotes visible in the evidence
+    trail (profile is visible/editable — a correction must be traceable, not silent)."""
+    corr = Corrections()
+    p = _profile()
+
+    out1 = deterministic_turn(
+        journey_mode="explore", phase="interests", message="em thích vẽ",
+        turn=1, fallback_index=0, profile=p,
+    )
+    p = merge_delta(p, out1.profile_delta, corr, turn=1)
+    assert any("vẽ" in i for i in p.interests)
+    assert p.dimensions.get("sang_tao") == 0.55
+
+    out2 = deterministic_turn(
+        journey_mode="explore", phase="interests",
+        message="à không, em không thích vẽ nữa", turn=2, fallback_index=1, profile=p,
+    )
+    assert out2.profile_delta.corrections is not None
+    p = merge_delta(p, out2.profile_delta, corr, turn=2)
+
+    assert not any("vẽ" in i for i in p.interests)
+    assert p.dimensions.get("sang_tao") == 0.15
+    quotes = [q.quote for q in p.evidence_quotes]
+    assert "em thích vẽ" in quotes
+    assert "à không, em không thích vẽ nữa" in quotes
+
+
+def test_verbal_correction_removes_skill_and_stays_removed_on_later_unrelated_turn() -> None:
+    """4b: "em biết Python" then "thật ra em chưa biết Python đâu" removes the skill,
+    and a later turn that merely contains "python" as a substring of something else
+    must not silently resurrect it (regression for the 1c containment-guard interacting
+    correctly with the durable corrections.removed_skills set)."""
+    corr = Corrections()
+    p = _profile()
+
+    out1 = deterministic_turn(
+        journey_mode="launch", phase="abilities", message="em biết Python",
+        turn=1, fallback_index=0, profile=p,
+    )
+    p = merge_delta(p, out1.profile_delta, corr, turn=1)
+    assert "python" in {s.name.lower() for s in p.skills}
+
+    out2 = deterministic_turn(
+        journey_mode="launch", phase="abilities",
+        message="thật ra em chưa biết Python đâu", turn=2, fallback_index=1, profile=p,
+    )
+    assert out2.profile_delta.corrections is not None
+    assert "Python" in out2.profile_delta.corrections.remove_skills
+    p = merge_delta(p, out2.profile_delta, corr, turn=2)
+    assert "python" not in {s.name.lower() for s in p.skills}
+
+    # Unrelated later turn that happens to contain "python" as a substring — must not
+    # silently re-add the skill just because the tool-keyword scan fires again.
+    out3 = deterministic_turn(
+        journey_mode="launch", phase="abilities",
+        message="em có tự học thêm về python qua video nhưng chưa làm project nào",
+        turn=3, fallback_index=2, profile=p,
+    )
+    p = merge_delta(p, out3.profile_delta, corr, turn=3)
+    assert "python" not in {s.name.lower() for s in p.skills}
+
+
 def test_deterministic_no_experience_note() -> None:
     out = deterministic_turn(
         journey_mode="launch",

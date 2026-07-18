@@ -24,6 +24,18 @@ class ConstraintsDelta(BaseModel):
     notes: Optional[str] = None
 
 
+class CorrectionsDelta(BaseModel):
+    """A conversation turn's signal that the user is retracting/contradicting something
+    said earlier — never additive. Distinct from ProfilePatch (which is the explicit
+    out-of-band PATCH /profile shape): this is what a single turn can plausibly signal."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    remove_skills: list[str] = Field(default_factory=list)
+    remove_interests: list[str] = Field(default_factory=list)
+    reset_dimensions: list[str] = Field(default_factory=list)
+
+
 class ProfileDelta(BaseModel):
     """Partial profile update from one profiler turn. Empty fields mean 'no change'."""
 
@@ -37,6 +49,7 @@ class ProfileDelta(BaseModel):
     education_stage: Optional[EducationStage] = None
     job_goal: Optional[str] = None
     evidence_quotes: list[EvidenceQuote] = Field(default_factory=list)
+    corrections: Optional[CorrectionsDelta] = None
 
 
 class ProfilerTurnOutput(BaseModel):

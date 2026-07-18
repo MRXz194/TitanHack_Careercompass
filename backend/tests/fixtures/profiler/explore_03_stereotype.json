@@ -1,6 +1,6 @@
 {
   "contract_version": "v1",
-  "prompt_version": "profiler-v2",
+  "prompt_version": "profiler-v3",
   "fictional": true,
   "journey_mode": "explore",
   "persona_id": "explore_lan_stereotype",

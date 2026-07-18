@@ -1,6 +1,6 @@
 import pytest
 
-from app.models.profiler_io import ProfileDelta, ProfilerTurnOutput
+from app.models.profiler_io import CorrectionsDelta, ProfileDelta, ProfilerTurnOutput
 
 
 pytestmark = pytest.mark.unit
@@ -65,6 +65,32 @@ def test_profiler_turn_defaults_isolated() -> None:
     b = ProfilerTurnOutput(reply="b?")
     a.profile_delta.interests.append("x")
     assert b.profile_delta.interests == []
+
+
+def test_profile_delta_corrections_defaults_to_none() -> None:
+    """4b: ProfileDelta.corrections must default to None so existing fixtures/tests
+    that predate this field (no "corrections" key) remain valid without changes."""
+    delta = ProfileDelta.model_validate({"interests": ["vẽ"]})
+    assert delta.corrections is None
+    assert delta.model_dump()["corrections"] is None
+
+
+def test_corrections_delta_round_trips_via_profile_delta() -> None:
+    raw = {
+        "corrections": {
+            "remove_skills": ["Python"],
+            "remove_interests": ["em thích vẽ"],
+            "reset_dimensions": ["sang_tao"],
+        }
+    }
+    delta = ProfileDelta.model_validate(raw)
+    assert isinstance(delta.corrections, CorrectionsDelta)
+    assert delta.corrections.remove_skills == ["Python"]
+    assert delta.corrections.remove_interests == ["em thích vẽ"]
+    assert delta.corrections.reset_dimensions == ["sang_tao"]
+    dumped = delta.model_dump()
+    round_tripped = ProfileDelta.model_validate(dumped)
+    assert round_tripped.corrections == delta.corrections
 
 
 def test_launch_delta_with_experience() -> None:

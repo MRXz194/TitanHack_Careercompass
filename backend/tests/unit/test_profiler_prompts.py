@@ -10,9 +10,9 @@ pytestmark = pytest.mark.unit
 PHASES = ("warmup", "interests", "abilities", "constraints", "wrapup")
 
 
-def test_prompt_version_is_profiler_v2() -> None:
-    assert prompts.PROFILER_PROMPT_VERSION == "profiler-v2"
-    assert "profiler-v2" in prompts.PROFILER_SYSTEM
+def test_prompt_version_is_profiler_v3() -> None:
+    assert prompts.PROFILER_PROMPT_VERSION == "profiler-v3"
+    assert "profiler-v3" in prompts.PROFILER_SYSTEM
 
 
 def test_build_system_includes_mode_and_phase() -> None:
