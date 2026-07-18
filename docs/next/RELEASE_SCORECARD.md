@@ -3,7 +3,7 @@
 Baseline commit: `e76a0a919505e7d534153fd95f41b72e5abc7b10`  
 Implementation branch: `codex/day3-opportunity-plan`  
 Release candidate commit: `8f982fc`  
-Main integration / CI fix: `19b87ad` / `d283b40`  
+Main integration / CI fix: `19b87ad` / `d283b40`
 Expansion Gate: **FAIL — automated candidate ready, manual E2E/human gates remain**
 
 ## Automated evidence
