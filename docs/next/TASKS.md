@@ -6,14 +6,29 @@ Mỗi task chỉ `DONE` khi có đủ: artifact, test command/output, commit, li
 
 Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` theo owner.
 
+Mỗi người chỉ giữ tối đa một task `IN_PROGRESS`. Board dùng trạng thái `READY → IN_PROGRESS → IN_REVIEW → VERIFIED → DONE`; owner không tự chuyển từ `IN_REVIEW` sang `VERIFIED`. Handoff phải ghi commit, files/API/artifact đã đổi, command đã chạy, kết quả, env/fixture, risk/limitation và tên consumer đã xác nhận.
+
+## Capacity map và thứ tự ưu tiên
+
+| Owner | P0 critical lane | P1 chỉ mở sau H+17 | Reviewer chính | Budget định hướng |
+|---|---|---|---|---:|
+| M1 | N1-01 → N1-02 → N1-03 | release polish | tất cả contract/release | 20–24h |
+| M2 | N2-00 → N2-01 → N2-02 | N2-03 route QA | M3 artifacts | 16–20h + support |
+| M3 | N3-01 → N3-02 | N3-03 skill bridge | M2 data, M4 numbers | 16–20h |
+| M4 | N4-01 → N4-02 → N4-03 → N4-04 | N4-05 research contract/replay/live | M5/M6 policy | 20–24h |
+| M5 | N5-01 → N5-02 → N5-03 | brief polish | M4 preview semantics | 18–22h |
+| M6 | N6-00 → N6-01 → N6-02 → N6-04 | N6-03 research cards | M3/M4 contracts | 20–24h |
+
+Nếu owner xong sớm, lấy task support đã ghi trong handoff của lane kế tiếp; không tự mở P1/P2. M4/M6 không để live search làm trễ What-if/Inspector; M2/M3 không publish artifact khi quality gate chưa pass.
+
 ## M1 — Integration, release và evidence
 
 ### N1-01 — Expansion Gate và baseline freeze (H+0–1)
 
 - **Problem:** mở feature khi core chưa ổn sẽ làm mất demo.
-- **Actions:** chạy test matrix; ghi commit baseline; xác nhận data snapshot, replay, Sev-1/2, owner và rollback; đóng băng contract cũ.
+- **Actions:** chạy test matrix; ghi commit baseline; xác nhận data snapshot/report/hash, source limitation, replay, Sev-1/2, owner và rollback; đóng băng contract cũ; chốt `WEB_RESEARCH_MODE=off|replay` ở baseline.
 - **Expected:** `docs/next/RELEASE_SCORECARD.md` được tạo từ template trong `EVALUATION.md`.
-- **Tests:** backend unit/contract/integration; FE typecheck/build; Explore/Launch/replay smoke.
+- **Tests:** backend unit/contract/integration; FE typecheck/build; Explore/Launch/replay smoke; raw/secret scan; boot không cần DDG/network.
 - **DoD:** mọi gate trong `README.md` pass hoặc kế hoạch ngày dư bị hủy.
 - **Risk/fallback:** bất kỳ P0 fail → M1 chuyển toàn team về core bug list.
 - **Handoff:** baseline commit + commands → M2–M6.
@@ -21,30 +36,41 @@ Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` t
 ### N1-02 — Contract/integration control (H+1–15)
 
 - **Problem:** compare/what-if/provenance dễ tạo field lệch FE–BE.
-- **Actions:** review sample payload; quản lý contract change; merge theo thứ tự M3/M4 → M5/M6; smoke sau mỗi merge.
+- **Actions:** review sample payload; quản lý contract change; chốt endpoint/shape cho preview và research; merge theo thứ tự M2/M3/M4 → M5/M6; smoke sau mỗi merge.
 - **Expected:** contract diff nhỏ, mock/live/replay parity.
-- **Tests:** OpenAPI/Pydantic/TS fixture parity; error/null/low-confidence cases.
+- **Tests:** OpenAPI/Pydantic/TS fixture parity; error/null/low-confidence/live-cached-replay-unavailable cases; stale/foreign career ID.
 - **DoD:** không consumer nào tự suy đoán field; main xanh sau từng merge.
 - **Fallback:** cắt field mới và dùng presentation từ contract hiện có.
 - **Handoff:** integration status mỗi checkpoint H+8/H+12/H+15.
 
 ### N1-03 — Acceptance, user test và release (H+15–24)
 
-- **Actions:** chạy 3 E2E; điều phối 2 sinh viên Explore, 2 Launch và 1–2 counselor; ưu tiên 1 fix dựa trên quan sát; claim audit; rehearsal/rollback.
+- **Actions:** chạy 3 E2E; test search-off/replay/live; điều phối 2 sinh viên Explore, 2 Launch và 1–2 counselor; ưu tiên 1 fix dựa trên quan sát; claim audit; rehearsal/rollback.
 - **Expected:** scorecard thật, screenshot/video backup, demo script cập nhật.
-- **Tests:** tasks U1–U5 trong `EVALUATION.md`; ngắt model/network và bật replay.
+- **Tests:** tasks U1–U5 và U6 nếu Research bật trong `EVALUATION.md`; ngắt model/network, và nếu có DDG thì bật replay/xác nhận research không đổi profile/candidate order.
 - **DoD:** không Sev-1/2, 2 rehearsal pass, mọi metric ghi đúng sample size.
 - **Fallback:** feature fail bị ẩn bằng feature flag; demo core cũ.
 - **Handoff:** release commit + known limitations → presenter.
 
 ## M2 — Data traceability và held-out quality
 
+### N2-00 — Public snapshot capture và acquisition audit (pre-H+0, tối đa H+3)
+
+- **Problem:** quota crawl không phản ánh public inventory; cố đạt quota bằng duplicate, cookie hoặc bypass sẽ làm dữ liệu và claim mất tin cậy.
+- **Actions:** inventory public sitemaps; canary 3 URL/source; crawl VietnamWorks cap 3.000 usable, ITviec cap 3.000 hoặc toàn public inventory, TopCV cap 1.000; delay/retry/resume; dừng 401/403/429/CAPTCHA; ghi requested/discovered/attempted/usable/unique/parse/http/block/stop/hash theo source. Phân biệt `run_*` với `snapshot/cumulative_*` và giữ run history để retry không ghi đè mất attempted/discovered cũ. Raw để trong `data/raw` gitignored.
+- **Expected:** ba report JSON + JSONL local; source limitation rõ; không raw text/cookie/token trong commit.
+- **Tests:** `backend/tests/unit/test_public_crawler.py`; canary schema; resume/high-water; stable ID/URL; secret scan; `git status` không thấy raw.
+- **DoD:** report tái hiện số record thực, unique ID=unique URL=usable; blocked source được dừng và không được claim representative; M1/M3 nhận path/hash.
+- **Risk/fallback:** inventory thấp → lấy toàn bộ và ghi limitation; source block → giữ partial snapshot hoặc exclude, không bypass.
+- **Handoff:** source reports, snapshot paths/hashes, command và caveats → N2-01, N3-01, N1-01.
+
 ### N2-01 — Snapshot trace pack (H+1–6)
 
 - **Problem:** aggregate đẹp nhưng judge không thấy đường từ source tới signal.
-- **Actions:** khóa snapshot ID/hash; report count theo source/region/time; salary coverage; dedupe/unmapped; chọn 10 aggregate và truy ngược posting IDs nội bộ.
+- **Actions:** normalize raw; khóa snapshot ID/hash; profile coverage theo source; report count theo source/region/time; exact/near dedupe, salary/date parse, career/region unmapped; chọn 10 aggregate và truy ngược posting IDs nội bộ. Chuẩn hóa pipeline entrypoint/README với explicit input/output, `--help`/`--dry-run` không side-effect, atomic output và command manifest để không vô tình chạy pipeline khi chỉ kiểm tra CLI. Thay fuzzy dedupe quét toàn bộ O(n²) bằng blocking key source/company/title tokens/date bucket trước khi `SequenceMatcher`, nhưng giữ fixture chứng minh kết quả baseline không regress.
+- **Known blockers từ acquisition audit:** ITviec có `baseSalary` marketing copy phải chuyển null/“thỏa thuận”; VietnamWorks có location ID số cần mapping có version hoặc suppress; TopCV partial snapshot bị 403 và date concentration không được dùng làm trend. Không publish Salary/Region/Trend cho tới khi từng blocker có test + coverage report.
 - **Expected:** machine-readable manifest + sanitized trace fixture; không commit raw licensed text.
-- **Tests:** schema/hash reproducibility; 10/10 aggregate trace; source URL/date present.
+- **Tests:** schema/hash reproducibility; `--help`/dry-run không tạo artifact; interrupted build không ghi đè artifact tốt; duplicate/coverage thresholds; salary outlier/n<5 suppression; 10/10 aggregate trace; source URL/date present.
 - **DoD:** M3 tái tạo đúng count; M6 render được source/sample/confidence.
 - **Fallback:** chỉ expose source/count/date; bỏ trace-level UI nếu terms không cho phép.
 - **Handoff:** snapshot/version/caveats → M3, M6, M1.
@@ -72,9 +98,9 @@ Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` t
 ### N3-01 — Signal Inspector query model (H+1–7)
 
 - **Problem:** API market cần đủ evidence để giải thích confidence.
-- **Actions:** expose hoặc chuẩn hóa snapshot/source/sample/salary coverage/trend confidence/top co-skills từ aggregate hiện có; không scan raw JSON per request.
+- **Actions:** chạy normalize→extract→map→aggregate từ N2-00; pin input/taxonomy/KB/pipeline hashes; chỉ publish artifact nếu QA gate pass; expose hoặc chuẩn hóa snapshot/source/sample/salary coverage/freshness/trend confidence/top co-skills; không scan raw JSON per request.
 - **Expected:** typed service + fixture/API response cho career/skill detail.
-- **Tests:** empty region; sample thấp; salary n<5→null; trend thiếu window→low confidence; provenance bắt buộc.
+- **Tests:** empty region; source partial; sample thấp; salary n<5→null; một snapshot/thiếu window→trend low confidence hoặc null; provenance bắt buộc; artifact rebuild deterministic.
 - **DoD:** M6 render được inspector mà không tự tính số.
 - **Fallback:** trả subset source/count/date/confidence từ `meta` và stats hiện có.
 - **Handoff:** sample request/response + snapshot hash → M6/M1.
@@ -133,6 +159,18 @@ Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` t
 - **DoD:** 100% hard invariants pass; fail thì disable what-if.
 - **Handoff:** pass/fail + claim boundary → M1.
 
+### N4-05 — Career Research agent + DuckDuckGo spike (P1, H+17–20)
+
+- **Problem:** LLM prose không phải bằng chứng hiện tại; generic browser tool có thể rò PII, bị prompt injection, rate-limit hoặc âm thầm ảnh hưởng recommendation.
+- **Actions contract/replay trước:** định nghĩa `research` stage, request/result Pydantic, allowlist chỉ `get_market_context` + `search_career_sources`; validate 1–2 career IDs thuộc recommendation; code-built query theo intent/region; typed citations; replay/local fallback; feature flag `off|replay|ddg`.
+- **Actions spike:** pin `ddgs==9.14.4`, ép backend DuckDuckGo; đo 10 query tiếng Việt cho 5 career families; timeout 4s, max 1 search call/5 results, TTL cache; kiểm tra empty/rate-limit/malformed URL. Package là community adapter, không được mô tả như official DuckDuckGo API.
+- **Actions live:** chỉ bật khi core xanh, contract/replay pass và spike đạt gate; sanitize HTML/length/URL, classify source tier, compose `InsightBlock[]`; không arbitrary page fetch.
+- **Expected:** `POST /api/research/careers` hoặc contract tương đương; policy matrix; 10 replay fixtures; live status `live|cached|replay|unavailable`; local market block luôn dùng snapshot.
+- **Tests:** tool-selection/args; no name/gender/school/GPA/raw transcript in query; SSRF/private URL reject; prompt injection trong query/snippet; timeout/rate-limit; citation required; every market number grounded; candidate order/profile unchanged byte-for-byte.
+- **DoD:** replay/local E2E pass và boot/test không cần DDG/network; live chỉ ship nếu ≥8/10 spike queries trả ≥3 relevant links trong budget, p95 ≤4s hoặc cache, 0 policy/grounding violation.
+- **Risk/fallback:** DDG không ổn định/terms chưa rõ → `WEB_RESEARCH_MODE=replay|off`, hiển thị local context + curated fixtures; không chặn core release.
+- **Handoff:** contract, fixtures, policy reason codes, env/kill switch và latency report → M1, N6-03.
+
 ## M5 — What-if UX và profile autonomy
 
 ### N5-01 — What-if drawer trên mock (H+2–7)
@@ -163,6 +201,16 @@ Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` t
 
 ## M6 — Compare, Signal Inspector và demo surface
 
+### N6-00 — Structured insight design system và component contract (H+1–4)
+
+- **Problem:** trả một đoạn text dài làm user khó so sánh, khó thấy nguồn và khiến LLM có thể tạo presentation không nhất quán.
+- **Actions:** tạo `InsightBlock` discriminated union và allowlisted components; map Cream Paper/Schematic Blue/Ink/Orange tokens; serif cho reading, mono cho UI/data; wireframe mobile/desktop cho metric strip, skill table, compare, route, source cards, caveat; loại login/pricing/marketing khỏi design reference.
+- **Expected:** typed fixture + component/state matrix cho normal/loading/empty/low-confidence/error/replay; mỗi số có `sourceRef`; source/limitation luôn nhìn thấy.
+- **Tests:** TS exhaustive switch; malformed/unknown block fallback; contrast/keyboard/mobile; long Vietnamese/null; không render raw HTML từ agent.
+- **DoD:** M3/M4 ký sample payload; cùng fixture render deterministic; một user tìm source/confidence ≤20 giây trong dry-run.
+- **Fallback:** fixed stacked cards/table dùng contract hiện có, không dynamic chart.
+- **Handoff:** tokens, fixtures, block renderer skeleton → N6-01/N6-02/N6-03.
+
 ### N6-01 — Compare 2 options (H+2–8)
 
 - **Problem:** ranking list dễ khiến user hiểu top-1 là verdict.
@@ -181,10 +229,18 @@ Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` t
 - **Fallback:** compact provenance panel; bỏ chart/co-skills.
 - **Handoff:** screenshots + data-state matrix → M1.
 
-### N6-03 — Live integration và pitch polish (H+12–20)
+### N6-03 — Career Research Cards (P1, H+17–20)
 
-- **Actions:** wire N3/N4; verify mock/live/replay; refine hierarchy; capture screenshots; update 60-second narrative.
-- **Tests:** FE typecheck/build; E2E Compare→Inspector→What-if→Brief; contrast/keyboard/mobile.
+- **Actions:** CTA “Nghiên cứu thêm” chỉ sau result; intent selector overview/skills/routes/local market; render local metric + source grid; domain/tier/date/status/limitation; external-link warning; không chat prose dài và không hiển thị raw agent trace.
+- **Tests:** 0/1/2 selected careers; stale/foreign ID; live/cached/replay/unavailable; timeout/retry-one-click; malicious/long snippet; keyboard/mobile; recommendation order trước/sau giống nhau.
+- **DoD:** replay/local flow pass, every source card có URL/domain/retrieved date/status; live DDG chỉ bật khi N4-05 go; lỗi live chuyển fallback không layout shift/5xx.
+- **Fallback:** ẩn CTA live và giữ “Nguồn & cách đọc số liệu” từ snapshot.
+- **Handoff:** screenshots/state matrix/E2E selector → M1/N6-04.
+
+### N6-04 — Live integration và pitch polish (H+12–20)
+
+- **Actions:** wire N3/N4; verify mock/live/replay/search-off; refine hierarchy; capture screenshots; update 60-second narrative.
+- **Tests:** FE typecheck/build; E2E Compare→Inspector→Research→What-if→Brief; contrast/keyboard/mobile.
 - **DoD:** no layout shift/blocker; source/limitation không bị giấu; demo ≤4 phút.
 - **Fallback:** feature flags tắt từng phần độc lập.
 - **Handoff:** release UI → M1.
@@ -194,15 +250,22 @@ Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` t
 ```mermaid
 flowchart LR
     N101["N1-01 gate"] --> N201["N2-01 trace"]
+    N200["N2-00 crawl audit"] --> N201
     N101 --> N401["N4-01 semantics"]
+    N101 --> N600["N6-00 block contract"]
     N201 --> N301["N3-01 inspector API"] --> N602["N6-02 inspector UI"]
     N202["N2-02 held-out"] --> N302["N3-02 extractor improvement"]
     N401 --> N402["N4-02 preview"] --> N502["N5-02 live what-if"]
     N401 --> N501["N5-01 drawer"] --> N502
     N403["N4-03 compare policy"] --> N601["N6-01 compare"]
+    N600 --> N601
+    N600 --> N602
+    N405["N4-05 research agent — P1"] -. "if enabled" .-> N603["N6-03 research cards — P1"]
+    N600 --> N603
     N601 --> N503["N5-03 brief"]
     N502 --> N104["N1-03 acceptance"]
     N602 --> N104
+    N603 -. "if enabled" .-> N104
     N503 --> N104
     N404["N4-04 fairness"] --> N104
 ```
