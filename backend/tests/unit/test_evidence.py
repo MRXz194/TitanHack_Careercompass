@@ -116,6 +116,53 @@ def test_template_why_keeps_specific_reason_when_signal_present() -> None:
     assert "Excel" in why.from_you[0].reason
 
 
+def test_validate_rejects_ungrounded_number_in_from_you_reason() -> None:
+    """3a: from_you.reason must be number-grounded, same as from_market/counterfactual."""
+    p = _profile_with_quote()
+    m = _market()
+    stats = ev.market_stats_dict(m)
+    quotes = ev.collect_allowed_quotes(p)
+    bad = Why(
+        from_you=[
+            WhyFromYou(
+                quote="em làm dashboard bằng Excel",
+                reason="bạn có kinh nghiệm 9999 dự án Excel",
+            )
+        ],
+        from_market=[WhyFromMarket(stat=f"{m.demand_count_90d} tin", stat_key="demand_count")],
+        counterfactual="cf",
+    )
+    out = ev.validate_why(bad, allowed_quotes=quotes, stats=stats, counterfactual_fact="cf")
+    assert out is not None
+    assert all("9999" not in x.reason for x in out.from_you)
+
+
+def test_validate_keeps_from_you_reason_number_sourced_from_its_own_quote() -> None:
+    """3a regression: a number the user themselves stated in the quote (not in market
+    stats) must not be falsely rejected when it's echoed back in the reason."""
+    p = Profile(
+        session_id="ev-2",
+        journey_mode="explore",
+        skills=[ProfileSkill(name="Excel", source_quote="em làm 5 dự án Excel rồi")],
+        evidence_quotes=[
+            EvidenceQuote(turn=1, quote="em làm 5 dự án Excel rồi", mapped_to="phan_tich")
+        ],
+    )
+    m = _market()
+    stats = ev.market_stats_dict(m)
+    quotes = ev.collect_allowed_quotes(p)
+    ok = Why(
+        from_you=[
+            WhyFromYou(quote="em làm 5 dự án Excel rồi", reason="bạn đã làm 5 dự án Excel")
+        ],
+        from_market=[WhyFromMarket(stat=f"{m.demand_count_90d} tin", stat_key="demand_count")],
+        counterfactual="cf",
+    )
+    out = ev.validate_why(ok, allowed_quotes=quotes, stats=stats, counterfactual_fact="cf")
+    assert out is not None
+    assert any("5 dự án Excel" in x.reason for x in out.from_you)
+
+
 def test_validate_rejects_ungrounded_market_numbers() -> None:
     p = _profile_with_quote()
     m = _market()

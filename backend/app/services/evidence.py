@@ -345,13 +345,17 @@ def validate_why(
     """Return sanitized Why or None if unrecoverable."""
     allowed_nums = allowed_number_tokens(stats)
 
-    # from_you: quotes must belong
+    # from_you: quotes must belong, and reason numbers must be grounded (in stats,
+    # or in the item's own quote — a number the user themselves said is safe to echo).
     safe_you: list[WhyFromYou] = []
     for item in why.from_you:
         if _looks_like_injection(item.quote) or _looks_like_injection(item.reason):
             continue
         if not quote_belongs(item.quote, allowed_quotes) and item.quote != "hồ sơ hiện tại của bạn":
             # try salvage: if reason ok but quote bad, skip item
+            continue
+        item_allowed_nums = allowed_nums | set(extract_number_tokens(item.quote))
+        if extract_number_tokens(item.reason) and not numbers_grounded(item.reason, item_allowed_nums):
             continue
         safe_you.append(item)
     if not safe_you and allowed_quotes:
@@ -479,6 +483,8 @@ def assert_why_grounded(why: Why, profile: Profile, market: MarketStats) -> None
     nums = allowed_number_tokens(stats)
     for item in why.from_you:
         assert quote_belongs(item.quote, allowed_q) or item.quote == "hồ sơ hiện tại của bạn"
+        item_nums = nums | set(extract_number_tokens(item.quote))
+        assert numbers_grounded(item.reason, item_nums) or not extract_number_tokens(item.reason)
     for item in why.from_market:
         assert numbers_grounded(item.stat, nums) or not extract_number_tokens(item.stat)
     # counterfactual may include career title words; numbers still checked against stats + none
