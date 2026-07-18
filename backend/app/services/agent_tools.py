@@ -12,12 +12,12 @@ from pydantic import BaseModel, Field
 
 from app.data.seed_loader import get_career, load_careers
 from app.models.agent_schemas import AgentStage
-from app.models.schemas import Profile, ProfilePatch, ProfileSkill
+from app.models.schemas import Profile, ProfilePatch, ProfileSkill, Region, ResearchIntent
 from app.prompts.profiler import get_fallback_question
 from app.services import matching, pathways
 from app.services.agent_policy import strip_privacy_text
 
-TOOL_REGISTRY_VERSION = "agent-tools-v1"
+TOOL_REGISTRY_VERSION = "agent-tools-v2-research"
 
 
 # ---------- arg schemas ----------
@@ -102,6 +102,13 @@ class PrepareResultInput(BaseModel):
     session_id_hash: str = ""
     top5_ids: list[str] = Field(default_factory=list)
     stretch_id: str = ""
+
+
+class SearchCareerSourcesInput(BaseModel):
+    session_id_hash: str = ""
+    career_ids: list[str] = Field(min_length=1, max_length=2)
+    intent: ResearchIntent = "overview"
+    region: Region = "all"
 
 
 # ---------- implementations ----------
@@ -368,6 +375,25 @@ def _prepare_result(
     }
 
 
+def _search_career_sources(
+    session_id_hash: str = "",
+    career_ids: list[str] | None = None,
+    intent: str = "overview",
+    region: str = "all",
+) -> dict:
+    """Bounded research tool. The router remains responsible for session authorization."""
+    from app.services.career_research import research_careers
+
+    response = research_careers(
+        career_ids=career_ids or [],
+        intent=intent,
+        region=region,
+    )
+    payload = response.model_dump()
+    payload["session_id_hash"] = session_id_hash
+    return payload
+
+
 def _structured(name: str, description: str, schema: type[BaseModel], fn: Callable) -> StructuredTool:
     return StructuredTool.from_function(
         name=name,
@@ -378,7 +404,7 @@ def _structured(name: str, description: str, schema: type[BaseModel], fn: Callab
 
 
 def build_tool_registry() -> dict[str, StructuredTool]:
-    """Registry of 10 local typed tools."""
+    """Registry of bounded CareerCompass tools."""
     tools = [
         _structured(
             "inspect_profile_gaps",
@@ -440,9 +466,15 @@ def build_tool_registry() -> dict[str, StructuredTool]:
             PrepareResultInput,
             _prepare_result,
         ),
+        _structured(
+            "search_career_sources",
+            "Search bounded current career sources; never changes recommendation ranking.",
+            SearchCareerSourcesInput,
+            _search_career_sources,
+        ),
     ]
     reg = {t.name: t for t in tools}
-    assert len(reg) == 10
+    assert len(reg) == 11
     return reg
 
 

@@ -17,18 +17,23 @@ graph TB
     J[/api/chat<br/>Bounded ReAct Profiler/] --> R[LangGraph StateGraph<br/>custom nodes + policy + budget]
     R --> K[(SQLite<br/>sessions.db)]
     I --> L[/api/recommendations<br/>top5 + stretch + evidence + pathway/]
+    L --> W[/api/recommendations/what-if<br/>deep-copy deterministic preview/]
+    L --> X[/api/research/careers<br/>bounded research stage/]
+    X -.-> Y[DDGS community adapter<br/>timeout + cache + URL policy]
     R -.->|structured planner/composer| M[LangChain Gateway<br/>ChatOpenAI<br/>provider config via env]
     L -.->|evidence gen| M
   end
 
   subgraph "Frontend — Next.js :3000"
     N[Landing /<br/>Explore | Launch] --> O[/explore<br/>Chat + Profile/Experience live/]
-    O --> P[/results<br/>Career + Evidence + Pathway/Readiness/]
+    O --> P[/results<br/>Career + Evidence + Decision Lab/]
     Q[/market<br/>Radar nhu cầu kỹ năng/]
   end
 
   O <-->|REST JSON| J
   P <-->|REST JSON| L
+  P <-->|preview + typed citations| W
+  P <-->|explicit research intent| X
   Q <-->|REST JSON| H
 ```
 
@@ -66,7 +71,7 @@ FE POST /api/chat {session_id, message, journey_mode}
  → trả {reply, profile, phase, done}
 ```
 
-Agent không có shell/browser/write tool tổng quát. LangChain chuẩn hóa model calls, structured output và typed tool schemas; LangGraph chỉ route state. Matching, routes, readiness và mọi market number vẫn qua deterministic domain functions; xem `AGENTIC_RUNTIME.md`.
+Agent không có shell/browser/write tool tổng quát. Sau recommendation, stage `research` có đúng một external read tool `search_career_sources`: query do code dựng từ career KB + enum, tối đa 5 kết quả, timeout/cache/URL policy và không nhận raw profile. LangChain chuẩn hóa model calls, structured output và typed tool schemas; LangGraph chỉ route state của `/api/chat`. Matching, routes, readiness và mọi market number vẫn qua deterministic domain functions; xem `AGENTIC_RUNTIME.md`.
 
 ```mermaid
 stateDiagram-v2
@@ -87,7 +92,7 @@ stateDiagram-v2
 
 Node `Plan`/`Compose` gọi LangChain gateway; node policy/tool/validate là CareerCompass code. Graph không persist private state và không chạy trên recommendation path.
 
-**Ranh giới bắt buộc:** agent chỉ chạy trong `/api/chat` để chọn tool thu thập/xác nhận evidence. `/api/recommendations` không có planner; toàn bộ candidate retrieval, score, stretch, route, readiness và validation chạy deterministic như flow bên dưới.
+**Ranh giới bắt buộc:** LangGraph planner chỉ chạy trong `/api/chat` để chọn tool thu thập/xác nhận evidence. `/api/recommendations` không có planner; toàn bộ candidate retrieval, score, stretch, route, readiness và validation chạy deterministic. `/api/research/careers` chỉ chạy sau recommendation với explicit user intent qua policy + typed tool registry; search result không quay lại scoring.
 
 ### Recommendation
 ```
@@ -129,6 +134,7 @@ flowchart LR
 | Agent orchestrator/policy | choose allowlisted tool order, validate budget/privacy/provenance, produce safe observations | arbitrary tool/URL/code execution, ranking verdict, hidden reasoning persistence |
 | Matching service | retrieve/score/diversify/readiness inputs | call crawler, invent evidence |
 | Market service | read typed stats/meta | scan raw JSON or call LLM |
+| Career research service | build allowlisted query, DDGS/replay/local fallback, sanitize typed citations | receive raw transcript/profile PII, fetch arbitrary pages, change ranking |
 | LangChain LLM gateway | instantiate provider adapters; structured call/embed/log/retry/timeout | business decisions/session persistence or exposing provider classes |
 | Presenter/evidence | validated wording/template | choose candidates or create numbers |
 | FE API client | network/mock/error normalization | render/component state |
@@ -165,7 +171,8 @@ backend/
 │   │   └── session_orm.py    # SQLAlchemy session rows
 │   ├── routers/
 │   │   ├── chat.py           # POST /api/chat, profile endpoints
-│   │   ├── recommend.py      # POST /api/recommendations
+│   │   ├── recommend.py      # recommendations + deterministic what-if preview
+│   │   ├── research.py       # POST /api/research/careers, policy + typed tool
 │   │   └── market.py         # GET /api/market/*
 │   ├── services/
 │   │   ├── llm.py            # LangChain Gateway — MỌI model/embedding instance ở đây
@@ -174,10 +181,12 @@ backend/
 │   │   ├── agent_chat.py     # PR-13: wire bounded agent into /api/chat
 │   │   ├── agent_graph.py    # PR-12: StateGraph or plain_python orchestrator
 │   │   ├── agent_policy.py   # PR-12: stage allowlist, privacy, budget, provenance
-│   │   ├── agent_tools.py    # PR-12: 10 local typed tools (registry v1)
+│   │   ├── agent_tools.py    # 11 typed tools incl. bounded research (registry v2)
 │   │   ├── matching.py       # scoring engine (deterministic; no agent planner)
 │   │   ├── evidence.py       # grounded why + counterfactual
 │   │   ├── pathways.py       # study routes + Launch readiness
+│   │   ├── what_if.py        # pure deep-copy preview + rank/score delta
+│   │   ├── career_research.py # DDGS/cache/sanitize/local fallback; no scoring authority
 │   │   └── market.py         # đọc market.db
 │   ├── prompts/              # MỌI prompt ở đây, có version comment
 │   └── data/seed_loader.py   # load seed khi chưa có data thật
@@ -193,7 +202,7 @@ backend/
 
 frontend/
 ├── app/                      # App Router: / (landing), /explore, /results, /market
-├── components/               # chat/, profile/, results/, market/, ui/
+├── components/               # chat/, profile/, results/ (DecisionLab), market/, ui/
 ├── lib/
 │   ├── api.ts                # MỌI call API + toàn bộ MOCK ở đây
 │   └── mock/                 # mock responses khớp contract

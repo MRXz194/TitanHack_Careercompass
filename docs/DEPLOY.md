@@ -47,6 +47,7 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 | `CORS_ORIGINS` | `http://localhost:3000` | URL Vercel thật (exact origin) |
 | `DEMO_MODE` | `off` | `off` cho live demo; `replay` là fallback bấm tay nếu mạng/LLM chết (L-08) |
 | `AGENT_MODE` | `langgraph` (release path) | `langgraph`; đổi `deterministic` là kill switch nếu graph lỗi |
+| `WEB_RESEARCH_MODE` | `off`/`replay`; `ddg` khi test live | `replay` cho demo an toàn; `ddg` chỉ sau 10-query gate, không cần API key |
 
 ## Smoke test sau deploy (bắt buộc, ~3 phút — chạy lại sau MỌI redeploy)
 
@@ -55,6 +56,7 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 - [ ] `/explore?mode=launch` → câu mở đầu launch khác explore
 - [ ] Xóa 1 skill trong profile card → không có banner lỗi đỏ (verify optimistic-patch rollback không kích hoạt sai)
 - [ ] DevTools Console: không có lỗi CORS
+- [ ] Results → Decision Lab → Compare 2 nghề → What-if không đổi profile → Career Research trả `replay/live/unavailable` có limitation, không 5xx
 - [ ] Đổi `NEXT_PUBLIC_USE_MOCK=1` trên Vercel → redeploy → FE chạy độc lập không cần BE (drill lưới an toàn — làm 1 lần cho biết đường lui, rồi đổi lại `0`)
 
 ## Kết quả thật (điền sau khi bấm)

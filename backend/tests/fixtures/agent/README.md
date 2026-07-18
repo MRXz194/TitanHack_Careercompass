@@ -38,5 +38,5 @@ Fictional, sanitized, versioned fixtures for offline agent evaluation and red-te
 ## Version pins (record in EVALUATION_RESULTS)
 
 - `tool_policy_version`: `agent-policy-v1`
-- `tool_registry_version`: `agent-tools-v1`
+- `tool_registry_version`: `agent-tools-v2-research`
 - Planner is offline/fixture or injectable; no live model required for red-team gates.

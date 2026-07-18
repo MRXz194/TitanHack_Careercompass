@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Commit SHA | `99f463e` |
-| Tool policy / registry | `agent-policy-v1` / `agent-tools-v1` |
+| Tool policy / registry | `agent-policy-v1` / `agent-tools-v2-research` |
 
 Không cherry-pick chỉ số đẹp: automated proxy, live test và human test được báo thành các nhóm riêng.
 

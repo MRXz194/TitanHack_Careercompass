@@ -61,3 +61,14 @@ def test_launch_recommendations_include_job_readiness(client: TestClient) -> Non
 def test_missing_session_id_422(client: TestClient) -> None:
     r = client.post("/api/recommendations", json={})
     assert r.status_code == 422
+
+
+def test_what_if_invalid_skill_returns_422_not_500(client: TestClient) -> None:
+    sid = "what-if-invalid"
+    client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+    response = client.post(
+        "/api/recommendations/what-if",
+        json={"session_id": sid, "skill": "GPA 3.8"},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "422"

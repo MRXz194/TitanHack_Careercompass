@@ -71,3 +71,26 @@ def test_market_requires_provenance_post() -> None:
         budget,
     )
     assert d2.code == PolicyCode.ALLOW
+
+
+def test_research_tool_is_bounded_to_research_stage() -> None:
+    budget = pol.budget_start()
+    plan = AgentPlan(
+        intent="research",
+        next_tool="search_career_sources",
+        arguments={"career_ids": ["data-analyst"], "intent": "skills", "region": "all"},
+    )
+    assert pol.authorize_plan(plan, AgentStage.discover, budget).code == PolicyCode.DENY_TOOL
+    assert pol.authorize_plan(plan, AgentStage.research, budget).code == PolicyCode.ALLOW
+
+
+def test_research_observation_requires_status_and_citations() -> None:
+    budget = pol.budget_start()
+    denied = pol.authorize_observation("search_career_sources", {"careers": []}, budget)
+    assert denied.code == PolicyCode.DENY_TOOL
+    allowed = pol.authorize_observation(
+        "search_career_sources",
+        {"status": "unavailable", "careers": []},
+        budget,
+    )
+    assert allowed.code == PolicyCode.ALLOW

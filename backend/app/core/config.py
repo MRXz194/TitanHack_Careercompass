@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     demo_mode: str = "off"  # off | replay
     agent_mode: str = "deterministic"  # deterministic | langgraph (enable only after PR-12 gate)
 
+    # Bounded career-source research. This never changes recommendation ranking.
+    # off = local market context only; replay = deterministic demo cards; ddg = live DDGS adapter.
+    web_research_mode: str = "off"  # off | replay | ddg
+    web_research_timeout_seconds: float = 4.0
+    web_research_max_results: int = 5
+    web_research_cache_ttl_seconds: int = 900
+
     # Matching weights — judge-explainable, tunable (docs/AI_DESIGN.md §4)
     w_cosine: float = 0.5
     w_skill_overlap: float = 0.3

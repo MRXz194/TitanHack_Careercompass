@@ -47,7 +47,7 @@ def test_agent_gates_present_after_pr14() -> None:
         "agent_personas_n12",
         "agent_orchestrator_p95",
         "agent-policy-v1",
-        "agent-tools-v1",
+        "agent-tools-v2-research",
     ):
         assert needle in text, f"missing {needle}"
     # Must not still claim agent gates unimplemented

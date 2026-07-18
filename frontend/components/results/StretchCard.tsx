@@ -6,10 +6,10 @@ import Tooltip from "@/components/ui/Tooltip";
 import { TOOLTIPS } from "@/lib/copy/transparency";
 
 const ROUTE_BADGE: Record<string, string> = {
-  university: "🎓 Đại học",
-  college: "🏫 Cao đẳng",
-  vocational: "🔧 Học nghề",
-  certificate: "📜 Chứng chỉ",
+  university: "Đại học",
+  college: "Cao đẳng",
+  vocational: "Học nghề",
+  certificate: "Chứng chỉ",
 };
 
 interface StretchCardProps {
@@ -24,7 +24,7 @@ export default function StretchCard({ rec }: StretchCardProps) {
   const trendVal = market.trend_pct ?? 0;
 
   return (
-    <div className="relative rounded-2xl border-2 border-dashed border-[var(--cc-accent)] bg-[var(--cc-accent-soft)] p-6 shadow-md transition-all duration-300 hover:shadow-lg overflow-hidden">
+    <div className="cc-stretch relative rounded-2xl border-2 border-dashed border-[var(--cc-accent)] bg-[var(--cc-accent-soft)] p-6 shadow-md transition-all duration-300 hover:shadow-lg overflow-hidden">
       {/* Con dấu Vintage "Mở rộng cơ hội" góc trên cùng */}
       <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full border-2 border-[var(--cc-accent)]/30 flex items-center justify-center rotate-12 select-none pointer-events-none">
         <span className="text-[9px] font-bold font-serif text-[var(--cc-accent)] uppercase tracking-wider text-center px-2 leading-tight">
@@ -35,7 +35,7 @@ export default function StretchCard({ rec }: StretchCardProps) {
       <div className="space-y-3">
         <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/60 border border-[var(--cc-accent)] px-3.5 py-1 text-xs font-bold text-amber-800 font-serif shadow-sm">
           <Tooltip content={TOOLTIPS.stretch.text}>
-            ✨ Gợi ý mở rộng (Stretch Recommendation)
+            Gợi ý mở rộng / Stretch
           </Tooltip>
         </div>
 
@@ -58,13 +58,13 @@ export default function StretchCard({ rec }: StretchCardProps) {
 
         {/* Khung giải thích tính chất "Stretch" */}
         <p className="text-xs text-[var(--cc-ink)] leading-relaxed italic font-serif bg-white/50 border border-[var(--cc-border)]/40 p-4 rounded-xl shadow-inner">
-          💡 <b>Ý nghĩa gợi ý:</b> Hướng đi này nằm ngoài vùng sở thích cốt lõi hiện tại của em, nhưng dựa trên các liên kết kĩ năng hoặc sở thích phụ, hệ thống đề xuất nhằm giúp em mở rộng thêm góc nhìn, tránh việc bị giới hạn lựa chọn (Anti-bias by design).
+          <b>Ý nghĩa gợi ý:</b> Hướng đi này nằm ngoài vùng sở thích cốt lõi hiện tại của em, nhưng dựa trên các liên kết kĩ năng hoặc sở thích phụ, hệ thống đề xuất nhằm giúp em mở rộng thêm góc nhìn, tránh việc bị giới hạn lựa chọn (Anti-bias by design).
         </p>
 
         {/* Tổng quan thị trường */}
         <div className="flex flex-wrap gap-2 text-xs text-[var(--cc-muted)] pt-1">
           <span className="flex items-center gap-1 bg-white/60 px-2.5 py-1 rounded-md border border-[var(--cc-border)]/50">
-            📈 {market.demand_count_90d.toLocaleString("vi-VN")} tin tuyển dụng/90 ngày
+            {market.demand_count_90d.toLocaleString("vi-VN")} tin tuyển dụng/90 ngày
           </span>
 
           {market.salary_p50_trieu !== null ? (
@@ -105,14 +105,14 @@ export default function StretchCard({ rec }: StretchCardProps) {
         <div className="mt-5 border-t border-[var(--cc-border)]/65 pt-5 space-y-5 text-sm">
           {/* Section: Explainability */}
           <div className="space-y-2.5">
-            <h4 className="font-bold font-serif text-[var(--cc-ink)] text-base">🔍 Phân tích Lý do Lựa chọn</h4>
+            <h4 className="font-bold font-serif text-[var(--cc-ink)] text-base">Phân tích lý do lựa chọn</h4>
             
             <div className="bg-white/80 rounded-xl p-4 border border-[var(--cc-border)] space-y-2 shadow-inner">
               <p className="text-[10px] font-bold text-[var(--cc-muted)] tracking-wider uppercase font-serif">Dựa trên mong muốn của em:</p>
               {why.from_you.length > 0 ? (
                 why.from_you.map((w, idx) => (
                   <p key={idx} className="text-sm leading-relaxed text-[var(--cc-ink)]">
-                    💬 <span className="italic font-serif">“{w.quote}”</span> — <span className="text-[var(--cc-muted)]">{w.reason}</span>
+                    <span className="italic font-serif">“{w.quote}”</span> — <span className="text-[var(--cc-muted)]">{w.reason}</span>
                   </p>
                 ))
               ) : (
@@ -126,7 +126,7 @@ export default function StretchCard({ rec }: StretchCardProps) {
                 <div className="grid sm:grid-cols-2 gap-2.5">
                   {why.from_market.map((w, idx) => (
                     <p key={idx} className="text-xs text-[var(--cc-ink)] flex items-start gap-1">
-                      <span>📊</span> <span>{w.stat}</span>
+                      <span>{w.stat}</span>
                     </p>
                   ))}
                 </div>
@@ -136,7 +136,7 @@ export default function StretchCard({ rec }: StretchCardProps) {
 
           {/* Section: Routes */}
           <div className="space-y-2.5">
-            <h4 className="font-bold font-serif text-[var(--cc-ink)] text-base">🛤️ Đề xuất Lộ trình Đào tạo</h4>
+            <h4 className="font-bold font-serif text-[var(--cc-ink)] text-base">Đề xuất lộ trình đào tạo</h4>
             <div className="grid gap-3.5 md:grid-cols-2">
               {routes.map((r, idx) => (
                 <div key={idx} className="rounded-xl border border-[var(--cc-border)] bg-white p-4 shadow-sm flex flex-col justify-between hover:border-[var(--cc-accent)] transition-all">
@@ -165,7 +165,7 @@ export default function StretchCard({ rec }: StretchCardProps) {
           {/* Section: Launch readiness */}
           {job_readiness && (
             <div className="space-y-3 border-t border-[var(--cc-border)]/50 pt-4">
-              <h4 className="font-bold font-serif text-[var(--cc-ink)] text-base">🚀 Đánh giá Mức độ Sẵn sàng (Readiness)</h4>
+              <h4 className="font-bold font-serif text-[var(--cc-ink)] text-base">Đánh giá mức độ sẵn sàng</h4>
               <div className="bg-white/70 border border-[var(--cc-border)] rounded-xl p-4 space-y-3 shadow-sm">
                 <div className="flex items-center gap-2 flex-wrap text-xs">
                   <span className="font-bold text-[var(--cc-muted)] font-serif">Mức độ chuẩn bị:</span>
@@ -176,12 +176,12 @@ export default function StretchCard({ rec }: StretchCardProps) {
                   </span>
                 </div>
                 <p className="text-xs text-[var(--cc-ink)] leading-relaxed font-serif italic">
-                  💡 {job_readiness.band_reason}
+                  {job_readiness.band_reason}
                 </p>
 
                 <div className="grid sm:grid-cols-2 gap-3 text-xs pt-1.5">
                   <div className="space-y-1">
-                    <p className="font-bold text-[var(--cc-success)]">✓ Kỹ năng đã có:</p>
+                    <p className="font-bold text-[var(--cc-success)]">Kỹ năng đã có:</p>
                     {job_readiness.matched_skills.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {job_readiness.matched_skills.map((s, idx) => (
@@ -195,7 +195,7 @@ export default function StretchCard({ rec }: StretchCardProps) {
                     )}
                   </div>
                   <div className="space-y-1">
-                    <p className="font-bold text-[var(--cc-danger)]">⚠ Kỹ năng thị trường cần nhưng thiếu:</p>
+                    <p className="font-bold text-[var(--cc-danger)]">Kỹ năng thị trường cần nhưng thiếu:</p>
                     {job_readiness.missing_skills.length > 0 ? (
                       <div className="flex flex-wrap gap-1">
                         {job_readiness.missing_skills.map((s, idx) => (
@@ -215,7 +215,6 @@ export default function StretchCard({ rec }: StretchCardProps) {
 
           {/* Section: Counterfactual */}
           <div className="rounded-xl bg-white/70 border border-[var(--cc-accent)]/25 p-4 text-xs font-medium text-[var(--cc-muted)] leading-relaxed italic font-serif flex items-start gap-2 shadow-sm">
-            <span className="text-sm">🔄</span>
             <div>
               <span className="font-bold text-[var(--cc-ink)]">Tư duy phản chứng: </span>
               {why.counterfactual}

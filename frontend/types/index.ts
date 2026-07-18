@@ -11,6 +11,8 @@ export type JourneyMode = "explore" | "launch";
 export type EducationStage = "high_school" | "vocational_student" | "college_student" | "university_student" | "final_year" | "recent_graduate" | "other";
 export type ExperienceKind = "project" | "internship" | "work" | "volunteer" | "coursework" | "other";
 export type ReadinessBand = "ready_now" | "near_ready" | "build_foundation";
+export type ResearchIntent = "overview" | "skills" | "routes" | "local_market";
+export type ResearchStatus = "live" | "cached" | "replay" | "unavailable";
 
 // ---------- Profile ----------
 
@@ -132,6 +134,24 @@ export interface RecommendationResponse {
   stretch: Recommendation;
 }
 
+export interface WhatIfDelta {
+  career_id: string;
+  title: string;
+  before_rank: number | null;
+  after_rank: number | null;
+  before_score: number | null;
+  after_score: number | null;
+}
+
+export interface WhatIfResponse {
+  generated_at: string;
+  mutation_label: string;
+  disclaimer: string;
+  original_profile_unchanged: boolean;
+  deltas: WhatIfDelta[];
+  preview: RecommendationResponse;
+}
+
 // ---------- Market ----------
 
 export interface MarketOverview {
@@ -165,4 +185,32 @@ export interface CareerDetail {
   description: string;
   market: MarketStats;
   routes: Route[];
+}
+
+// ---------- Bounded career research ----------
+
+export interface ResearchSourceCard {
+  title: string;
+  url: string;
+  domain: string;
+  snippet: string;
+  source_tier: "official" | "job_board" | "education" | "other";
+  retrieved_at: string;
+}
+
+export interface CareerResearchBlock {
+  career_id: string;
+  title: string;
+  local_market: MarketStats;
+  sources: ResearchSourceCard[];
+}
+
+export interface CareerResearchResponse {
+  status: ResearchStatus;
+  generated_at: string;
+  intent: ResearchIntent;
+  region: Region;
+  disclaimer: string;
+  limitation: string;
+  careers: CareerResearchBlock[];
 }

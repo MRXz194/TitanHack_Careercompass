@@ -536,4 +536,4 @@ def test_max_two_agent_tools_hard_cap() -> None:
 
 def test_versions_pinned_for_scorecard() -> None:
     assert agent_policy.TOOL_POLICY_VERSION == "agent-policy-v1"
-    assert TOOL_REGISTRY_VERSION == "agent-tools-v1"
+    assert TOOL_REGISTRY_VERSION == "agent-tools-v2-research"

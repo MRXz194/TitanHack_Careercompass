@@ -43,7 +43,7 @@ cd ../frontend && npm run typecheck
 | `AGENT_MODE` | `deterministic` | `langgraph` optional for bounded chat agent |
 | `DEMO_MODE` | `off` | `replay` disables agent graph + live model path |
 | Recommend planner | **none** | PR-05…07 code only |
-| Tool policy / registry | `agent-policy-v1` / `agent-tools-v1` | |
+| Tool policy / registry | `agent-policy-v1` / `agent-tools-v2-research` | |
 
 ### Claim boundary (pitch)
 
@@ -345,7 +345,7 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 
 #### Status (M4)
 - **State:** DONE (spike gate PASS; chat wiring completed in PR-13)
-- **Code:** `agent_schemas.py`, `agent_policy.py`, `agent_tools.py` (10 tools), `agent_graph.py`
+- **Code:** `agent_schemas.py`, `agent_policy.py`, `agent_tools.py` (11 tools), `agent_graph.py`
 - **Handoff:** `docs/handoffs/M4_PR-12_AGENT_RUNTIME_HANDOFF.md`
 - **Default:** `AGENT_MODE=deterministic` (no graph compile)
 
@@ -387,7 +387,7 @@ See full template in `docs/handoffs/M4_PR-04_CHAT_HANDOFF.md` (curl, latency, er
 - **Tests:** `tests/unit/test_agent_redteam.py`
 - **Harness:** `scripts/run_m4_evaluation.py` fills agent gates (no permanent N/A)
 - **Handoff:** `docs/handoffs/M4_PR-14_AGENT_REDTEAM_HANDOFF.md`
-- **Versions:** policy `agent-policy-v1`, tools `agent-tools-v1`, default `AGENT_MODE=deterministic`
+- **Versions:** policy `agent-policy-v1`, tools `agent-tools-v2-research`, default `AGENT_MODE=deterministic`
 
 #### Verify evidence
 - `pytest -q tests/unit/test_agent_redteam.py` → PASS (31)

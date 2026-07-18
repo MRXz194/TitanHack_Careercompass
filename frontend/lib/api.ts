@@ -8,7 +8,8 @@
  */
 import { requestJson } from "@/lib/api-core";
 import type {
-  ChatResponse, JourneyMode, MarketOverview, Profile, ProfilePatch, RecommendationResponse, Region, SkillGapResponse,
+  CareerResearchResponse, ChatResponse, JourneyMode, MarketOverview, Profile, ProfilePatch,
+  RecommendationResponse, Region, ResearchIntent, SkillGapResponse, WhatIfResponse,
 } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
@@ -95,5 +96,27 @@ export async function patchProfile(patch: ProfilePatch): Promise<{ profile: Prof
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
+  });
+}
+
+export async function fetchCareerResearch(
+  careerIds: string[],
+  intent: ResearchIntent = "overview",
+  region: Region = "all",
+): Promise<CareerResearchResponse> {
+  if (USE_MOCK) return (await import("./mock/research")).mockCareerResearch(careerIds, intent, region);
+  return requestJson<CareerResearchResponse>(`${API_BASE}/api/research/careers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: getSessionId(), career_ids: careerIds.slice(0, 2), intent, region }),
+  });
+}
+
+export async function previewWhatIfSkill(skill: string): Promise<WhatIfResponse> {
+  if (USE_MOCK) return (await import("./mock/what-if")).mockWhatIfSkill(skill);
+  return requestJson<WhatIfResponse>(`${API_BASE}/api/recommendations/what-if`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: getSessionId(), skill }),
   });
 }

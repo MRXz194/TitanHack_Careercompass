@@ -6,6 +6,7 @@ import type { RecommendationResponse, JourneyMode } from "@/types";
 import ResultsHeader from "@/components/results/ResultsHeader";
 import RecommendationCard from "@/components/results/RecommendationCard";
 import StretchCard from "@/components/results/StretchCard";
+import DecisionLab from "@/components/results/DecisionLab";
 
 export default function ResultsPage() {
   const [data, setData] = useState<RecommendationResponse | null>(null);
@@ -43,9 +44,7 @@ export default function ResultsPage() {
     return (
       <main className="mx-auto max-w-3xl min-h-screen p-6 flex flex-col justify-center items-center space-y-4">
         <div className="relative flex items-center justify-center">
-          {/* Vòng xoay spinner mang phong cách tối giản, vintage */}
           <div className="w-12 h-12 rounded-full border-4 border-[var(--cc-border)] border-t-[var(--cc-primary)] animate-spin" />
-          <span className="absolute text-lg">🧭</span>
         </div>
         <p className="text-sm font-serif italic text-[var(--cc-muted)] animate-pulse">
           Đang đọc lại hồ sơ, phác thảo lộ trình cho em…
@@ -57,7 +56,7 @@ export default function ResultsPage() {
   if (error || !data) {
     return (
       <main className="mx-auto max-w-3xl min-h-screen p-6 flex flex-col justify-center items-center space-y-4 text-center">
-        <span className="text-4xl">📯</span>
+        <p className="cc-kicker">SYSTEM / RESULTS UNAVAILABLE</p>
         <h2 className="text-xl font-bold font-serif text-[var(--cc-ink)]">Đã xảy ra sự cố nhỏ</h2>
         <p className="text-sm text-[var(--cc-muted)] max-w-md leading-relaxed">
           {error || "Không tìm thấy dữ liệu phiên khảo sát. Hãy đảm bảo em đã hoàn thành cuộc hội thoại trước."}
@@ -81,11 +80,10 @@ export default function ResultsPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl min-h-screen p-6 space-y-6">
-      {/* Menu đầu trang phong cách vintage cuốn nhật ký */}
-      <div className="flex justify-between items-center text-xs font-serif text-[var(--cc-muted)] border-b border-[var(--cc-border)]/40 pb-2.5">
+    <main className="mx-auto max-w-6xl min-h-screen p-6 space-y-6">
+      <div className="cc-journal-nav">
         <a href="/" className="hover:text-[var(--cc-primary)] transition-all font-bold tracking-widest uppercase">
-          🧭 CareerCompass
+          CareerCompass
         </a>
         <div className="flex gap-3">
           <a href="/market" className="hover:underline">Thị trường việc làm</a>
@@ -125,14 +123,16 @@ export default function ResultsPage() {
         </div>
       )}
 
+      <DecisionLab options={[...data.recommendations, data.stretch]} />
+
       {/* Khung Footer ghi chú miễn trừ trách nhiệm */}
       <div className="rounded-xl bg-[var(--cc-primary-soft)]/40 border border-[var(--cc-border)]/50 p-5 text-center text-xs text-[var(--cc-muted)] leading-relaxed font-serif shadow-sm">
-        <p className="font-bold text-[var(--cc-ink)] mb-1">✍ Ghi chú Định hướng Quan trọng</p>
+        <p className="font-bold text-[var(--cc-ink)] mb-1">Ghi chú định hướng</p>
         <p>{data.disclaimer}</p>
         <div className="flex justify-center gap-4 pt-3.5 text-[10px] uppercase font-bold tracking-wider text-[var(--cc-primary)]">
-          <a href="/explore" className="hover:underline">↩ Làm lại khảo sát</a>
+          <a href="/explore" className="hover:underline">Làm lại khảo sát</a>
           <span>·</span>
-          <a href="/how-it-works" className="hover:underline">ℹ Tìm hiểu thuật toán</a>
+          <a href="/how-it-works" className="hover:underline">Tìm hiểu thuật toán</a>
         </div>
       </div>
     </main>

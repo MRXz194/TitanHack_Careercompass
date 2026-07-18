@@ -18,6 +18,7 @@ import os
 import sys
 import json
 import re
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from difflib import SequenceMatcher
@@ -202,12 +203,104 @@ def is_duplicate(title1, company1, title2, company2, threshold=0.85):
     c_ratio = SequenceMatcher(None, company1.lower().strip(), company2.lower().strip()).ratio()
     return (t_ratio >= threshold) and (c_ratio >= threshold)
 
+
+_COMPANY_NOISE = {
+    "co", "company", "corp", "corporation", "jsc", "joint", "stock", "ltd",
+    "limited", "inc", "llc", "tnhh", "cp", "cong", "ty", "vietnam", "viet", "nam",
+}
+_TITLE_NOISE = {
+    "senior", "junior", "fresher", "intern", "lead", "manager", "nhan", "vien",
+    "tuyen", "gap", "urgent", "remote", "hcm", "hanoi", "da", "nang",
+}
+
+
+def _tokens(value: str) -> list[str]:
+    normalized = unicodedata.normalize("NFKD", value or "")
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii").lower()
+    return re.findall(r"[a-z0-9]+", ascii_text)
+
+
+def _company_anchor(company: str) -> tuple[str, ...]:
+    useful = [token for token in _tokens(company) if token not in _COMPANY_NOISE]
+    return tuple(useful[:2] or _tokens(company)[:1] or ["unknown"])
+
+
+def _title_anchors(title: str) -> tuple[str, ...]:
+    useful = [token for token in _tokens(title) if token not in _TITLE_NOISE and len(token) > 1]
+    # Multiple token keys preserve recall when word order varies while keeping
+    # each fuzzy candidate set small.
+    return tuple(sorted(set(useful))[:4] or ["unknown"])
+
+
+def _date_bucket(posted_date: str) -> int:
+    try:
+        return datetime.fromisoformat(posted_date).toordinal() // 30
+    except (TypeError, ValueError):
+        return 0
+
+
+def deduplicate_postings(postings: list[dict]) -> tuple[list[dict], int]:
+    """Fuzzy dedupe using company/title/date blocking instead of an O(n²) scan."""
+    kept: list[dict] = []
+    index: dict[tuple[tuple[str, ...], str, int], set[int]] = {}
+    for posting in postings:
+        company = _company_anchor(str(posting.get("company") or ""))
+        title_tokens = _title_anchors(str(posting.get("title") or ""))
+        bucket = _date_bucket(str(posting.get("posted_date") or ""))
+        candidate_ids: set[int] = set()
+        for token in (*title_tokens, "*"):
+            for nearby in (bucket - 1, bucket, bucket + 1):
+                candidate_ids.update(index.get((company, token, nearby), set()))
+
+        duplicate_found = False
+        for candidate_id in candidate_ids:
+            candidate = kept[candidate_id]
+            try:
+                within_window = abs(
+                    (
+                        datetime.fromisoformat(posting["posted_date"])
+                        - datetime.fromisoformat(candidate["posted_date"])
+                    ).days
+                ) <= 30
+            except (KeyError, TypeError, ValueError):
+                within_window = False
+            if within_window and is_duplicate(
+                posting["title"], posting["company"], candidate["title"], candidate["company"]
+            ):
+                duplicate_found = True
+                break
+
+        if duplicate_found:
+            continue
+        kept_id = len(kept)
+        kept.append(posting)
+        for token in (*title_tokens, "*"):
+            index.setdefault((company, token, bucket), set()).add(kept_id)
+    return kept, len(postings) - len(kept)
+
+
+def _write_jsonl_atomic(path: Path, rows: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as output:
+            for row in rows:
+                output.write(json.dumps(row, ensure_ascii=False) + "\n")
+        os.replace(temp_name, path)
+    except Exception:
+        try:
+            os.unlink(temp_name)
+        except OSError:
+            pass
+        raise
+
 # Import unicodedata since we need it in normalization
 import unicodedata
 
 def main() -> None:
     print("=== STARTING NORMALIZATION STEP ===")
-    raw_files = list(RAW_DIR.glob("*.jsonl"))
+    # Stable input order is required for reproducible hashes across filesystems.
+    raw_files = sorted(RAW_DIR.glob("*.jsonl"), key=lambda path: path.name.lower())
     print(f"Found {len(raw_files)} raw jsonl files to process.")
     
     postings_in = []
@@ -281,36 +374,18 @@ def main() -> None:
     
     # Deduplicate (fuzzy match title + company, 30 days window - keeping newest)
     # Sort by crawled_at descending so we see the newest first
-    processed_postings.sort(key=lambda x: x["crawled_at"], reverse=True)
+    processed_postings.sort(
+        key=lambda item: (str(item.get("crawled_at") or ""), str(item.get("id") or "")),
+        reverse=True,
+    )
     
-    deduped_postings = []
-    for p in processed_postings:
-        # Check if duplicate exists in deduped list
-        duplicate_found = False
-        for dp in deduped_postings:
-            # check if title & company are fuzzy matched
-            if is_duplicate(p["title"], p["company"], dp["title"], dp["company"]):
-                # check if date is within 30 days
-                try:
-                    d1 = datetime.fromisoformat(p["posted_date"])
-                    d2 = datetime.fromisoformat(dp["posted_date"])
-                    if abs((d1 - d2).days) <= 30:
-                        duplicate_found = True
-                        break
-                except Exception:
-                    pass
-        if duplicate_found:
-            deduped += 1
-        else:
-            deduped_postings.append(p)
+    deduped_postings, deduped = deduplicate_postings(processed_postings)
             
     print(f"Postings after deduplication: {len(deduped_postings)} (Deduped: {deduped})")
     
     # Save output
     out_file = PROCESSED_DIR / "postings.jsonl"
-    with out_file.open("w", encoding="utf-8") as f:
-        for p in deduped_postings:
-            f.write(json.dumps(p, ensure_ascii=False) + "\n")
+    _write_jsonl_atomic(out_file, deduped_postings)
             
     print(f"Saved normalized data to: {out_file}")
     

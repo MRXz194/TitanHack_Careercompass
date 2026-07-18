@@ -91,6 +91,7 @@ def inspect_profile_gaps(session_id_hash: str, stage: AgentStage) -> dict:
 | `assess_launch_readiness` | Deterministic result only | Tính matched/missing/band **và 4 actions có deliverable** | Profile evidence + role skills -> typed readiness | No hiring probability; no GPA/school/gender/region input |
 | `compose_grounded_explanation` | Deterministic result invokes wording only | Diễn đạt từ inputs đã chọn | quotes + typed stats -> Vietnamese evidence | regex/allowed-key number grounding; template fallback |
 | `prepare_result` | Deterministic result only | Ghép `RecommendationResponse` theo contract | validated artifacts -> response | route/readiness/bias invariants phải pass |
+| `search_career_sources` | Agent-selectable chỉ ở `research` | Tìm tối đa 5 nguồn hiện tại cho 1–2 nghề đã được gợi ý | career IDs + intent + region enum -> typed citation cards | DDGS community adapter; không raw profile; URL sanitize; timeout/cache; không đổi ranking |
 
 ### Stage allowlist P0
 
@@ -99,6 +100,7 @@ def inspect_profile_gaps(session_id_hash: str, stage: AgentStage) -> dict:
 | `discover` | `inspect_profile_gaps`, `extract_profile_evidence`, `apply_profile_correction`, `ask_clarifying_question` | Không đọc market trước khi có evidence tối thiểu |
 | `confirm_profile` | bốn tool profile + `get_market_context` | Market chỉ để hỏi/xác nhận context; không rank hoặc loại nghề |
 | `retrieve`, `explain`, `ready` | không có agent-selected tool | Chuyển sang deterministic recommendation pipeline |
+| `research` | `get_market_context`, `search_career_sources` | Chỉ sau recommendation; một search call; lỗi chuyển local/replay, không quay lại scoring |
 
 Policy reject mọi tool ngoài hàng tương ứng, kể cả tool tồn tại trong registry.
 

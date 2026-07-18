@@ -17,6 +17,8 @@ EducationStage = Literal[
 ]
 ExperienceKind = Literal["project", "internship", "work", "volunteer", "coursework", "other"]
 ReadinessBand = Literal["ready_now", "near_ready", "build_foundation"]
+ResearchIntent = Literal["overview", "skills", "routes", "local_market"]
+ResearchStatus = Literal["live", "cached", "replay", "unavailable"]
 
 
 # ---------- Profile ----------
@@ -176,6 +178,29 @@ class RecommendationResponse(BaseModel):
     stretch: Recommendation
 
 
+class WhatIfRequest(BaseModel):
+    session_id: str = Field(min_length=1, max_length=160)
+    skill: str = Field(min_length=1, max_length=80)
+
+
+class WhatIfDelta(BaseModel):
+    career_id: str
+    title: str
+    before_rank: Optional[int] = None
+    after_rank: Optional[int] = None
+    before_score: Optional[float] = None
+    after_score: Optional[float] = None
+
+
+class WhatIfResponse(BaseModel):
+    generated_at: str
+    mutation_label: str
+    disclaimer: str
+    original_profile_unchanged: bool = True
+    deltas: list[WhatIfDelta]
+    preview: RecommendationResponse
+
+
 # ---------- Market ----------
 
 class RisingCareer(BaseModel):
@@ -223,3 +248,38 @@ class CareerDetail(BaseModel):
     description: str
     market: MarketStats
     routes: list[Route]
+
+
+# ---------- Bounded career research (Day 3) ----------
+
+class CareerResearchRequest(BaseModel):
+    session_id: str = Field(min_length=1, max_length=160)
+    career_ids: list[str] = Field(min_length=1, max_length=2)
+    intent: ResearchIntent = "overview"
+    region: Region = "all"
+
+
+class ResearchSourceCard(BaseModel):
+    title: str
+    url: str
+    domain: str
+    snippet: str
+    source_tier: Literal["official", "job_board", "education", "other"] = "other"
+    retrieved_at: str
+
+
+class CareerResearchBlock(BaseModel):
+    career_id: str
+    title: str
+    local_market: MarketStats
+    sources: list[ResearchSourceCard] = Field(default_factory=list)
+
+
+class CareerResearchResponse(BaseModel):
+    status: ResearchStatus
+    generated_at: str
+    intent: ResearchIntent
+    region: Region
+    disclaimer: str
+    limitation: str
+    careers: list[CareerResearchBlock]

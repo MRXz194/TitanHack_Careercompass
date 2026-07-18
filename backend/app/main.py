@@ -8,7 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.data.seed_loader import load_careers
-from app.routers import chat, market, recommend
+from app.routers import chat, market, recommend, research
 from app.services import market as market_service
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
@@ -53,12 +53,18 @@ def unhandled_exception_handler(request: Request, exc: Exception) -> JSONRespons
 app.include_router(chat.router)
 app.include_router(market.router)
 app.include_router(recommend.router)
+app.include_router(research.router)
 
 
 # A never-real key some devs leave in place after copying .env.example — don't report
 # llm_ok:true for it (see docs/DEPLOY.md; a truthy-but-fake key made every chat turn
 # attempt a doomed live call before falling back).
-_PLACEHOLDER_KEYS = {"", "sk-REPLACE_ME"}
+_PLACEHOLDER_KEYS = {
+    "",
+    "sk-REPLACE_ME",  # backward compatibility with older copied examples
+    "REPLACE_IN_LOCAL_ENV",
+    "REPLACE_IN_RAILWAY_DASHBOARD",
+}
 
 
 @app.get("/api/health")

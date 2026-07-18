@@ -54,7 +54,7 @@ class EvalReport:
     rec_p95_ms: float | None = None
     agent_orch_p95_ms: float | None = None
     agent_policy_version: str = "agent-policy-v1"
-    agent_tool_registry_version: str = "agent-tools-v1"
+    agent_tool_registry_version: str = "agent-tools-v2-research"
     agent_mode_default: str = "deterministic"
     notes: list[str] = field(default_factory=list)
 

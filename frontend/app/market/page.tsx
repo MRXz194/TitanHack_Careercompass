@@ -42,11 +42,10 @@ export default function MarketPage() {
   const isMock = process.env.NEXT_PUBLIC_USE_MOCK === "1";
 
   return (
-    <main className="mx-auto max-w-4xl min-h-screen p-6 space-y-6">
-      {/* Menu đầu trang phong cách vintage */}
-      <div className="flex justify-between items-center text-xs font-serif text-[var(--cc-muted)] border-b border-[var(--cc-border)]/40 pb-2.5">
+    <main className="mx-auto max-w-6xl min-h-screen p-6 space-y-6">
+      <div className="cc-journal-nav">
         <a href="/" className="hover:text-[var(--cc-primary)] transition-all font-bold tracking-widest uppercase">
-          🧭 CareerCompass
+          CareerCompass
         </a>
         <div className="flex gap-3">
           <a href="/explore" className="hover:underline">Bắt đầu khảo sát</a>
@@ -55,10 +54,10 @@ export default function MarketPage() {
         </div>
       </div>
 
-      {/* Header chính */}
-      <div className="space-y-2">
+      <div className="cc-page-heading">
+        <p className="cc-kicker">MARKET SIGNAL / OBSERVED DEMAND</p>
         <h1 className="text-3xl font-bold tracking-tight text-[var(--cc-ink)] font-serif">
-          🎯 Radar Nhu cầu Kỹ năng Tuyển dụng
+          Radar nhu cầu kỹ năng tuyển dụng
         </h1>
         <p className="text-sm text-[var(--cc-muted)] leading-relaxed">
           Tín hiệu tổng hợp từ snapshot tin tuyển dụng hiện có, với cửa sổ phân tích tối đa 90 ngày. Đây là <b>nhu cầu tuyển dụng quan sát được</b> (Hiring Demand Proxy), không phải dữ liệu thời gian thực hay kết luận tuyệt đối về thiếu hụt nhân lực.
@@ -96,7 +95,7 @@ export default function MarketPage() {
         </div>
       ) : error ? (
         <div className="py-12 text-center space-y-2">
-          <span className="text-3xl">📯</span>
+          <p className="cc-kicker">SYSTEM / MARKET DATA UNAVAILABLE</p>
           <p className="text-sm text-[var(--cc-danger)] font-medium">{error}</p>
         </div>
       ) : (
@@ -126,7 +125,7 @@ export default function MarketPage() {
                             {s.demand_count} tin tuyển dụng
                             {hasTrend && (
                               <span className={s.trend_pct! >= 0 ? " text-[var(--cc-success)] font-bold" : " text-[var(--cc-danger)] font-bold"}>
-                                 · {s.trend_pct! >= 0 ? "▲" : "▼"}{Math.abs(s.trend_pct!)}%
+                                 · {s.trend_pct! >= 0 ? "+" : "−"}{Math.abs(s.trend_pct!)}%
                               </span>
                             )}
                           </span>
@@ -141,7 +140,7 @@ export default function MarketPage() {
                         </div>
 
                         {s.low_confidence && (
-                          <p className="text-[9px] text-amber-800/80 italic font-serif">⚠ Cỡ mẫu nhỏ — tín hiệu nhu cầu này cần được kiểm chứng thêm.</p>
+                          <p className="text-[9px] text-amber-800/80 italic font-serif">Cỡ mẫu nhỏ — tín hiệu nhu cầu này cần được kiểm chứng thêm.</p>
                         )}
                       </div>
                     );
@@ -152,7 +151,7 @@ export default function MarketPage() {
               </div>
 
               <p className="text-[10px] text-[var(--cc-muted)] border-t border-[var(--cc-border)]/40 pt-3 italic font-serif">
-                ℹ <Tooltip content={TOOLTIPS.source_note.text}>{gaps.source_note}</Tooltip>
+                SOURCE / <Tooltip content={TOOLTIPS.source_note.text}>{gaps.source_note}</Tooltip>
               </p>
             </section>
           )}
@@ -178,7 +177,7 @@ export default function MarketPage() {
                               ? "Độ tin cậy thấp"
                               : c.trend_pct == null
                                 ? `${c.demand_count} tin (chưa đủ dữ liệu xu hướng)`
-                                : `▲ ${c.trend_pct}%`}
+                                : `${c.trend_pct! >= 0 ? "+" : "−"} ${Math.abs(c.trend_pct!)}%`}
                           </span>
                         </div>
                       ))

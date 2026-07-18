@@ -1,129 +1,86 @@
-// Landing page — task F2-06 hoàn thiện. Giao diện vintage, minh bạch và định hướng rõ ràng 2 hành trình.
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { JourneyMode } from "@/types";
+import type { JourneyMode } from "@/types";
+
+const streams = [
+  "SOURCE vietnamworks\nREGION hanoi\nSKILL data-analysis\nCONFIDENCE 0.82\nSTATUS observed",
+  "PROFILE evidence\nINTEREST systems\nPROJECT dashboard\nCONSTRAINT short-route\nUSER confirmed",
+  "CAREER data-analyst\nDEMAND 90d\nSALARY sample-gated\nTREND insufficient\nROUTE certificate",
+  "SOURCE itviec\nSKILL react\nSKILL sql\nENTRY signal\nTRACE snapshot-id",
+  "POLICY no-gender\nREGION context-only\nSTRETCH required\nAUTONOMY editable\nOUTPUT reference",
+  "AGENT inspect\nAGENT clarify\nTOOL market-context\nTOOL research\nFALLBACK deterministic",
+];
 
 export default function LandingPage() {
   const router = useRouter();
 
-  const handleStart = (mode: JourneyMode) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("cc_journey_mode", mode);
-    }
+  const start = (mode: JourneyMode) => {
+    localStorage.setItem("cc_journey_mode", mode);
     router.push("/explore");
   };
 
   return (
-    <main className="mx-auto max-w-4xl min-h-screen p-6 flex flex-col justify-between space-y-12">
-      
-      {/* Brand Header */}
-      <header className="flex justify-between items-center text-xs font-serif text-[var(--cc-muted)] border-b border-[var(--cc-border)]/40 pb-4">
-        <span className="font-bold tracking-widest uppercase text-[var(--cc-ink)] text-sm">🧭 CareerCompass</span>
-        <div className="flex gap-4">
-          <Link href="/market" className="hover:underline">Thị trường việc làm</Link>
-          <span>·</span>
-          <Link href="/how-it-works" className="hover:underline">Cách hệ thống hoạt động</Link>
+    <main>
+      <div className="cc-shell">
+        <nav className="cc-topbar" aria-label="Điều hướng chính">
+          <Link href="/" className="cc-wordmark">CareerCompass</Link>
+          <div className="cc-navlinks">
+            <Link href="/market" className="cc-nav-optional">Market signals</Link>
+            <Link href="/how-it-works" className="cc-nav-optional">Method</Link>
+            <button className="cc-button-dark" onClick={() => start("explore")}>EXPLORE</button>
+            <button className="cc-button-orange" onClick={() => start("launch")}>GRADUATE LAUNCH</button>
+          </div>
+        </nav>
+
+        <section className="cc-hero-copy">
+          <p className="cc-kicker">VIETNAM / EDUCATION → EMPLOYMENT / DECISION SUPPORT</p>
+          <h1>Đừng chọn nghề bằng một <span className="cc-emphasis">phán đoán duy nhất.</span></h1>
+          <p>
+            CareerCompass đối chiếu điều em đã làm, điều em muốn thử và tín hiệu tuyển dụng quan sát được
+            để mở ra nhiều hướng học tập — đại học, cao đẳng, học nghề hoặc chứng chỉ.
+          </p>
+          <div className="cc-hero-actions">
+            <button className="cc-button-dark" onClick={() => start("explore")}>BẮT ĐẦU KHÁM PHÁ</button>
+            <Link className="cc-button-ghost" href="/market">ĐỌC TÍN HIỆU THỊ TRƯỜNG</Link>
+          </div>
+        </section>
+      </div>
+
+      <section className="cc-data-panel" aria-label="Minh họa luồng dữ liệu CareerCompass">
+        <div className="cc-streams" aria-hidden="true">
+          {streams.map((stream) => <pre key={stream}>{`${stream}\n\n${stream}\n\n${stream}`}</pre>)}
         </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="text-center space-y-6 max-w-2xl mx-auto py-8">
-        <span className="text-5xl block animate-bounce">🧭</span>
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-[var(--cc-ink)] font-serif leading-tight">
-          Lộ trình Sự nghiệp của bạn,<br />Khởi hành từ Thực tế.
-        </h1>
-        <p className="text-base text-[var(--cc-muted)] leading-relaxed">
-          Đứng trước bối cảnh mất cân bằng giữa đào tạo và tuyển dụng tại Việt Nam, nhiều bạn trẻ chọn ngành theo xu hướng hoặc kỳ vọng của gia đình mà thiếu đi tín hiệu thị trường thực tế. 
-          <b> CareerCompass</b> giúp bạn đối chiếu mong muốn cá nhân với hơn 3.000 tin tuyển dụng thật.
-        </p>
-      </section>
-
-      {/* Two Journeys Cards */}
-      <section className="grid gap-6 md:grid-cols-2">
-        
-        {/* Card 1: Explore */}
-        <div className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-6">
-          <div className="space-y-3">
-            <span className="text-3xl block">🌱</span>
-            <h2 className="text-2xl font-bold font-serif text-[var(--cc-ink)]">Hành trình Khám phá (Explore)</h2>
-            <p className="text-xs font-semibold text-[var(--cc-primary)] uppercase tracking-wider">Dành cho Học sinh & Sinh viên năm đầu</p>
-            <p className="text-xs text-[var(--cc-muted)] leading-relaxed">
-              Trò chuyện để phác thảo hồ sơ sở thích, năng lực và điều kiện cá nhân. Nhận đề xuất lộ trình học tập đa dạng (Đại học, Cao đẳng, Học nghề) và gợi ý mở rộng hướng đi tiềm năng.
-            </p>
-          </div>
-          <button
-            onClick={() => handleStart("explore")}
-            className="w-full text-center rounded-xl bg-[var(--cc-primary)] py-3 text-xs font-bold text-white shadow hover:opacity-90 transition-all cursor-pointer"
-          >
-            Khám phá Hướng đi mới ➡️
-          </button>
-        </div>
-
-        {/* Card 2: Launch */}
-        <div className="rounded-2xl border border-[var(--cc-accent)]/60 bg-[var(--cc-accent-soft)] p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between space-y-6">
-          <div className="space-y-3">
-            <span className="text-3xl block">🚀</span>
-            <h2 className="text-2xl font-bold font-serif text-[var(--cc-ink)]">Hành trình Ra mắt (Launch)</h2>
-            <p className="text-xs font-semibold text-amber-800 uppercase tracking-wider">Dành cho Sinh viên năm cuối & Tốt nghiệp</p>
-            <p className="text-xs text-[var(--cc-muted)] leading-relaxed">
-              Khai thác các dự án thực tế, kinh nghiệm và kỹ năng công cụ của bạn. Đối chiếu trực tiếp với các vị trí entry-level, chỉ ra kỹ năng còn thiếu và lên lộ trình tích lũy trong 30 ngày.
-            </p>
-          </div>
-          <button
-            onClick={() => handleStart("launch")}
-            className="w-full text-center rounded-xl bg-amber-800 py-3 text-xs font-bold text-white shadow hover:bg-amber-900 transition-all cursor-pointer"
-          >
-            Bứt phá Sự nghiệp ➡️
-          </button>
-        </div>
-
-      </section>
-
-      {/* 3 Step Guide Section */}
-      <section className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-6 shadow-sm space-y-6">
-        <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)] text-center">Định vị hướng đi qua 3 bước đơn giản</h2>
-        
-        <div className="grid gap-6 md:grid-cols-3 text-center">
-          <div className="space-y-2">
-            <span className="text-2xl block text-[var(--cc-primary)]">1️⃣</span>
-            <p className="font-bold text-sm text-[var(--cc-ink)] font-serif">Trò chuyện cởi mở</p>
-            <p className="text-xs text-[var(--cc-muted)] leading-relaxed">Trò chuyện tự nhiên bằng tiếng Việt để chia sẻ về sở thích, dự án đã làm hoặc băn khoăn của bạn.</p>
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-2xl block text-[var(--cc-primary)]">2️⃣</span>
-            <p className="font-bold text-sm text-[var(--cc-ink)] font-serif">Xem hồ sơ live</p>
-            <p className="text-xs text-[var(--cc-muted)] leading-relaxed">Hồ sơ năng lực tự động hình thành theo thời gian thực. Bạn có toàn quyền xem và sửa đổi theo ý mình.</p>
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-2xl block text-[var(--cc-primary)]">3️⃣</span>
-            <p className="font-bold text-sm text-[var(--cc-ink)] font-serif">Nhận lộ trình thực tế</p>
-            <p className="text-xs text-[var(--cc-muted)] leading-relaxed">Đề xuất 5 nghề nghiệp cùng 1 gợi ý mở rộng, đi kèm bằng chứng trích dẫn, số liệu thị trường và lộ trình cụ thể.</p>
-          </div>
+        <div className="cc-panel-label">
+          <p className="cc-kicker">CAREER DECISION ENGINE</p>
+          <strong>Hội thoại có cấu trúc. Dữ liệu có nguồn. Quyết định thuộc về em.</strong>
+          <div className="cc-human-machine"><span>HUMAN AGENCY</span><span>MACHINE EVIDENCE</span></div>
         </div>
       </section>
 
-      {/* Ethics & Limits Section */}
-      <section className="text-center space-y-2 max-w-xl mx-auto">
-        <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--cc-muted)]">Cam kết Đạo đức & Chống Định kiến</p>
-        <p className="text-xs text-[var(--cc-muted)] leading-relaxed">
-          Chúng tôi không thu thập thông tin giới tính, không lọc cứng vùng miền và luôn đề xuất ít nhất một lộ trình phi đại học cho mỗi nghề nghiệp. Hệ thống hoạt động theo nguyên tắc tôn trọng quyền tự quyết của người dùng.
-        </p>
+      <section className="cc-shell cc-section">
+        <div className="cc-section-heading">
+          <p className="cc-kicker">ONE CORE / TWO JOURNEYS</p>
+          <h2>Từ băn khoăn đến một thử nghiệm nghề nghiệp có thể kiểm chứng.</h2>
+          <p>AI hỗ trợ đặt câu hỏi và truy xuất bằng chứng; scoring và các giới hạn đạo đức vẫn do code kiểm soát.</p>
+        </div>
+        <div className="cc-feature-grid">
+          <article className="cc-feature"><h3>01 / Conversation</h3><p>Hồ sơ hình thành qua nhiều lượt trò chuyện và luôn có thể sửa, không phải một bài trắc nghiệm đóng.</p></article>
+          <article className="cc-feature"><h3>02 / Market</h3><p>Nhu cầu, kỹ năng, lương và vùng được gắn snapshot, cỡ mẫu, confidence và giới hạn diễn giải.</p></article>
+          <article className="cc-feature"><h3>03 / Options</h3><p>Top hướng cân nhắc đi cùng stretch option và lộ trình ngoài đại học để mở rộng agency.</p></article>
+          <article className="cc-feature"><h3>04 / Action</h3><p>Sinh viên mới ra trường nhận skill gap có bằng chứng và deliverable 30 ngày thay vì lời khuyên chung chung.</p></article>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="text-center text-xs text-[var(--cc-muted)] border-t border-[var(--cc-border)]/40 pt-4 flex flex-col sm:flex-row justify-between gap-2">
-        <p>© 2026 CareerCompass. Mọi gợi ý chỉ mang tính tham khảo, quyết định cuối cùng là của bạn.</p>
-        <div className="flex gap-3 justify-center">
-          <Link href="/how-it-works" className="underline">Cách hệ thống hoạt động</Link>
-          <span>·</span>
-          <Link href="/market" className="underline">Bản đồ thị trường</Link>
-        </div>
+      <section className="cc-dark-band">
+        <p>Không thu thập giới tính. Không dùng vùng miền để loại nghề. Không biến mức phù hợp thành bản án tương lai.</p>
+      </section>
+
+      <footer className="cc-shell cc-footer">
+        <div><span className="cc-status-dot" />SYSTEM DESIGNED FOR TRANSPARENT FALLBACKS</div>
+        <div>© 2026 CareerCompass · Gợi ý là tài liệu tham khảo, quyết định là của em.</div>
       </footer>
-
     </main>
   );
 }

@@ -29,6 +29,14 @@ services:
         value: "off"
       - key: AGENT_MODE
         value: langgraph
+      - key: WEB_RESEARCH_MODE
+        value: replay # switch to ddg only after docs/next DAY3 gate passes
+      - key: WEB_RESEARCH_TIMEOUT_SECONDS
+        value: "4"
+      - key: WEB_RESEARCH_MAX_RESULTS
+        value: "5"
+      - key: WEB_RESEARCH_CACHE_TTL_SECONDS
+        value: "900"
       - key: READINESS_READY_COVERAGE
         value: "0.75"
       - key: READINESS_NEAR_COVERAGE

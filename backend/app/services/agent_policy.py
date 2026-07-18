@@ -41,6 +41,7 @@ AGENT_SELECTABLE: dict[AgentStage, frozenset[str]] = {
     AgentStage.retrieve: frozenset(),
     AgentStage.explain: frozenset(),
     AgentStage.ready: frozenset(),
+    AgentStage.research: frozenset({"get_market_context", "search_career_sources"}),
 }
 
 DETERMINISTIC_ONLY_TOOLS = frozenset(
@@ -181,6 +182,22 @@ def authorize_observation(
                 reason="MISSING_PROVENANCE",
                 tool=tool,
             )
+    if tool == "search_career_sources":
+        status = result.get("status")
+        if status not in {"live", "cached", "replay", "unavailable"}:
+            return PolicyDecision(
+                code=PolicyCode.DENY_TOOL,
+                reason="MISSING_RESEARCH_STATUS",
+                tool=tool,
+            )
+        for career in result.get("careers") or []:
+            for source in career.get("sources") or []:
+                if not source.get("url") or not source.get("domain"):
+                    return PolicyDecision(
+                        code=PolicyCode.DENY_TOOL,
+                        reason="MISSING_CITATION",
+                        tool=tool,
+                    )
     cleaned = strip_privacy_args(result)
     return PolicyDecision(
         code=PolicyCode.ALLOW,

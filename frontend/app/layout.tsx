@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CareerCompass — La bàn hướng nghiệp từ dữ liệu thật",
+  title: "CareerCompass — La bàn hướng nghiệp từ dữ liệu tuyển dụng",
   description:
-    "Khám phá hướng đi phù hợp với em — dựa trên năng lực, sở thích và dữ liệu thị trường lao động Việt Nam.",
+    "Khám phá nhiều hướng học tập và nghề nghiệp dựa trên bằng chứng cá nhân cùng tín hiệu tuyển dụng quan sát được tại Việt Nam.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

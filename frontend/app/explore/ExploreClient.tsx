@@ -126,7 +126,7 @@ export function ExploreClient({ initialMode }: { initialMode: JourneyMode }) {
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col p-4 md:p-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-bold">🧭 CareerCompass</h1>
+          <h1 className="text-lg font-bold">CareerCompass</h1>
           {IS_MOCK && (
             <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800">
               Dữ liệu mẫu
@@ -156,7 +156,7 @@ export function ExploreClient({ initialMode }: { initialMode: JourneyMode }) {
               href="/results"
               className="m-3 mt-0 rounded-xl bg-[var(--cc-success)] px-4 py-3 text-center font-semibold text-white shadow hover:opacity-90"
             >
-              🎯 Xem hướng đi của bạn
+              Xem hướng đi của bạn
             </a>
           )}
         </section>

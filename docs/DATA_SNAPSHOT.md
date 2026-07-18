@@ -1,42 +1,34 @@
-# DATA SNAPSHOT CARD — release artifact
+# DATA SNAPSHOT CARD — generated candidate card
 
-> Status: `BUILT_WITH_CAVEATS`. Đây là snapshot nhu cầu tuyển dụng quan sát được, không phải dữ liệu thời gian thực và không đo nguồn cung lao động.
+> Status: `CANDIDATE_NOT_RELEASED`. Đây là hiring-demand proxy, không phải dữ liệu thời gian thực và không đo nguồn cung lao động. Snapshot này chưa thay `backend/market.db` khi accuracy còn `NOT_RUN`.
 
 | Field | Value |
 |---|---|
-| Snapshot / SHA-256 | `real_jobs_snapshot_20260718` / `c6c1db099370db28c10ccd032ceb173078930349191ccdd09939b70676831dfd` |
-| Built at / analysis window | `2026-07-18T02:43:13Z` / tối đa 90 ngày |
-| Raw / normalized | 300 / 298; 2 dòng drop hoặc dedupe (0,67%) |
-| Sources | TopCV 100, VietnamWorks 99, ITViec 99 |
-| Regions | Hà Nội 158, HCM 38, Đà Nẵng 2, other 100 |
-| Salary evidence | 127/298 (42,62%); percentile null khi mẫu không đủ |
-| Experience evidence | 199/298 (66,78%); entry-level 76 |
-| Skill extraction | `skill-extraction-v1`; 261/298 có ít nhất 1 skill; 127 low-signal dùng dictionary fallback; live LLM success 0 |
-| Career mapping | `career-mapping-v1-stub`; 89/298 (29,87%); title-pattern-only; accuracy `NOT_RUN` |
-| Deploy artifact | `backend/market.db`: 43 career-stat rows, 548 skill-stat rows, 16 metadata rows; không chứa job description |
-| Trend | `NULL` cho snapshot hiện tại vì chưa đủ hai cửa sổ thời gian đáng tin |
+| Snapshot / SHA-256 | `real_jobs_snapshot_20260718` / `4ecfc1a513fea9eb451e61cbed4825b64385cf8a75d746cc2606dc5be0e83806` |
+| Built at / analysis window | `2026-07-18T09:27:09.381825+00:00` / tối đa 90 ngày |
+| Raw / normalized | 3914 / 3865; drop hoặc dedupe 49 (1.25%) |
+| Source distribution | vietnamworks: 2963 (76.7%), itviec: 874 (22.6%), topcv: 28 (0.7%) |
+| Region distribution | other: 2971 (76.9%), hcm: 498 (12.9%), hanoi: 372 (9.6%), danang: 24 (0.6%) |
+| Salary evidence | 1449/3865 (37.5%) |
+| Experience evidence | 854/3865 (22.1%); entry-level 87 |
+| Skill extraction | `skill-extraction-v1`; 3532/3865 có skill; live LLM success 0; fallback 1481 |
+| Career mapping | `career-mapping-v1-stub`; 1031/3865 (26.7%); accuracy `NOT_RUN` |
 
-## Nguồn và quyền sử dụng
+## Release decision
 
-- Policy pages được ghi trong `data/processed/manifest.json`; `permission_status=unverified` cho cả ba nguồn. Privacy/terms page không được diễn giải thành giấy phép tái phân phối.
-- Raw JSON, processed full text và auto-labeled gold không còn nằm trong Git HEAD. Chúng chỉ được giữ local/secure storage để tái chạy pipeline.
-- Repo chỉ phát hành aggregate SQLite, manifest và report tái lập; không công bố lại nội dung mô tả việc làm.
-- UI phải ghi “hiring-demand proxy / nhu cầu quan sát được”, không gọi là “thiếu hụt kỹ năng” nếu chưa có dữ liệu supply.
+- Candidate có quy mô và skill coverage tốt hơn release hiện tại, nhưng chưa đủ bằng chứng để thay DB demo.
+- Blocker: Career mapping accuracy is NOT_RUN; label and review at least 50 postings before replacing market.db.; Region 'other' dominates the snapshot; regional claims require better location normalization.
+- Go/no-go owner phải ký sau gold-label accuracy review; script không tự publish DB.
 
-## Chất lượng và giới hạn
+## Source permission and release boundary
 
-- Posting count không bằng vacancy count; một tin có thể tuyển nhiều người hoặc đã đóng.
-- Mẫu nhỏ và lệch Hà Nội/IT, không đại diện toàn bộ Việt Nam. Đà Nẵng chỉ có 2 tin.
-- 209/298 tin chưa map vào KB 25 career; aggregate theo career vì vậy chỉ phản ánh phần mapped.
-- LLM extraction live đã thất bại/không cấu hình ở snapshot này; số skill hiện tại chủ yếu đến từ taxonomy deterministic. Không được trình bày là LLM extraction đã đạt chất lượng production.
-- Skill/career mapping accuracy và human usefulness vẫn `NOT_RUN`; coverage không thay thế accuracy.
+- Policy URLs nằm trong `data/processed/manifest.json`; permission status là `unverified`, không suy diễn privacy/terms page thành giấy phép tái phân phối.
+- Raw/processed full text không được commit. Release chỉ chứa aggregate DB, manifest và report.
+- UI/pitch phải gọi đây là nhu cầu tuyển dụng quan sát được, không claim labor shortage nếu chưa có supply data.
 
-## Fix nguồn đã đưa vào code
+## Known limitations
 
-- `normalize.parse_posted_date` nhận biết “Hạn/Deadline”, ngày không hợp lệ và ngày tương lai; các trường hợp này quay về ngày crawl thay vì giả làm ngày đăng.
-- `stable_job_id` dùng SHA-256 của URL chuẩn hóa, tránh hai URL khác nhau có cùng số đuôi bị trùng ID.
-- Hai fix có unit regression test. Snapshot hiện tại đã được vá tương đương trước khi build; lần crawl kế tiếp sẽ nhận fix từ nguồn.
-
-## Claim được phép khi pitch
-
-“CareerCompass đã xử lý một snapshot 298 tin từ ba nguồn để trích tín hiệu kỹ năng, lương và khu vực. Đây là proxy quan sát có caveat; sản phẩm hiển thị denominator, độ tin cậy và không bịa trend khi dữ liệu chưa đủ.”
+- Posting count không bằng vacancy count; coverage lệch theo nguồn và vùng.
+- Mapping coverage không phải mapping accuracy; accuracy và human usefulness có thể vẫn `NOT_RUN`.
+- Salary percentile phải null khi mẫu không đủ; trend phải null khi không đủ hai cửa sổ đáng tin.
+- Xem `docs/EVALUATION_RESULTS.md` và report JSON để biết denominator/fallback đầy đủ.

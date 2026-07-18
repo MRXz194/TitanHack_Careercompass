@@ -41,6 +41,7 @@ Chi tiết:
 - [EVALUATION.md](EVALUATION.md) — acceptance, quality, bias, usability và release scorecard.
 - [DATA_RESEARCH_ARCHITECTURE.md](DATA_RESEARCH_ARCHITECTURE.md) — crawler/data quality workflow, bounded web-research agent, structured insight UI và scale path.
 - [DATA_SNAPSHOT_AUDIT.md](DATA_SNAPSHOT_AUDIT.md) — kết quả crawl 3.914 records, hashes, raw-field diagnostics, blockers và handoff M2/M3.
+- [RELEASE_SCORECARD.md](RELEASE_SCORECARD.md) — trạng thái triển khai thật, test evidence, DDG gate và các bước manual còn chặn release.
 
 ## Thứ tự triển khai bắt buộc
 

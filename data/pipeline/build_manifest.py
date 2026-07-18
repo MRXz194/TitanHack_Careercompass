@@ -1,3 +1,4 @@
+import argparse
 import json
 import hashlib
 from pathlib import Path
@@ -28,11 +29,21 @@ def get_file_sha256(filepath):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
-def main():
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Build the versioned data manifest and snapshot card.")
+    parser.add_argument("--raw-dir", type=Path, default=RAW_DIR)
+    parser.add_argument("--processed-file", type=Path, default=PROCESSED_FILE)
+    parser.add_argument("--manifest", type=Path, default=MANIFEST_FILE)
+    parser.add_argument("--snapshot-doc", type=Path, default=SNAPSHOT_DOC)
+    parser.add_argument("--enrich-report", type=Path, default=ENRICH_REPORT)
+    parser.add_argument("--mapping-report", type=Path, default=MAPPING_REPORT)
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args(argv)
+
     print("=== BUILDING MANIFEST AND DATA SNAPSHOT CARD ===")
     
     # 1. Count raw postings
-    raw_files = list(RAW_DIR.glob("*.jsonl"))
+    raw_files = list(args.raw_dir.glob("*.jsonl"))
     raw_count = 0
     raw_counts_by_source = {}
     for rf in raw_files:
@@ -51,15 +62,15 @@ def main():
     # 2. Read processed postings
     processed_count = 0
     postings = []
-    if PROCESSED_FILE.exists():
-        with PROCESSED_FILE.open("r", encoding="utf-8") as f:
+    if args.processed_file.exists():
+        with args.processed_file.open("r", encoding="utf-8") as f:
             for line in f:
                 if line.strip():
                     postings.append(json.loads(line))
         processed_count = len(postings)
     else:
         print("ERROR: postings.jsonl does not exist. Run normalize.py first.")
-        return
+        return 1
         
     print(f"Total Processed count: {processed_count}")
     
@@ -96,7 +107,7 @@ def main():
             entry_level_count += 1
             
     # 4. SHA-256 Hash of processed postings
-    sha256 = get_file_sha256(PROCESSED_FILE)
+    sha256 = get_file_sha256(args.processed_file)
     print(f"SHA-256: {sha256}")
     
     # 5. Drop / Dedupe calculations
@@ -106,8 +117,8 @@ def main():
     salary_cov = (salary_count / processed_count * 100) if processed_count > 0 else 0.0
     exp_cov = (experience_count / processed_count * 100) if processed_count > 0 else 0.0
     
-    enrich_report = read_json_object(ENRICH_REPORT)
-    mapping_report = read_json_object(MAPPING_REPORT)
+    enrich_report = read_json_object(args.enrich_report)
+    mapping_report = read_json_object(args.mapping_report)
     enriched_count = int(enrich_report.get("postings_output") or 0)
     zero_skill_count = int(enrich_report.get("zero_skill_postings") or 0)
     skill_coverage_count = max(0, enriched_count - zero_skill_count)
@@ -117,6 +128,12 @@ def main():
     mapping_coverage_pct = (
         mapped_count / mapping_denominator * 100 if mapping_denominator > 0 else None
     )
+    mapping_accuracy = mapping_report.get("mapping_accuracy", "NOT_RUN")
+    release_status = "RELEASE_READY" if mapping_accuracy != "NOT_RUN" else "CANDIDATE_NOT_RELEASED"
+    release_blockers = [] if release_status == "RELEASE_READY" else [
+        "Career mapping accuracy is NOT_RUN; label and review at least 50 postings before replacing market.db.",
+        "Region 'other' dominates the snapshot; regional claims require better location normalization.",
+    ]
 
     # Build manifest dict. Source permission is deliberately not inferred from a
     # privacy/terms URL; the release contains aggregate statistics only.
@@ -165,7 +182,9 @@ def main():
             "seniority_distribution": seniority_counts,
             "entry_level_count": entry_level_count
         },
-        "taxonomy_version": "skills_vi_v1.0",
+        "release_status": release_status,
+        "release_blockers": release_blockers,
+        "taxonomy_version": enrich_report.get("taxonomy_version", "NOT_RUN"),
         "skill_extraction": {
             "version": enrich_report.get("extraction_version", "NOT_RUN"),
             "postings_output": enriched_count,
@@ -179,16 +198,11 @@ def main():
             "mapped_postings": mapped_count,
             "denominator": mapping_denominator,
             "coverage_pct": round(mapping_coverage_pct, 2) if mapping_coverage_pct is not None else None,
-            "accuracy": mapping_report.get("mapping_accuracy", "NOT_RUN"),
+            "accuracy": mapping_accuracy,
         },
         "career_mapping_coverage_pct": round(mapping_coverage_pct, 2) if mapping_coverage_pct is not None else None,
         "caveat": "Hiring demand proxy from crawled job descriptions. Not representative of total employment supply."
     }
-    
-    # Save manifest.json
-    with MANIFEST_FILE.open("w", encoding="utf-8") as f:
-        json.dump(manifest, f, ensure_ascii=False, indent=2)
-    print(f"Saved manifest to: {MANIFEST_FILE}")
     
     # Format regions for display
     region_str = ", ".join([f"{k}: {v} ({v/processed_count*100:.1f}%)" for k, v in counts_by_region.items()])
@@ -200,9 +214,9 @@ def main():
         if mapping_coverage_pct is not None
         else "NOT_RUN"
     )
-    markdown_content = f"""# DATA SNAPSHOT CARD — generated release card
+    markdown_content = f"""# DATA SNAPSHOT CARD — generated candidate card
 
-> Status: `BUILT_WITH_CAVEATS`. Đây là hiring-demand proxy, không phải dữ liệu thời gian thực và không đo nguồn cung lao động.
+> Status: `{release_status}`. Đây là hiring-demand proxy, không phải dữ liệu thời gian thực và không đo nguồn cung lao động. Snapshot này chưa thay `backend/market.db` khi accuracy còn `NOT_RUN`.
 
 | Field | Value |
 |---|---|
@@ -215,6 +229,12 @@ def main():
 | Experience evidence | {experience_count}/{processed_count} ({exp_cov:.1f}%); entry-level {entry_level_count} |
 | Skill extraction | `{enrich_report.get('extraction_version', 'NOT_RUN')}`; {skill_coverage_count}/{enriched_count or processed_count} có skill; live LLM success {int(enrich_report.get('llm_success_postings') or 0)}; fallback {extraction_fallback_count} |
 | Career mapping | `{mapping_report.get('mapping_version', 'NOT_RUN')}`; {mapping_display}; accuracy `{mapping_report.get('mapping_accuracy', 'NOT_RUN')}` |
+
+## Release decision
+
+- Candidate có quy mô và skill coverage tốt hơn release hiện tại, nhưng chưa đủ bằng chứng để thay DB demo.
+- Blocker: {'; '.join(release_blockers) if release_blockers else 'Không có blocker tự động.'}
+- Go/no-go owner phải ký sau gold-label accuracy review; script không tự publish DB.
 
 ## Source permission and release boundary
 
@@ -230,9 +250,21 @@ def main():
 - Xem `docs/EVALUATION_RESULTS.md` và report JSON để biết denominator/fallback đầy đủ.
 """
     
-    with SNAPSHOT_DOC.open("w", encoding="utf-8") as f:
+    if args.dry_run:
+        print("DRY RUN: manifest and snapshot card were not written.")
+        print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+
+    args.manifest.parent.mkdir(parents=True, exist_ok=True)
+    args.manifest.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    print(f"Saved manifest to: {args.manifest}")
+    args.snapshot_doc.parent.mkdir(parents=True, exist_ok=True)
+    with args.snapshot_doc.open("w", encoding="utf-8") as f:
         f.write(markdown_content)
-    print(f"Updated Data Snapshot card at: {SNAPSHOT_DOC}")
+    print(f"Updated Data Snapshot card at: {args.snapshot_doc}")
+    return 0
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

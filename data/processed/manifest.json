@@ -1,87 +1,93 @@
 {
   "snapshot_id": "real_jobs_snapshot_20260718",
-  "sha256": "c6c1db099370db28c10ccd032ceb173078930349191ccdd09939b70676831dfd",
-  "built_at": "2026-07-18T02:43:13.736836+00:00",
+  "sha256": "4ecfc1a513fea9eb451e61cbed4825b64385cf8a75d746cc2606dc5be0e83806",
+  "built_at": "2026-07-18T09:27:09.381825+00:00",
   "window_days": 90,
   "sources": {
     "topcv": {
       "policy_url": "https://www.topcv.vn/dieu-khoan-bao-mat",
       "permission_status": "unverified",
       "usage_note": "Aggregate-only hackathon snapshot; redistribution rights are not claimed.",
-      "raw_count": 100,
-      "processed_count": 100
+      "raw_count": 28,
+      "processed_count": 28
     },
     "vietnamworks": {
       "policy_url": "https://www.vietnamworks.com/chinh-sach-bao-mat",
       "permission_status": "unverified",
       "usage_note": "Aggregate-only hackathon snapshot; redistribution rights are not claimed.",
-      "raw_count": 100,
-      "processed_count": 99
+      "raw_count": 3000,
+      "processed_count": 2963
     },
     "itviec": {
       "policy_url": "https://itviec.com/privacy-policy",
       "permission_status": "unverified",
       "usage_note": "Aggregate-only hackathon snapshot; redistribution rights are not claimed.",
-      "raw_count": 100,
-      "processed_count": 99
+      "raw_count": 886,
+      "processed_count": 874
     }
   },
   "counts": {
-    "raw_total": 300,
-    "normalized_total": 298,
-    "dropped_or_deduped": 2,
-    "dedupe_rate_pct": 0.67,
+    "raw_total": 3914,
+    "normalized_total": 3865,
+    "dropped_or_deduped": 49,
+    "dedupe_rate_pct": 1.25,
     "by_source": {
-      "itviec": 99,
-      "topcv": 100,
-      "vietnamworks": 99
+      "vietnamworks": 2963,
+      "itviec": 874,
+      "topcv": 28
     },
     "by_region": {
-      "hanoi": 158,
-      "hcm": 38,
-      "other": 100,
-      "danang": 2
+      "other": 2971,
+      "hcm": 498,
+      "hanoi": 372,
+      "danang": 24
     },
     "by_source_region": {
-      "itviec x hanoi": 99,
-      "topcv x hcm": 34,
-      "topcv x other": 26,
-      "topcv x hanoi": 38,
-      "topcv x danang": 2,
-      "vietnamworks x other": 74,
-      "vietnamworks x hanoi": 21,
-      "vietnamworks x hcm": 4
+      "vietnamworks x other": 2963,
+      "itviec x hcm": 491,
+      "itviec x hanoi": 357,
+      "itviec x danang": 23,
+      "itviec x other": 3,
+      "topcv x hanoi": 15,
+      "topcv x danang": 1,
+      "topcv x other": 5,
+      "topcv x hcm": 7
     }
   },
   "coverage": {
-    "salary_percentage": 42.62,
-    "salary_sample_count": 127,
-    "experience_percentage": 66.78,
-    "experience_sample_count": 199,
+    "salary_percentage": 37.49,
+    "salary_sample_count": 1449,
+    "experience_percentage": 22.1,
+    "experience_sample_count": 854,
     "seniority_distribution": {
-      "entry": 76,
-      "mid": 59,
-      "senior": 86,
-      "unknown": 77
+      "entry": 87,
+      "mid": 58,
+      "senior": 1440,
+      "unknown": 2280
     },
-    "entry_level_count": 76
+    "entry_level_count": 87
   },
-  "taxonomy_version": "skills_vi_v1.0",
+  "release_status": "CANDIDATE_NOT_RELEASED",
+  "release_blockers": [
+    "Career mapping accuracy is NOT_RUN; label and review at least 50 postings before replacing market.db.",
+    "Region 'other' dominates the snapshot; regional claims require better location normalization."
+  ],
+  "taxonomy_version": "1.0.0",
   "skill_extraction": {
     "version": "skill-extraction-v1",
-    "postings_output": 298,
-    "postings_with_skills": 261,
-    "zero_skill_postings": 37,
+    "postings_output": 3865,
+    "postings_with_skills": 3532,
+    "zero_skill_postings": 333,
     "llm_success_postings": 0,
-    "fallback_postings": 127
+    "fallback_postings": 1481
   },
   "career_mapping": {
     "version": "career-mapping-v1-stub",
-    "mapped_postings": 89,
-    "denominator": 298,
-    "coverage_pct": 29.87,
+    "mapped_postings": 1031,
+    "denominator": 3865,
+    "coverage_pct": 26.68,
     "accuracy": "NOT_RUN"
   },
-  "career_mapping_coverage_pct": 29.87,
+  "career_mapping_coverage_pct": 26.68,
   "caveat": "Hiring demand proxy from crawled job descriptions. Not representative of total employment supply."
 }

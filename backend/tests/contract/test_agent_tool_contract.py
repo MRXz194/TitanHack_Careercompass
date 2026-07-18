@@ -13,7 +13,7 @@ pytestmark = pytest.mark.contract
 def test_registry_names_subset_of_policy_universe() -> None:
     reg = set(get_registry().names())
     assert reg == ALL_REGISTERED_TOOLS
-    assert len(reg) == 10
+    assert len(reg) == 11
 
 
 def test_agent_selectable_and_deterministic_partition() -> None:

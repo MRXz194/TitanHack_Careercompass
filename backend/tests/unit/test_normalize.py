@@ -13,6 +13,7 @@ from data.pipeline.normalize import (
     determine_seniority,
     parse_posted_date,
     is_duplicate,
+    deduplicate_postings,
 )
 
 pytestmark = pytest.mark.unit
@@ -125,3 +126,15 @@ def test_is_duplicate_fuzzy():
     assert is_duplicate("Python Developer", "FPT Software", "Java Developer", "FPT Software") is False
     # Different company
     assert is_duplicate("Senior Java Developer", "FPT Software", "Senior Java Developer", "VNG") is False
+
+
+def test_blocked_dedupe_preserves_fuzzy_and_date_semantics():
+    rows = [
+        {"id": "new", "title": "Senior Java Developer", "company": "FPT Software Co.", "posted_date": "2026-07-18"},
+        {"id": "dup", "title": "senior java developer", "company": "FPT Software", "posted_date": "2026-07-01"},
+        {"id": "old", "title": "Senior Java Developer", "company": "FPT Software", "posted_date": "2026-05-01"},
+        {"id": "other", "title": "Senior Java Developer", "company": "VNG", "posted_date": "2026-07-01"},
+    ]
+    kept, duplicate_count = deduplicate_postings(rows)
+    assert [row["id"] for row in kept] == ["new", "old", "other"]
+    assert duplicate_count == 1

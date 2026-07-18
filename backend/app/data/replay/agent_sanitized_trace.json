@@ -2,7 +2,7 @@
   "fixture_version": "agent-replay-v1",
   "description": "Sanitized agent turn metadata for offline demo evidence (PR-14). No CoT, no raw messages.",
   "tool_policy_version": "agent-policy-v1",
-  "tool_registry_version": "agent-tools-v1",
+  "tool_registry_version": "agent-tools-v2-research",
   "agent_mode": "deterministic",
   "demo_mode": "replay",
   "turns": [

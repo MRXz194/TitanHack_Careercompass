@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 
-from app.models.schemas import RecommendationResponse
-from app.services import matching, session_store
+from app.models.schemas import RecommendationResponse, WhatIfRequest, WhatIfResponse
+from app.services import matching, session_store, what_if
 
 router = APIRouter(prefix="/api", tags=["recommendations"])
 
@@ -35,3 +35,14 @@ def recommendations(body: dict) -> RecommendationResponse:
         recommendations=top5,
         stretch=stretch,
     )
+
+
+@router.post("/recommendations/what-if", response_model=WhatIfResponse)
+def preview_what_if(body: WhatIfRequest) -> WhatIfResponse:
+    state = session_store.get_session(body.session_id)
+    if state is None:
+        raise HTTPException(404, detail="session not found; complete profiling first")
+    try:
+        return what_if.preview_added_skill(state.profile, body.skill)
+    except ValueError as exc:
+        raise HTTPException(422, detail=str(exc)) from exc

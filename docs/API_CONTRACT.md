@@ -196,6 +196,19 @@ Ràng buộc BE phải đảm bảo (FE được phép assume):
 
 ---
 
+### `POST /api/recommendations/what-if` — preview một kỹ năng giả định
+
+Request: `{ "session_id": "…", "skill": "SQL" }`.
+
+Response gồm `mutation_label`, `original_profile_unchanged=true`, danh sách `deltas`
+(`career_id`, rank/score trước và sau) và một `preview: RecommendationResponse` đầy đủ.
+
+Hard rules: đúng một kỹ năng mỗi request; chạy trên deep copy; không persist session;
+giả định không được diễn đạt thành bằng chứng người dùng đã có; recommendation vẫn do
+deterministic core tạo. Lỗi preview không được làm thay đổi hồ sơ gốc.
+
+---
+
 ## 4. Market Intelligence
 
 ### `GET /api/market/overview?region={all|hanoi|hcm|danang}`
@@ -236,6 +249,33 @@ Ràng buộc BE phải đảm bảo (FE được phép assume):
 ```json
 { "career_id": "…", "title": "…", "description": "…", "market": { …MarketStats }, "routes": [ …Route ] }
 ```
+
+---
+
+## 4.1 Career Research — nguồn kiểm chứng sau recommendation
+
+`POST /api/research/careers`
+
+```json
+{
+  "session_id": "…",
+  "career_ids": ["data-analyst"],
+  "intent": "skills",
+  "region": "hcm"
+}
+```
+
+- `career_ids`: 1–2 ID và bắt buộc thuộc top-5/stretch của chính session.
+- `intent`: `overview | skills | routes | local_market`.
+- Không gửi tên, giới tính, trường, GPA, raw transcript hoặc profile text ra search provider.
+- Response gồm `status`, `generated_at`, `limitation`, `disclaimer` và từng career block có
+  `local_market: MarketStats` + `sources[]` (`title`, `url`, `domain`, `snippet`,
+  `source_tier`, `retrieved_at`).
+- `status = live | cached | replay | unavailable`.
+
+Search không được đổi candidate order, score, profile hoặc market snapshot. Chỉ URL
+`http/https` công khai đã sanitize được trả về; lỗi/timeout chuyển thành local-only response,
+không 5xx. DDGS là community adapter miễn phí/không API key, không phải API chính thức của DuckDuckGo.
 
 ---
 

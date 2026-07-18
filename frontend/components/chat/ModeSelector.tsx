@@ -6,8 +6,8 @@ import { useState } from "react";
 import type { JourneyMode } from "@/types";
 
 const MODES: { value: JourneyMode; label: string; hint: string }[] = [
-  { value: "explore", label: "🧭 Khám phá nghề", hint: "Dành cho bạn đang tìm hướng đi" },
-  { value: "launch", label: "🚀 Tìm việc đầu tiên", hint: "Dành cho bạn sắp/mới tốt nghiệp" },
+  { value: "explore", label: "Khám phá nghề", hint: "Dành cho bạn đang tìm hướng đi" },
+  { value: "launch", label: "Tìm việc đầu tiên", hint: "Dành cho bạn sắp/mới tốt nghiệp" },
 ];
 
 export function ModeSelector({

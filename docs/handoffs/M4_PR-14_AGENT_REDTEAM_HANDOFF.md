@@ -16,7 +16,7 @@
 | Field | Value |
 |---|---|
 | Tool policy | `agent-policy-v1` |
-| Tool registry | `agent-tools-v1` |
+| Tool registry | `agent-tools-v2-research` |
 | Profiler prompt | `profiler-v2` |
 | Default `AGENT_MODE` | `deterministic` |
 | Max agent tools / turn | 2 |

@@ -183,7 +183,7 @@ export function ProfilePanel({
           <p className="mt-1 text-xs text-[var(--cc-muted)]">Chưa có thông tin — cứ chia sẻ khi bạn thấy thoải mái nhé.</p>
         ) : (
           <ul className="mt-1 space-y-0.5 text-xs text-[var(--cc-ink)]">
-            {c.region_pref && <li>📍 Ưu tiên khu vực: {REGION_LABELS[c.region_pref] ?? c.region_pref}</li>}
+          {c.region_pref && <li>Ưu tiên khu vực: {REGION_LABELS[c.region_pref] ?? c.region_pref}</li>}
             {c.study_budget && <li>💰 Tài chính: {c.study_budget}</li>}
             {c.study_duration_pref && <li>⏱ Thời gian học: {c.study_duration_pref}</li>}
             {c.notes && <li>📝 {c.notes}</li>}

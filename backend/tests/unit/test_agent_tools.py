@@ -9,9 +9,10 @@ from app.services.agent_tools import TOOL_REGISTRY_VERSION, get_registry
 pytestmark = pytest.mark.unit
 
 
-def test_registry_has_exactly_ten_tools() -> None:
+def test_registry_has_research_tool() -> None:
     reg = get_registry()
-    assert len(reg.names()) == 10
+    assert len(reg.names()) == 11
+    assert "search_career_sources" in reg.names()
     assert TOOL_REGISTRY_VERSION.startswith("agent-tools")
 
 

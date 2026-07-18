@@ -13,6 +13,7 @@ class AgentStage(str, Enum):
     retrieve = "retrieve"
     explain = "explain"
     ready = "ready"
+    research = "research"
 
 
 class PolicyCode(str, Enum):
@@ -25,7 +26,7 @@ class PolicyCode(str, Enum):
 class AgentPlan(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    intent: Literal["collect_evidence", "confirm", "revise_profile"] = "collect_evidence"
+    intent: Literal["collect_evidence", "confirm", "revise_profile", "research"] = "collect_evidence"
     next_tool: str
     arguments: dict[str, Any] = Field(default_factory=dict)
     public_rationale: str = ""

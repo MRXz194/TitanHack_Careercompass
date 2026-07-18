@@ -6,7 +6,7 @@
 |---|---|
 | Schemas | `backend/app/models/agent_schemas.py` |
 | Policy | `backend/app/services/agent_policy.py` (`agent-policy-v1`) |
-| Tools | `backend/app/services/agent_tools.py` (`agent-tools-v1`, 10 tools) |
+| Tools | `backend/app/services/agent_tools.py` (`agent-tools-v2-research`, 11 tools) |
 | Graph / orchestrator | `backend/app/services/agent_graph.py` |
 | Tests | `tests/unit/test_agent_*.py`, `tests/contract/test_agent_tool_contract.py` |
 

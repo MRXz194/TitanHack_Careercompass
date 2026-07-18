@@ -6,10 +6,10 @@ import Tooltip from "@/components/ui/Tooltip";
 import { TOOLTIPS } from "@/lib/copy/transparency";
 
 const ROUTE_BADGE: Record<string, string> = {
-  university: "🎓 Đại học",
-  college: "🏫 Cao đẳng",
-  vocational: "🔧 Học nghề",
-  certificate: "📜 Chứng chỉ",
+  university: "Đại học",
+  college: "Cao đẳng",
+  vocational: "Học nghề",
+  certificate: "Chứng chỉ",
 };
 
 interface RecommendationCardProps {
@@ -30,13 +30,13 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
 
   // Lọc danh sách tab: Chỉ hiện tab "Readiness" nếu là Launch mode (job_readiness != null)
   const tabs: { id: TabType; label: string }[] = [
-    { id: "why", label: "🔍 Vì sao gợi ý?" },
-    { id: "market", label: "📊 Thị trường" },
-    { id: "routes", label: "🛤️ Lộ trình học" },
+    { id: "why", label: "Vì sao gợi ý?" },
+    { id: "market", label: "Thị trường" },
+    { id: "routes", label: "Lộ trình học" },
   ];
 
   if (job_readiness) {
-    tabs.push({ id: "readiness", label: "🚀 Độ sẵn sàng" });
+    tabs.push({ id: "readiness", label: "Độ sẵn sàng" });
   }
 
   return (
@@ -49,7 +49,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
     >
       {is_stretch && (
         <span className="mb-3.5 inline-flex items-center gap-1.5 rounded-full bg-[var(--cc-accent-soft)] border border-[var(--cc-accent)] px-3 py-1 text-xs font-semibold text-[var(--cc-accent)] font-serif shadow-sm">
-          ✨ Hướng đi gợi mở (Stretch Recommendation)
+          Hướng đi gợi mở / Stretch
         </span>
       )}
 
@@ -80,7 +80,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
       {/* Tóm tắt thị trường nhanh */}
       <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--cc-muted)] border-t border-[var(--cc-border)]/60 pt-3.5">
         <span className="flex items-center gap-1 bg-[var(--cc-primary-soft)]/40 px-2.5 py-1 rounded-md border border-[var(--cc-border)]/50">
-          📈 {market.demand_count_90d.toLocaleString("vi-VN")} tin tuyển/90 ngày
+              {market.demand_count_90d.toLocaleString("vi-VN")} tin tuyển/90 ngày
         </span>
 
         {market.salary_p50_trieu !== null ? (
@@ -155,7 +155,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                   {why.from_you.length > 0 ? (
                     why.from_you.map((w, idx) => (
                       <p key={idx} className="text-sm leading-relaxed text-[var(--cc-ink)]">
-                        💬 <span className="italic font-serif">“{w.quote}”</span> — <span className="text-[var(--cc-muted)]">{w.reason}</span>
+                        <span className="italic font-serif">“{w.quote}”</span> — <span className="text-[var(--cc-muted)]">{w.reason}</span>
                       </p>
                     ))
                   ) : (
@@ -169,7 +169,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                     <div className="grid sm:grid-cols-2 gap-2.5">
                       {why.from_market.map((w, idx) => (
                         <p key={idx} className="text-xs text-[var(--cc-ink)] flex items-start gap-1">
-                          <span>📊</span> <span>{w.stat}</span>
+                          <span>{w.stat}</span>
                         </p>
                       ))}
                     </div>
@@ -230,7 +230,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                     <div className="flex flex-wrap gap-1.5">
                       {market.top_regions.map((region, idx) => (
                         <span key={idx} className="bg-slate-100/80 border border-[var(--cc-border)]/65 px-2 py-0.5 rounded text-[11px] capitalize">
-                          📍 {region === "hcm" ? "TP. Hồ Chí Minh" : region === "danang" ? "Đà Nẵng" : region === "hanoi" ? "Hà Nội" : region}
+                          {region === "hcm" ? "TP. Hồ Chí Minh" : region === "danang" ? "Đà Nẵng" : region === "hanoi" ? "Hà Nội" : region}
                         </span>
                       ))}
                     </div>
@@ -239,7 +239,6 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
 
                 {market.low_confidence && (
                   <div className="rounded-lg bg-amber-50/50 border border-amber-200/50 p-3 text-xs text-amber-800 flex items-start gap-1.5">
-                    <span>⚠</span>
                     <span><b>Lưu ý:</b> Dữ liệu thị trường cho nghề này tại vùng miền của em có kích thước mẫu khá nhỏ. Các con số chỉ mang tính tham khảo để định hướng.</span>
                   </div>
                 )}
@@ -294,12 +293,12 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                     </span>
                   </div>
                   <p className="text-xs text-[var(--cc-ink)] leading-relaxed font-serif italic">
-                    💡 {job_readiness.band_reason}
+                    {job_readiness.band_reason}
                   </p>
 
                   <div className="grid sm:grid-cols-2 gap-3 text-xs pt-1">
                     <div className="space-y-1">
-                      <p className="font-bold text-[var(--cc-success)]">✓ Kỹ năng đã có minh chứng:</p>
+                      <p className="font-bold text-[var(--cc-success)]">Kỹ năng đã có minh chứng:</p>
                       {job_readiness.matched_skills.length > 0 ? (
                         <div className="flex flex-wrap gap-1.5">
                           {job_readiness.matched_skills.map((s, idx) => (
@@ -313,7 +312,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                       )}
                     </div>
                     <div className="space-y-1">
-                      <p className="font-bold text-[var(--cc-danger)]">⚠ Kỹ năng thị trường cần nhưng thiếu:</p>
+                      <p className="font-bold text-[var(--cc-danger)]">Kỹ năng thị trường cần nhưng thiếu:</p>
                       {job_readiness.missing_skills.length > 0 ? (
                         <div className="flex flex-wrap gap-1.5">
                           {job_readiness.missing_skills.map((s, idx) => (
@@ -330,7 +329,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
 
                   {job_readiness.search_queries.length > 0 && (
                     <div className="text-xs space-y-1.5 pt-2 border-t border-[var(--cc-border)]/40">
-                      <p className="font-bold text-[var(--cc-muted)] font-serif">🔍 Gợi ý chức danh tìm việc (aliases):</p>
+                      <p className="font-bold text-[var(--cc-muted)] font-serif">Gợi ý chức danh tìm việc (aliases):</p>
                       <div className="flex flex-wrap gap-1.5">
                         {job_readiness.search_queries.map((q, idx) => (
                           <code key={idx} className="font-mono bg-[var(--cc-primary-soft)] px-2 py-0.5 rounded text-xs text-[var(--cc-primary)] border border-[var(--cc-border)]/40">{q}</code>
@@ -342,7 +341,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
 
                 {/* Bảng Kế hoạch hành động 30 ngày (30-day Action Plan) */}
                 <div className="space-y-2 pt-1">
-                  <p className="text-xs font-bold text-[var(--cc-ink)] uppercase font-serif tracking-wide">✍ Kế hoạch tích lũy năng lực trong 30 ngày tới:</p>
+                  <p className="text-xs font-bold text-[var(--cc-ink)] uppercase font-serif tracking-wide">Kế hoạch tích lũy năng lực trong 30 ngày tới:</p>
                   
                   <div className="relative border-l-2 border-[var(--cc-border)] ml-3 pl-4 space-y-4">
                     {job_readiness.actions_30d.map((act) => (
@@ -362,11 +361,11 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                           
                           <div className="grid sm:grid-cols-2 gap-2 text-xs pt-1.5 border-t border-dashed border-[var(--cc-border)]/55">
                             <div>
-                              <p className="text-[10px] font-bold text-[var(--cc-muted)] uppercase">📂 Sản phẩm đầu ra (Deliverable):</p>
+                              <p className="text-[10px] font-bold text-[var(--cc-muted)] uppercase">Sản phẩm đầu ra (Deliverable):</p>
                               <p className="text-xs text-[var(--cc-ink)] mt-0.5 font-mono bg-slate-50 px-1.5 py-0.5 rounded">{act.deliverable}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold text-[var(--cc-muted)] uppercase">💡 Ý nghĩa hành động:</p>
+                              <p className="text-[10px] font-bold text-[var(--cc-muted)] uppercase">Ý nghĩa hành động:</p>
                               <p className="text-xs text-[var(--cc-muted)] mt-0.5">{act.why}</p>
                             </div>
                           </div>
@@ -381,7 +380,6 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
 
           {/* Section: Counterfactual (Tư duy phản chứng) */}
           <div className="mt-4 rounded-xl bg-[var(--cc-accent-soft)] border border-[var(--cc-accent)]/20 p-4 text-xs font-medium text-[var(--cc-muted)] leading-relaxed italic font-serif flex items-start gap-2 shadow-sm">
-            <span className="text-sm">🔄</span>
             <div>
               <span className="font-bold text-[var(--cc-ink)]">Tư duy phản chứng: </span>
               {why.counterfactual}
