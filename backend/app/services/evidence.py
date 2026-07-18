@@ -217,6 +217,27 @@ def _looks_like_injection(text: str) -> bool:
 
 # ---------- template fallback (always grounded) ----------
 
+# Below this, a profile carries essentially no concrete personal signal (no sourced
+# skill, no interest, no dimension meaningfully above zero) — ranking still degrades
+# gracefully to a market-led order (matching.py), but the evidence text must not claim
+# a personalization that isn't there (ethics/anti-overclaim: ranking honesty matters as
+# much as number honesty).
+_LOW_SIGNAL_THRESHOLD = 0.15
+
+
+def signal_strength(profile: Profile) -> float:
+    """Rough 0..1 measure of how much concrete personal signal a profile carries.
+    Only used to phrase evidence honestly for a near-blank profile — never touches scoring."""
+    sourced_skills = sum(1 for s in profile.skills if (s.source_quote or "").strip())
+    interests = len(profile.interests)
+    max_dim = max(profile.dimensions.values(), default=0.0)
+    raw = (
+        min(1.0, sourced_skills / 2.0) * 0.4
+        + min(1.0, interests / 2.0) * 0.3
+        + min(1.0, float(max_dim)) * 0.3
+    )
+    return round(raw, 3)
+
 
 def template_why(
     *,
@@ -237,6 +258,12 @@ def template_why(
     elif interest_hint:
         reason = (
             f"sở thích «{interest_hint}» trong hồ sơ gợi ý bạn có thể hợp với {title}"
+        )
+    elif signal_strength(profile) < _LOW_SIGNAL_THRESHOLD:
+        # Honest framing: don't claim a personal-fit story the profile can't back up yet.
+        reason = (
+            f"hồ sơ hiện chưa có nhiều tín hiệu cụ thể — gợi ý {title} chủ yếu dựa trên "
+            "dữ liệu thị trường; trò chuyện thêm để gợi ý cá nhân hoá hơn"
         )
     else:
         reason = f"phù hợp với hướng {title} dựa trên điều bạn đã chia sẻ trong hồ sơ"

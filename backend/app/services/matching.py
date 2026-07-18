@@ -20,6 +20,7 @@ Launch matched/missing/band/queries/actions with GRADUATE_LAUNCH invariants.
 """
 from __future__ import annotations
 
+import logging
 import math
 import re
 from typing import Any, Optional
@@ -27,6 +28,8 @@ from typing import Any, Optional
 from app.core.config import get_settings
 from app.data.seed_loader import get_career, load_careers
 from app.models.schemas import MarketStats, Profile, Recommendation
+
+log = logging.getLogger("matching")
 from app.services import evidence as evidence_service
 from app.services import market as market_service
 from app.services import pathways
@@ -221,7 +224,9 @@ def top_k_careers(profile: Profile, k: int = 20) -> list[tuple[str, float, dict[
     for c in load_careers():
         parts = score_career(profile, c, use_market=True)
         scored.append((c["career_id"], parts["total"], parts))
-    scored.sort(key=lambda x: x[1], reverse=True)
+    # Deterministic tie-break: descending score, then ascending career_id — NOT incidental
+    # KB iteration order, which would otherwise decide ties for a thin/zero-signal profile.
+    scored.sort(key=lambda x: (-x[1], x[0]))
     return scored[:k]
 
 
@@ -246,11 +251,29 @@ def pick_stretch(
                 best = (cid, sc)
     if best:
         return best
-    # fallback: best not in top5
+    # Fallback: the ranks-6..15 window had nothing with a different dominant dimension.
+    # Before giving up the "expand choices" guarantee, scan the FULL ranked list (not just
+    # the narrow window) for any non-top5 career whose dominant dimension differs — with a
+    # 25-career KB across 5 dimensions this should essentially always find one.
+    for cid, sc, _ in ranked:
+        if cid in top5_ids:
+            continue
+        career = get_career(cid)
+        if not career:
+            continue
+        c_dom = dominant_dimension(career.get("dimensions") or {})
+        if c_dom != user_dom:
+            return cid, sc
+    # Absolute fallback: the KB genuinely has zero dimension diversity outside top5 for this
+    # profile. This drops the documented "different dominant dimension" guarantee — log it
+    # so a KB regression is visible in ops instead of silently shipping a non-diverse stretch.
+    log.warning(
+        "pick_stretch fallback: no dimension-diverse career available outside top5 (user_dom=%s)",
+        user_dom,
+    )
     for cid, sc, _ in ranked:
         if cid not in top5_ids:
             return cid, sc
-    # absolute fallback: last of ranked
     return ranked[-1][0], ranked[-1][1]
 
 
@@ -357,11 +380,16 @@ def recommend(profile: Profile) -> tuple[list[Recommendation], Recommendation]:
     if not ranked:
         # pathological empty KB
         raise RuntimeError("career KB empty")
+    # Top-5 is capped, never padded with duplicates: a KB smaller than 6 careers (real KB
+    # has 25) legitimately yields fewer than 5 unique recommendations rather than showing
+    # the same career_id twice as if it were 2 distinct suggestions.
     top5_raw = ranked[:5]
-    # pad if KB smaller than 5
-    while len(top5_raw) < 5 and ranked:
-        top5_raw.append(ranked[len(top5_raw) % len(ranked)])
-    top5_ids = {cid for cid, _, _ in top5_raw[:5]}
+    if len(ranked) < 5:
+        log.warning(
+            "recommend(): career KB has only %d careers, cannot fill top5 without duplicates",
+            len(ranked),
+        )
+    top5_ids = {cid for cid, _, _ in top5_raw}
     stretch_id, stretch_score = pick_stretch(ranked, profile, top5_ids)
     top5 = [
         build_recommendation(profile, cid, sc, is_stretch=False)

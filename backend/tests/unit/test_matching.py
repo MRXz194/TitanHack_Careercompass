@@ -131,6 +131,68 @@ def test_recommend_returns_top5_and_stretch() -> None:
     assert scores == sorted(scores, reverse=True)
 
 
+def test_top_k_careers_tie_break_is_deterministic_by_career_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """2a: ties must break by career_id, not incidental KB iteration order."""
+    fake_careers = [
+        {"career_id": "zzz-last", "title": "Z", "dimensions": {}, "seed_market": {}},
+        {"career_id": "aaa-first", "title": "A", "dimensions": {}, "seed_market": {}},
+    ]
+    monkeypatch.setattr(matching, "load_careers", lambda: fake_careers)
+    monkeypatch.setattr(
+        matching,
+        "score_career",
+        lambda profile, career, use_market=True: {
+            "total": 0.5, "cosine": 0.5, "skill": 0.0, "market": 0.0, "market_component": 0.0,
+        },
+    )
+    ranked = matching.top_k_careers(_tech_profile(), k=10)
+    assert [cid for cid, _, _ in ranked] == ["aaa-first", "zzz-last"]
+
+
+def test_pick_stretch_full_scan_fallback_finds_dimension_diverse_career(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """2b: if ranks 6..15 all share the user's dominant dimension, the fallback must keep
+    scanning the FULL ranked list for a dimension-diverse career before giving up the
+    "expand choices" guarantee — not silently drop the filter."""
+    user_dom_dims = {"ky_thuat": 0.9, "phan_tich": 0.1, "sang_tao": 0.1, "xa_hoi": 0.1, "quan_ly": 0.1}
+    same_dom = {"ky_thuat": 0.8, "phan_tich": 0.2, "sang_tao": 0.1, "xa_hoi": 0.1, "quan_ly": 0.1}
+    diverse_dom = {"ky_thuat": 0.1, "phan_tich": 0.1, "sang_tao": 0.1, "xa_hoi": 0.9, "quan_ly": 0.1}
+
+    ranked = [(f"top{i}", 0.9 - i * 0.01, {}) for i in range(5)]
+    ranked += [(f"same{i}", 0.5 - i * 0.01, {}) for i in range(10)]  # ranks 6..15
+    ranked += [("diverse-1", 0.1, {})]  # only found via full-scan fallback
+
+    def _fake_get_career(cid: str):
+        if cid.startswith("top") or cid.startswith("same"):
+            return {"career_id": cid, "dimensions": same_dom}
+        if cid == "diverse-1":
+            return {"career_id": cid, "dimensions": diverse_dom}
+        return None
+
+    monkeypatch.setattr(matching, "get_career", _fake_get_career)
+    profile = Profile(session_id="stretch-fallback", journey_mode="explore", dimensions=user_dom_dims)
+    top5_ids = {f"top{i}" for i in range(5)}
+    stretch_id, _ = matching.pick_stretch(ranked, profile, top5_ids)
+    assert stretch_id == "diverse-1"
+
+
+def test_recommend_top5_never_duplicates_career_id_when_kb_smaller_than_five(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """2c: KB smaller than 5 must yield fewer unique recommendations, never the same
+    career_id padded in twice as if it were two distinct suggestions."""
+    real_careers = load_careers()[:3]
+    monkeypatch.setattr(matching, "load_careers", lambda: real_careers)
+    top5, stretch = matching.recommend(_tech_profile())
+    ids = [r.career_id for r in top5]
+    assert len(ids) == len(set(ids))
+    assert len(ids) <= 3
+    assert stretch.career_id
+
+
 def test_tech_profile_prefers_technical_careers() -> None:
     p = _tech_profile()
     top5, _ = matching.recommend(p)

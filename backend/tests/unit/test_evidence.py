@@ -92,6 +92,30 @@ def test_template_skips_trend_when_low_confidence() -> None:
     assert why.from_market
 
 
+def test_template_why_honest_reason_for_near_zero_signal_profile() -> None:
+    """2d: a profile with no sourced skills/interests/dimensions must not get a reason
+    that overclaims 'dựa trên điều bạn đã chia sẻ' when nothing meaningful was shared —
+    ranking still degrades to market-led order, but the text must say so honestly."""
+    blank = Profile(session_id="blank-1", journey_mode="explore")
+    assert ev.signal_strength(blank) < 0.15
+    m = _market()
+    career = {"career_id": "data-analyst", "title": "Chuyên viên phân tích dữ liệu", "seed_market": {}}
+    why = ev.template_why(profile=blank, career=career, market=m, counterfactual="cf")
+    reason = why.from_you[0].reason
+    assert "dựa trên điều bạn đã chia sẻ trong hồ sơ" not in reason
+    assert "thị trường" in reason
+
+
+def test_template_why_keeps_specific_reason_when_signal_present() -> None:
+    """2d regression: a profile WITH real signal must still get the specific,
+    evidence-backed reason branch, not the honest-low-signal fallback."""
+    p = _profile_with_quote()
+    assert ev.signal_strength(p) >= 0.15
+    career = {"career_id": "data-analyst", "title": "Chuyên viên phân tích dữ liệu", "seed_market": {}}
+    why = ev.template_why(profile=p, career=career, market=_market(), counterfactual="cf")
+    assert "Excel" in why.from_you[0].reason
+
+
 def test_validate_rejects_ungrounded_market_numbers() -> None:
     p = _profile_with_quote()
     m = _market()
