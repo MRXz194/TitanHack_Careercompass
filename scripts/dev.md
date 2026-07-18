@@ -14,7 +14,7 @@ Terminal 1:
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt -r ..\data\requirements.txt
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
@@ -33,6 +33,7 @@ Mở `http://localhost:3000`; API docs tại `http://localhost:8000/docs`.
 
 ```powershell
 cd backend
+python -m pip install -r requirements.txt -r ..\data\requirements.txt
 python -m compileall app scripts tests
 python -m pytest -q tests/unit tests/contract
 python -m pytest -q tests/integration

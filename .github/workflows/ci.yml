@@ -17,7 +17,8 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: python -m pip install -r requirements.txt
+      - name: Install backend and data-test dependencies
+        run: python -m pip install -r requirements.txt -r ../data/requirements.txt
       - name: Verify pinned AI stack imports
         run: python -c "import langchain_core, langchain_openai, langgraph"
       - run: python -m compileall app scripts tests

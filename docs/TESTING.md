@@ -39,7 +39,7 @@ Frontend test folders chỉ được thêm khi F1/F2 có component behavior cầ
 `frontend/tests/unit`, `frontend/tests/contract`, `frontend/tests/e2e`. Không thêm test
 framework FE trong lúc P0 đang đỏ; TypeScript + build + backend contract fixtures là gate nền.
 
-**Cập nhật (F1):** `frontend/tests/unit` đã có 61 test thật (Vitest + Testing Library) bảo
+**Cập nhật (F1):** `frontend/tests/unit` đã có 64 test thật (Vitest + Testing Library) bảo
 vệ chat state machine, profile diff/patch, và các component chat/profile — chạy bằng
 `npm run test` trong `frontend/`, đã lên CI (`.github/workflows/ci.yml`) như một gate bắt buộc.
 `transparency-copy.test.ts` (M6/PR-09) là ngoại lệ: script `assert` chạy qua `npx tsx`, không
@@ -63,6 +63,7 @@ không chạy trong CI mặc định.
 Từ `backend/`:
 
 ```bash
+python -m pip install -r requirements.txt -r ../data/requirements.txt
 python -m compileall app scripts tests
 python -m pytest -q tests/unit tests/contract
 python -m pytest -q tests/integration
