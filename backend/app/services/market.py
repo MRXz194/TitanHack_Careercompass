@@ -146,11 +146,21 @@ def get_career_market(
         ).mappings().first()
     if not meta:
         raise MarketDataUnavailable("market metadata is empty")
+    if row is None and all_row is not None:
+        # Region informs, never filters: no per-region slice for this career, but the
+        # same snapshot HAS real national data. Showing a dead "0 tin tuyển" wall for
+        # every card just because the student named a region made all results look
+        # identical/broken. Fall back to the national row, labeled honestly.
+        row = all_row
+        note_suffix = " (toàn quốc — chưa đủ dữ liệu riêng theo khu vực)"
+    else:
+        note_suffix = ""
     if row is None:
+        # Career absent from the snapshot entirely: honest zero, never seed numbers.
         return MarketStats(
             demand_count_90d=0,
             low_confidence=True,
-            top_regions=json.loads(all_row["top_regions_json"]) if all_row else [],
+            top_regions=[],
             source_note=_source_note(0, meta),
         )
     return MarketStats(
@@ -164,7 +174,7 @@ def get_career_market(
         low_confidence=bool(row["low_confidence"]),
         top_regions=json.loads(row["top_regions_json"]),
         top_skills=json.loads(row["top_skills_json"]),
-        source_note=_source_note(row["demand_count_90d"], meta),
+        source_note=_source_note(row["demand_count_90d"], meta) + note_suffix,
     )
 
 

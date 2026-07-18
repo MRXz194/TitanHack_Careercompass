@@ -44,8 +44,26 @@ _DIM_KEYWORDS: dict[str, tuple[str, ...]] = {
     "phan_tich": ("dữ liệu", "excel", "phân tích", "dashboard", "số liệu", "logic", "toán"),
     "sang_tao": ("vẽ", "thiết kế", "nhạc", "sáng tạo", "viết", "photoshop", "figma"),
     "xa_hoi": ("dạy", "giúp", "tình nguyện", "chăm", "tư vấn", "giao tiếp"),
-    "quan_ly": ("tổ chức", "lịch", "nhóm", "quản lý", "điều phối", "kinh doanh"),
+    # "lịch" alone is ambiguous — it is a word inside "du lịch" (travel) and
+    # "lịch sử" (history); only scheduling phrasings signal quan_ly.
+    "quan_ly": ("tổ chức", "xếp lịch", "lên lịch", "nhóm", "quản lý", "điều phối", "kinh doanh"),
 }
+
+# Keyword hits must be whole words: "hàn" (welding) is a substring of "hàng"
+# (goods — one of the most common Vietnamese words), "lịch" (schedule) of "du
+# lịch" (travel). Plain `in` matching mis-bumped dimensions and made unrelated
+# personas converge on the same career list. \w is Unicode-aware in Python, so
+# Vietnamese diacritic letters count as word characters on both sides.
+_KW_PATTERNS: dict[str, "re.Pattern[str]"] = {}
+
+
+def _word_match(keyword: str, text: str) -> bool:
+    pat = _KW_PATTERNS.get(keyword)
+    if pat is None:
+        pat = re.compile(rf"(?<!\w){re.escape(keyword)}(?!\w)")
+        _KW_PATTERNS[keyword] = pat
+    return bool(pat.search(text))
+
 
 # Cues that a user is retracting/contradicting something said earlier in the
 # conversation — never additive. Profile is visible/editable, so a correction must
@@ -101,16 +119,16 @@ def _detect_corrections(text: str, profile: Optional[Profile]) -> Optional["Corr
     remove_interests: list[str] = []
     if profile is not None:
         for skill in profile.skills:
-            if skill.name and skill.name.lower() in lower:
+            if skill.name and _word_match(skill.name.lower(), lower):
                 remove_skills.append(skill.name)
         for interest in profile.interests:
             words = _interest_content_words(interest)
-            if words and any(w in lower for w in words):
+            if words and any(_word_match(w, lower) for w in words):
                 remove_interests.append(interest)
 
     reset_dims: list[str] = []
     for dim, kws in _DIM_KEYWORDS.items():
-        if any(k in lower for k in kws):
+        if any(_word_match(k, lower) for k in kws):
             reset_dims.append(dim)
 
     if not (remove_skills or remove_interests or reset_dims):
@@ -264,10 +282,17 @@ def merge_delta(
 
     # Evidence quotes — the deterministic path already guards this at the call site (line
     # ~559 below); an LLM-produced delta needs the same guard here since nothing else re-checks it.
+    # Dedupe by (turn, quote): handle_turn merges the agent-extracted delta AND the classic
+    # delta for the same message, which used to append every quote twice per turn.
+    seen_q = {(q.turn, q.quote) for q in profile.evidence_quotes}
     for eq in delta.evidence_quotes or []:
         quote = (eq.quote or "").strip()
         if not quote or _looks_like_injection(quote):
             continue
+        key = (eq.turn or turn, quote[:500])
+        if key in seen_q:
+            continue
+        seen_q.add(key)
         profile.evidence_quotes.append(
             EvidenceQuote(turn=eq.turn or turn, quote=quote[:500], mapped_to=eq.mapped_to or "")
         )
@@ -458,6 +483,27 @@ def _user_declines_constraint(message: str) -> bool:
     )
 
 
+def _wants_results(message: str) -> bool:
+    """Explicit mid-flow request to see suggestions — unlike _wants_done's loose
+    confirmation words ("ok", "được"), these phrases are unambiguous intent."""
+    m = message.lower()
+    return any(
+        p in m
+        for p in (
+            "xem gợi ý",
+            "xem goi y",
+            "xem hướng",
+            "xem huong",
+            "xem kết quả",
+            "xem ket qua",
+            "xem nghề",
+            "gợi ý nghề",
+            "cho em xem",
+            "cho mình xem",
+        )
+    )
+
+
 def _wants_done(message: str) -> bool:
     m = message.lower()
     return any(
@@ -479,6 +525,32 @@ def _wants_done(message: str) -> bool:
 
 
 # ---------- deterministic LLM-free turn ----------
+
+
+# Messages that are meta-statements — constraints, confirmations, education
+# facts — not interests. Storing them as interests polluted both the visible
+# profile ("ĐIỀU BẠN THÍCH: em học lớp 12") and the matching text.
+_NON_INTEREST_MARKERS = (
+    "em ở ",
+    "mình ở ",
+    "gia đình",
+    "ngân sách",
+    "không có nhiều tiền",
+    "học phí",
+    "cho em xem",
+    "cho mình xem",
+    "xem gợi ý",
+    "xem hướng",
+    "xem kết quả",
+    "sẵn sàng",
+    "đúng rồi",
+    "không rõ",
+    "chưa biết",
+)
+
+_EDUCATION_ONLY_RE = re.compile(
+    r"^(em|mình|tôi)?\s*(đang)?\s*(học|là)?\s*(lớp\s*\d+|cấp\s*\d|học sinh|sinh viên(\s*năm\s*\w+)?)\s*$"
+)
 
 
 def _compact_interest_label(text: str) -> str | None:
@@ -513,16 +585,33 @@ def _compact_interest_label(text: str) -> str | None:
         "quay video",
         "edit",
     )
-    if any(k in lower_for_activity for k in activity_keys):
-        # keep a short clause, not the whole paragraph
-        label = raw
-        for sep in (".", "!", "?", ","):
-            if sep in label:
-                label = label.split(sep)[0].strip()
-                break
+    interest_cues = ("thích", "mê ", "đam mê", "yêu thích", "hay ", "hứng thú")
+    has_activity = any(_word_match(k, lower_for_activity) for k in activity_keys)
+    if has_activity or any(c in lower for c in interest_cues):
+        # Pick the clause that actually carries the interest signal — the FIRST
+        # clause is often a meta lead-in ("em học lớp 12, em thích vẽ" → the
+        # old first-clause split stored "em học lớp 12" as an interest).
+        clauses = [c.strip() for c in re.split(r"[.!?,;]", raw) if c.strip()]
+        best: str | None = None
+        for clause in clauses:
+            cl = clause.lower()
+            if any(m in cl for m in _NON_INTEREST_MARKERS) or _EDUCATION_ONLY_RE.match(cl):
+                continue
+            scored_activity = any(_word_match(k, cl) for k in activity_keys)
+            scored_cue = any(c in cl for c in interest_cues)
+            if scored_activity or scored_cue:
+                best = clause
+                if scored_activity:
+                    break  # activity clause wins outright
+        if best is None:
+            return None
+        label = best
         if len(label) > 40:
             label = label[:37] + "…"
         return label
+    # Meta statements are never interests, however short.
+    if any(m in lower for m in _NON_INTEREST_MARKERS) or _EDUCATION_ONLY_RE.match(lower):
+        return None
     # Generic long answers: do not invent a fake interest from whole sentence
     if len(raw) > 60:
         return None
@@ -655,8 +744,15 @@ def deterministic_turn(
         for dim, kws in _DIM_KEYWORDS.items():
             if dim in reset_now:
                 continue
-            if any(k in lower for k in kws):
-                dims[dim] = 0.55
+            if any(_word_match(k, lower) for k in kws):
+                # New evidence in a later turn deepens an already-seen dimension
+                # instead of flatlining at 0.55 forever (which clustered every
+                # profile's match scores around the same ~40%).
+                current = float((profile.dimensions if profile else {}).get(dim, 0.0))
+                if current >= 0.55:
+                    dims[dim] = min(0.8, round(current + 0.1, 2))
+                else:
+                    dims[dim] = 0.55
     delta.dimensions = dims
 
     # Skills from tool keywords if not already added
@@ -671,7 +767,7 @@ def deterministic_turn(
     }
     existing = {s.name.lower() for s in delta.skills}
     for key, name in tool_map.items():
-        if key in lower and name.lower() not in existing and not _looks_like_injection(name):
+        if _word_match(key, lower) and name.lower() not in existing and not _looks_like_injection(name):
             delta.skills.append(
                 ProfileSkill(name=name, level="đã đề cập", source_quote=text[:240] or name)
             )
@@ -810,6 +906,19 @@ def handle_turn(
     )
 
     force_done = state.phase == "wrapup" and _wants_done(user_text)
+    # Respect explicit autonomy: a student with a reasonably complete profile who
+    # asks outright to see suggestions must not be dragged through more canned
+    # questions ("cho em xem gợi ý đi" used to be ignored — and even stored as an
+    # interest — until the phase machine felt like wrapping up).
+    if (
+        not force_done
+        and state.phase not in ("warmup", "wrapup")
+        and _wants_results(user_text)
+        and state.profile.completeness >= 0.5
+    ):
+        force_done = True
+        state.phase = "wrapup"
+        state.turns_in_phase = 0
     new_phase, done, turns_in_phase = advance_phase(
         state.journey_mode,
         state.phase,

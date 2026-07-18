@@ -241,6 +241,39 @@ def test_verbal_correction_removes_skill_and_stays_removed_on_later_unrelated_tu
     assert "python" not in {s.name.lower() for s in p.skills}
 
 
+def test_merge_delta_does_not_duplicate_evidence_quotes() -> None:
+    """handle_turn merges the agent-extracted delta AND the classic delta for the
+    same message — both carry the same evidence quote, which used to append twice
+    per turn (visible as doubled quotes in the live profile)."""
+    p = _profile()
+    delta = ProfileDelta(
+        evidence_quotes=[
+            __import__("app.models.schemas", fromlist=["EvidenceQuote"]).EvidenceQuote(
+                turn=2, quote="em thích vẽ", mapped_to="sang_tao"
+            )
+        ]
+    )
+    p = merge_delta(p, delta, Corrections(), turn=2)
+    p = merge_delta(p, delta, Corrections(), turn=2)
+    quotes = [(q.turn, q.quote) for q in p.evidence_quotes]
+    assert quotes.count((2, "em thích vẽ")) == 1
+
+
+def test_handle_turn_explicit_results_request_reaches_wrapup() -> None:
+    """A student with a reasonably complete profile who explicitly asks to see
+    suggestions ("cho em xem gợi ý") mid-flow must not be dragged through more
+    canned questions — respect their autonomy and surface the results CTA."""
+    from app.services import profiler as prof
+
+    sid = "wants-results-1"
+    prof.handle_turn(sid, None, journey_mode="explore")
+    prof.handle_turn(sid, "em học lớp 12, em thích sửa máy tính và hàn dây điện", journey_mode="explore")
+    prof.handle_turn(sid, "em hay sửa quạt, sửa loa hỏng cho hàng xóm", journey_mode="explore")
+    prof.handle_turn(sid, "em ở đà nẵng, gia đình không có nhiều tiền", journey_mode="explore")
+    resp = prof.handle_turn(sid, "thôi được rồi, cho em xem gợi ý nghề nghiệp đi", journey_mode="explore")
+    assert resp.phase == "wrapup"
+
+
 def test_deterministic_no_experience_note() -> None:
     out = deterministic_turn(
         journey_mode="launch",

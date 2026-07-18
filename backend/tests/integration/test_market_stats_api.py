@@ -75,4 +75,13 @@ def test_api_reads_aggregate_db_and_handles_empty_region(
     assert absent.salary_p50_trieu is None
     assert absent.low_confidence is True
     assert "fixture-mi04" in absent.source_note
+
+    # Region informs, never filters: a career that HAS national data but no row
+    # for the student's region must fall back to the (real) national stats with
+    # an honest note — not display a dead "0 tin tuyển" wall for every card,
+    # which made all results look identical/broken for any region-pref user.
+    regional_fallback = market_service.get_career_market("data-analyst", "danang")
+    assert regional_fallback.demand_count_90d == 12
+    assert regional_fallback.salary_p50_trieu == 15.5
+    assert "toàn quốc" in regional_fallback.source_note
     engine.dispose()
