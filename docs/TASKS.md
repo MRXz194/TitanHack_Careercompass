@@ -117,10 +117,12 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Test lay
 | PR-13 | **LangChain/LangGraph chat orchestrator + degradation:** nối custom StateGraph planner → policy → đúng 1 typed tool → composer/fallback vào `/api/chat`; recommendation deterministic; policy hard-cap 2 để chặn loop, deadline 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent integration pass; timeout/model/tool failure không 5xx; deterministic mode cùng contract; không `create_agent`/LangSmith/checkpointer |
 | PR-14 | **Agent evaluation/red-team:** tool-selection fixtures, injection, paired bias, provenance, budget/latency/replay; ghi pass/fail thật | H+31→38 | PR-05,06,08,13 | `EVALUATION_RESULTS.md` có agent metrics + failures/fix; không claim autonomous khi gate fail |
 
-**M4 release status:** PR-01…PR-14 và persona/workflow hardening hiện **VERIFIED_CI**
-trên Ubuntu (334 unit/contract + 40 integration + 7 E2E). Đây chưa phải final release sign-off:
+**M4 release status:** PR-01…PR-14 và release workflow hardening hiện **VERIFIED_CI**
+trên Ubuntu tại product-code commit `2fc677e` (335 unit/contract + 46 integration + 7 E2E, runtime
+workflow artifact và route invariant). Đây chưa phải final release sign-off:
 Render/Vercel smoke và human usability vẫn do M1 khóa. Detail:
-`docs/workstreams/M4_PROFILE_RECOMMENDER.md` và `docs/next/RELEASE_SCORECARD.md`.
+`docs/workstreams/M4_PROFILE_RECOMMENDER.md`, `docs/next/RELEASE_SCORECARD.md` và
+`docs/handoffs/RELEASE_WORKFLOW_COMPLETION.md`.
 
 **Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render); PR-12…14 → M1/M5 (agent status + claim boundary).
 

@@ -31,6 +31,7 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 | Career KB | `data/seed/careers_seed.json` | M2 + M4 | matching/FE | route check pass |
 | Replay fixtures | `backend/app/data/replay/*.json` | M1 + M4 | demo | ngắt mạng vẫn E2E |
 | Evaluation results | `docs/EVALUATION_RESULTS.md` | M1 | pitch/judges | ghi cả fail/caveat |
+| Runtime workflow evidence | `backend/scripts/show_workflow_pipeline.py` + CI Job Summary/artifact | M1 | cả team/pitch | status PASS, aggregate-only, no network/PII/CoT; commit và run ID được ghi |
 | Launch profile/result fixture | replay + contract | M4 | M5/M6/M1 | matched/missing/actions invariants pass |
 | Agent graph/tool/policy contract | ADR + `AGENTIC_RUNTIME.md` + pinned LangChain/LangGraph + `agent_policy/tools/graph/chat` + handoffs `M4_PR-12`…`14` | M4 | M1/M3/M5/M6 | install/spike gate, deterministic fallback, allowlist/stage matrix + unit/contract/integration + PR-14 red-team pass |
 | Sanitized agent trace/replay | `backend/app/data/replay/agent_sanitized_trace.json` + chat samples + `EVALUATION_RESULTS.md` | M4 + M1 | demo/pitch | tool/version/snapshot/fallback visible; no CoT/raw transcript |
@@ -55,3 +56,9 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 ## 5. Trước khi ngủ hoặc đổi người
 
 Commit/push branch, ghi task đang ở đâu, lệnh chạy cuối cùng, lỗi cuối cùng và bước tiếp theo nhỏ nhất. Buddy phải thả ✅. Không handoff secret qua repo hoặc screenshot.
+
+## 6. Handoff release mới nhất
+
+Automated release `2fc677e`: `docs/handoffs/RELEASE_WORKFLOW_COMPLETION.md`. File này ghi
+contract thay đổi, pipeline được chạy, test evidence và những gate external vẫn chưa được phép
+đổi sang PASS.

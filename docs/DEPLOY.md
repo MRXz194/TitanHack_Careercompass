@@ -63,7 +63,7 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 
 ## Kết quả thật (điền sau khi bấm)
 
-- Main/CI: `d283b40`; [workflow 29639845313](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29639845313) — backend + frontend PASS trên Ubuntu.
+- Verified product-code release: `2fc677e`; [workflow 29660149913](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29660149913) — backend + frontend PASS trên Ubuntu, runtime workflow artifact `runtime-workflow-2fc677ee2997d9884fd1b97991d8754542f31043` đã được upload. Đây không thay cho public Render/Vercel smoke bên dưới; docs-only/CI-pin commit sau đó phải có main CI xanh riêng.
 - Backend URL: `UNVERIFIED` — Render dashboard owner cần bàn giao URL thật; URL suy từ service name đã timeout và không được ghi là production evidence.
 - Frontend deployment URL được ghi trước đây: `https://titan-hack-careercompass-rg81hcrn5-mrxz194s-projects.vercel.app`.
 - **Public access: FAIL/BLOCKED (recheck 2026-07-18).** URL trên và deployment mới đều redirect sang Vercel login/SSO. Trạng thái build/deploy có thể success nhưng chưa thể gọi là website công khai.

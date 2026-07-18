@@ -16,7 +16,7 @@ PH-M1-01 current-commit CI xanh và PH-M1-02 deploy smoke có evidence thật.
 
 | Owner | Task | Vấn đề phải xử lý | Expected / verify | Trạng thái |
 |---|---|---|---|---|
-| M1 | PH-M1-01 | Baseline xanh không chứng minh hardening mới xanh | Backend compile/unit/contract/integration/e2e + 79 FE tests/typecheck/build; SHA + CI URL + secret/diff check | VERIFIED_CI — run 29654386126 |
+| M1 | PH-M1-01 | Baseline xanh không chứng minh hardening mới xanh | Backend compile/unit/contract/integration/e2e/runtime pipeline + 81 FE tests/typecheck/build; SHA + CI URL + secret/diff check | VERIFIED_CI — product-code `2fc677e`, run 29660149913 |
 | M1 | PH-M1-02 | Vercel đang redirect login; Render URL chưa xác minh | Incognito 6 routes, health/CORS/cold-start, replay/live kill switch, rollback ID | BLOCKED_EXTERNAL |
 | M1 | PH-M1-03 | Chưa có evidence người dùng/counselor | 2 Explore + 2 Launch + 1 counselor, denominators và ≥1 observed fix | NOT_RUN |
 | M2 | PH-M2-01 | Persona output chưa được trace về snapshot | 15-row top-3 audit; source/hash/count/confidence; null/suppression đúng | READY — automated core gate xanh |

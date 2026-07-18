@@ -1,6 +1,18 @@
-# EVALUATION RESULTS — release integrity v2
+# EVALUATION RESULTS — release integrity v2 (archived baseline)
 
-> Baseline: commit `99f463e` on 2026-07-18. Current branch adds release-integrity fixes; local full gates pass, CI for the new commit is pending until push. Không đổi `NOT_RUN` thành PASS nếu chưa có bằng chứng.
+> Phần chi tiết bên dưới là snapshot lịch sử tại commit `99f463e`, không phải trạng thái
+> current main. Evidence hiện hành nằm trong `docs/next/RELEASE_SCORECARD.md`; không đổi
+> `NOT_RUN` thành PASS nếu chưa có bằng chứng.
+
+## Current automated release evidence — 2026-07-19
+
+| Gate | Evidence | Status |
+|---|---|---|
+| Product-code `2fc677e` | [CI 29660149913](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29660149913): 388 backend tests, runtime workflow + route invariant, 81 frontend tests/typecheck/build | PASS |
+| Runtime workflow | Artifact `runtime-workflow-2fc677ee2997d9884fd1b97991d8754542f31043`; real FastAPI boundaries, released aggregate, offline/no-provider mode | PASS |
+| Public Vercel/Render + human/counselor + held-out mapping labels | Xem current scorecard; chưa có credential/URL/participant/label evidence mới | NOT_RUN / BLOCKED |
+
+## Archived release-integrity-v2 snapshot
 
 | Field | Value |
 |---|---|

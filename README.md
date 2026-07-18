@@ -53,6 +53,8 @@ cd backend
 python -m compileall app scripts tests
 python -m pytest -q tests/unit tests/contract
 python -m pytest -q tests/integration
+python -m pytest -q tests/e2e
+python -m scripts.show_workflow_pipeline --output workflow-pipeline.json
 python -m scripts.check_routes
 ```
 
