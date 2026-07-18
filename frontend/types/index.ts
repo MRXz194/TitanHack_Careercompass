@@ -174,6 +174,7 @@ export interface MarketOverview {
   updated_at: string;
   source_note: string;
   rising_careers: { career_id: string; title: string; trend_pct: number | null; demand_count: number; low_confidence: boolean }[];
+  demand_leaders: { career_id: string; title: string; demand_count: number; low_confidence: boolean }[];
   top_paying: { career_id: string; title: string; salary_p50_trieu: number }[];
 }
 

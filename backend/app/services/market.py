@@ -14,6 +14,7 @@ from sqlalchemy.engine import Engine
 
 from app.core import db as db_module
 from app.models.schemas import (
+    DemandCareer,
     MarketOverview,
     MarketStats,
     RisingCareer,
@@ -98,6 +99,10 @@ def get_overview(region: str, *, engine: Engine | None = None) -> MarketOverview
     )
     paying = [row for row in rows if row["salary_p50_trieu"] is not None]
     paying.sort(key=lambda row: (-row["salary_p50_trieu"], row["career_id"]))
+    demand = sorted(
+        rows,
+        key=lambda row: (-row["demand_count_90d"], row["career_id"]),
+    )
     return MarketOverview(
         region=region,
         postings_count=postings_count,
@@ -113,6 +118,17 @@ def get_overview(region: str, *, engine: Engine | None = None) -> MarketOverview
                 low_confidence=bool(row["low_confidence"]),
             )
             for row in rising[:8]
+        ],
+        # Demand volume is a one-window observation, not a growth claim. Keep it
+        # separate so a fresh snapshot remains useful without inventing a trend.
+        demand_leaders=[
+            DemandCareer(
+                career_id=row["career_id"],
+                title=row["title"],
+                demand_count=row["demand_count_90d"],
+                low_confidence=bool(row["low_confidence"]),
+            )
+            for row in demand[:8]
         ],
         top_paying=[
             TopPayingCareer(

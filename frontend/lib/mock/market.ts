@@ -1,7 +1,7 @@
 // Mock market data — Khớp shape MarketOverview / SkillGapResponse và hỗ trợ thay đổi dữ liệu theo vùng miền.
 import type { MarketOverview, Region, SkillGapResponse } from "@/types";
 
-const REGION_OVERVIEW: Record<Region, Omit<MarketOverview, "region">> = {
+const REGION_OVERVIEW: Record<Region, Omit<MarketOverview, "region" | "demand_leaders">> = {
   hanoi: {
     postings_count: 1420,
     window_days: 90,
@@ -128,7 +128,15 @@ export async function mockOverview(region: Region): Promise<MarketOverview> {
   const data = REGION_OVERVIEW[region] || REGION_OVERVIEW["all"];
   return {
     region,
-    ...data
+    ...data,
+    demand_leaders: data.rising_careers
+      .map(({ career_id, title, demand_count, low_confidence }) => ({
+        career_id,
+        title,
+        demand_count,
+        low_confidence,
+      }))
+      .sort((a, b) => b.demand_count - a.demand_count),
   };
 }
 

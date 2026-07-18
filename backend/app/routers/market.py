@@ -13,6 +13,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.data.seed_loader import get_career, load_careers
 from app.models.schemas import (
     CareerDetail,
+    DemandCareer,
     MarketOverview,
     MarketStats,
     Region,
@@ -34,6 +35,11 @@ SEED_NOTE = "Dữ liệu mẫu (seed) — pipeline chưa chạy hoặc chưa đ�
 def _seed_overview(region: Region) -> MarketOverview:
     careers = load_careers()
     rising = sorted(careers, key=lambda c: c["seed_market"]["trend_pct"], reverse=True)[:8]
+    demand = sorted(
+        careers,
+        key=lambda c: c["seed_market"]["demand_count_90d"],
+        reverse=True,
+    )[:8]
     paying = sorted(careers, key=lambda c: c["seed_market"]["salary_p50_trieu"], reverse=True)[:5]
     return MarketOverview(
         region=region, postings_count=sum(c["seed_market"]["demand_count_90d"] for c in careers),
@@ -42,6 +48,9 @@ def _seed_overview(region: Region) -> MarketOverview:
                                      trend_pct=c["seed_market"]["trend_pct"],
                                      demand_count=c["seed_market"]["demand_count_90d"],
                                      low_confidence=False) for c in rising],
+        demand_leaders=[DemandCareer(career_id=c["career_id"], title=c["title"],
+                                     demand_count=c["seed_market"]["demand_count_90d"],
+                                     low_confidence=False) for c in demand],
         top_paying=[TopPayingCareer(career_id=c["career_id"], title=c["title"],
                                     salary_p50_trieu=c["seed_market"]["salary_p50_trieu"]) for c in paying],
     )

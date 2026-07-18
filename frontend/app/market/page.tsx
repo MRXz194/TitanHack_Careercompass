@@ -187,6 +187,29 @@ export default function MarketPage() {
                   </div>
                 </section>
 
+                {/* Section: Nhu cầu quan sát — tách khỏi tín hiệu tăng trưởng */}
+                <section className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-5 shadow-sm space-y-4">
+                  <div>
+                    <h2 className="text-base font-bold font-serif text-[var(--cc-ink)]">Nhu cầu tuyển dụng quan sát</h2>
+                    <p className="text-[10px] text-[var(--cc-muted)] italic mt-0.5">Số tin trong cửa sổ dữ liệu; không đồng nghĩa nghề đang tăng trưởng</p>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {overview.demand_leaders.length > 0 ? (
+                      overview.demand_leaders.map((career) => (
+                        <div key={career.career_id} className="flex justify-between items-center rounded-xl border border-[var(--cc-border)]/50 bg-white p-3 text-xs hover:border-[var(--cc-primary)] transition-all">
+                          <span className="font-medium text-[var(--cc-ink)]">{career.title}</span>
+                          <span className={career.low_confidence ? "text-amber-800/80 italic text-[10px]" : "font-bold text-[var(--cc-primary)]"}>
+                            {career.demand_count.toLocaleString("vi-VN")} tin{career.low_confidence ? " · mẫu nhỏ" : ""}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-[var(--cc-muted)] italic font-serif text-center py-6">Chưa có đủ tin đã ánh xạ nghề cho khu vực này.</p>
+                    )}
+                  </div>
+                </section>
+
                 {/* Section: Nghề lương cao nhất */}
                 <section className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-5 shadow-sm space-y-4">
                   <div>

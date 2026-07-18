@@ -237,9 +237,14 @@ sinh preview generic từ một hồ sơ trống.
   "updated_at": "2026-07-18",
   "source_note": "Từ 1.214 tin tuyển dụng, snapshot 18/07/2026",
   "rising_careers": [ { "career_id": "…", "title": "…", "trend_pct": 34, "demand_count": 210, "low_confidence": false } ],
+  "demand_leaders": [ { "career_id": "…", "title": "…", "demand_count": 210, "low_confidence": false } ],
   "top_paying": [ { "career_id": "…", "title": "…", "salary_p50_trieu": 25 } ]                      // top 5
 }
 ```
+
+`rising_careers` chỉ có phần tử khi snapshot có đủ hai cửa sổ thời gian để tính trend.
+`demand_leaders` tách riêng khối lượng tin quan sát trong một cửa sổ; không được gọi demand
+volume là tăng trưởng. Vì vậy snapshot mới vẫn hữu ích mà không bịa tín hiệu “đang lên”.
 
 ### `GET /api/market/skills?region={…}` — Radar nhu cầu kỹ năng (hiring-demand proxy)
 

@@ -61,8 +61,12 @@ Rule-based theo title keywords trong `careers_seed.json` (`title_patterns`), fal
 
 Mỗi (career × region) và (skill × region), cửa sổ 90 ngày:
 - `demand_count` = số postings.
+- `demand_leaders` = nghề xếp theo `demand_count` trong đúng cửa sổ/vùng; đây là volume
+  quan sát, không phải dự báo tăng trưởng.
 - `salary_p25/p50/p75` = percentile trên posting CÓ lương; luôn trả `salary_sample_count`; <5 mẫu → null — **không bịa**.
 - `trend_pct` = (count 45 ngày cuối − count 45 ngày đầu) / max(count 45 ngày đầu, 5) × 100. Thiếu đủ hai cửa sổ hoặc mẫu <10 → `low_confidence: true`; FE không đưa trend vào headline.
+- `rising_careers` chỉ phát hành khi có `trend_pct`; nếu snapshot mới chỉ có một cửa sổ,
+  danh sách này rỗng và UI giải thích giới hạn thay vì dùng `demand_leaders` để giả làm trend.
 
 **Hiring-demand proxy** (field API vẫn là `gap_score`, 0..1 mỗi region):
 ```

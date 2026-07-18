@@ -223,6 +223,13 @@ class RisingCareer(BaseModel):
     low_confidence: bool = True
 
 
+class DemandCareer(BaseModel):
+    career_id: str
+    title: str
+    demand_count: int
+    low_confidence: bool = True
+
+
 class TopPayingCareer(BaseModel):
     career_id: str
     title: str
@@ -236,6 +243,7 @@ class MarketOverview(BaseModel):
     updated_at: str
     source_note: str = ""
     rising_careers: list[RisingCareer]
+    demand_leaders: list[DemandCareer]
     top_paying: list[TopPayingCareer]
 
 

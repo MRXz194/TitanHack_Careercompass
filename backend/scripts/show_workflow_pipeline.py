@@ -208,8 +208,12 @@ def run_pipeline() -> dict[str, Any]:
 
             market_overview = _expect(client.get("/api/market/overview?region=all"))
             market_skills = _expect(client.get("/api/market/skills?region=all"))
-            if not market_overview["rising_careers"] or not market_skills["skills"]:
-                raise RuntimeError("market workflow returned no released aggregate signals")
+            if not market_overview["demand_leaders"] or not market_skills["skills"]:
+                raise RuntimeError(
+                    "market workflow returned no released aggregate signals "
+                    f"(demand={len(market_overview['demand_leaders'])}, "
+                    f"skills={len(market_skills['skills'])})"
+                )
 
         session_store.clear_all_sessions()
         db_module.sessions_engine.dispose()
@@ -263,7 +267,9 @@ def run_pipeline() -> dict[str, Any]:
                 ),
             },
             "market": {
+                "demand_leaders": len(market_overview["demand_leaders"]),
                 "rising_careers": len(market_overview["rising_careers"]),
+                "trend_signal_available": bool(market_overview["rising_careers"]),
                 "skill_signals": len(market_skills["skills"]),
                 "source_note_present": bool(market_overview["source_note"]),
             },

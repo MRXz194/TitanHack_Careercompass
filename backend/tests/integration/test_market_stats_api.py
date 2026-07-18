@@ -58,6 +58,8 @@ def test_api_reads_aggregate_db_and_handles_empty_region(
     overview = market_router.overview("hanoi")
     assert overview.postings_count == 12
     assert overview.rising_careers[0].career_id == "data-analyst"
+    assert overview.demand_leaders[0].career_id == "data-analyst"
+    assert overview.demand_leaders[0].demand_count == 12
     assert "fixture-mi04" in overview.source_note
 
     detail = market_router.career_detail("data-analyst", "all")
@@ -67,6 +69,7 @@ def test_api_reads_aggregate_db_and_handles_empty_region(
     empty = market_router.overview("danang")
     assert empty.postings_count == 0
     assert empty.rising_careers == []
+    assert empty.demand_leaders == []
 
     # A career absent from a valid real snapshot must return an honest zero,
     # never silently mix in seed demand/salary numbers.
