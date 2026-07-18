@@ -359,7 +359,9 @@ def discover_vietnamworks(client: PublicClient, limit: int) -> list[str]:
     status, content = client.get("https://www.vietnamworks.com/sitemap/jobs.xml")
     if status != 200:
         return []
-    return [url for url in _xml_locations(content) if url.endswith("-jv")][:limit]
+    # Sitemap contains inactive/expired URLs too. Return the full public inventory;
+    # ``crawl_source`` stops once it has ``limit`` usable unique records.
+    return [url for url in _xml_locations(content) if url.endswith("-jv")]
 
 
 def discover_itviec(client: PublicClient, limit: int) -> list[str]:
@@ -382,11 +384,12 @@ def discover_topcv(client: PublicClient, limit: int) -> list[str]:
             continue
         unavailable = 0
         urls.extend(url for url in _xml_locations(content) if "/viec-lam/" in url)
-        if len(urls) >= limit:
+        # Keep a buffer because sitemap entries can be expired or unparsable.
+        if len(urls) >= limit * 2:
             break
     unique = list(dict.fromkeys(urls))
     random.Random(42).shuffle(unique)
-    return unique[:limit]
+    return unique[: limit * 2]
 
 
 DISCOVERERS: dict[str, Callable[[PublicClient, int], list[str]]] = {
