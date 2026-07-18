@@ -919,6 +919,14 @@ def handle_turn(
         force_done = True
         state.phase = "wrapup"
         state.turns_in_phase = 0
+        # Reply must acknowledge the jump, not ask yet another canned question.
+        turn_out.reply = get_fallback_question(
+            state.journey_mode,
+            "wrapup",
+            state.fallback_index,
+            recent_replies=_recent_assistant(),
+        )
+        state.fallback_index += 1
     new_phase, done, turns_in_phase = advance_phase(
         state.journey_mode,
         state.phase,
