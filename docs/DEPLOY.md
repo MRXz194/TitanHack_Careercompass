@@ -1,5 +1,7 @@
 # DEPLOY — L-03 deploy skeleton + L-02 GitHub guardrails checklist
 
+> Production target hiện tại: Vercel + Railway. Runbook copy-paste và env matrix mới nằm tại `docs/DEPLOY_VERCEL_RAILWAY.md`. Phần Render bên dưới được giữ làm fallback.
+
 > M1 sở hữu file này. Checklist dưới đây là thao tác bấm tay trong GitHub/Vercel/Render UI —
 > không tự động hoá được từ CLI trong môi trường build hiện tại vì cần credentials cá nhân
 > của leader. Điền URL/kết quả thật vào cuối file sau khi xong, và tick lại `docs/PREFLIGHT.md`.
