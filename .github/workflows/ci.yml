@@ -30,12 +30,20 @@ jobs:
         run: python -m pytest -q tests/e2e
       - name: Show release workflow pipeline
         run: |
+          set +e
           python -m scripts.show_workflow_pipeline --output workflow-pipeline.json
+          pipeline_status=$?
           echo '## CareerCompass runtime workflow' >> "$GITHUB_STEP_SUMMARY"
           echo '```json' >> "$GITHUB_STEP_SUMMARY"
           cat workflow-pipeline.json >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+          if [ "$pipeline_status" -ne 0 ]; then
+            pipeline_error=$(python -c "import json; d=json.load(open('workflow-pipeline.json', encoding='utf-8')); print(d.get('error', {}).get('message', 'unknown pipeline error'))")
+            echo "::error title=Runtime workflow pipeline failed::$pipeline_error"
+          fi
+          exit "$pipeline_status"
       - name: Upload workflow evidence
+        if: ${{ always() && hashFiles('backend/workflow-pipeline.json') != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: runtime-workflow-${{ github.sha }}

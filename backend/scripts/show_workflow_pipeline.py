@@ -281,11 +281,24 @@ def main() -> None:
     parser.add_argument("--output", type=Path, help="Optional JSON evidence output path")
     args = parser.parse_args()
 
-    report = run_pipeline()
+    exit_code = 0
+    try:
+        report = run_pipeline()
+    except Exception as exc:  # noqa: BLE001 - CI evidence must survive a failed gate
+        report = {
+            "status": "FAIL",
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "error": {
+                "type": type(exc).__name__,
+                "message": str(exc)[:500],
+            },
+        }
+        exit_code = 1
     rendered = json.dumps(report, ensure_ascii=False, indent=2)
     if args.output:
         args.output.write_text(rendered + "\n", encoding="utf-8")
     print(rendered)
+    raise SystemExit(exit_code)
 
 
 if __name__ == "__main__":
