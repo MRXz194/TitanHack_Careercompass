@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 
 import pytest
+from langchain_core.messages import AIMessage
 from pydantic import BaseModel
 
 from app.services import llm
@@ -98,6 +99,28 @@ def test_chat_json_raises_gateway_error_after_budget(monkeypatch: pytest.MonkeyP
 
     with pytest.raises(llm.LLMError, match="after 1 attempts"):
         llm.chat_json("Return JSON", [], ExampleOutput, max_retries=0)
+
+
+def test_chat_json_prompt_strategy_for_fpt_without_response_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeSettings:
+        chat_model = "DeepSeek-V4-Flash"
+        chat_structured_method = "prompt"
+
+    class PromptModel:
+        def invoke(self, messages: list[object]) -> AIMessage:
+            assert messages
+            return AIMessage(content='```json\n{"value":"fpt-ok"}\n```')
+
+        def with_structured_output(self, *args, **kwargs):
+            raise AssertionError("FPT prompt strategy must not send response_format")
+
+    monkeypatch.setattr(llm, "get_settings", lambda: FakeSettings())
+    monkeypatch.setattr(llm, "_chat_model", lambda: PromptModel())
+
+    result = llm.chat_json("Return JSON", [], ExampleOutput, max_retries=0)
+    assert result.value == "fpt-ok"
 
 
 def test_embed_uses_gateway_adapter_without_network(monkeypatch: pytest.MonkeyPatch) -> None:

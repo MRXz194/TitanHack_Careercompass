@@ -12,8 +12,15 @@ from app.services import session_store
 
 
 @pytest.fixture(autouse=True)
-def isolated_sessions_db(tmp_path: Path) -> Iterator[None]:
+def isolated_sessions_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Each test gets a fresh SQLite sessions DB; never touch the dev sessions.db."""
+    # A developer may have real provider keys in ignored backend/.env. Tests are
+    # offline by contract and must never spend quota unless a test explicitly
+    # overrides these values after fixture setup.
+    monkeypatch.setenv("CHAT_API_KEY", "")
+    monkeypatch.setenv("EMBED_API_KEY", "")
+    monkeypatch.setenv("CHAT_STRUCTURED_METHOD", "json_mode")
+    get_settings.cache_clear()
     url = f"sqlite:///{tmp_path / 'test_sessions.db'}"
     db_module.rebind_sessions_engine(url)
     session_store.clear_all_sessions()

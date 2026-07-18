@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     chat_api_base: str = "https://api.deepseek.com/v1"
     chat_api_key: str = ""
     chat_model: str = "deepseek-v4-flash"
+    chat_structured_method: str = "json_mode"  # json_mode | prompt
 
     # Embeddings (OpenAI)
     embed_api_base: str = "https://api.openai.com/v1"
