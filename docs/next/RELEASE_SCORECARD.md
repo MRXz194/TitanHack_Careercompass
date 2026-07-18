@@ -3,13 +3,14 @@
 Baseline commit: `e76a0a919505e7d534153fd95f41b72e5abc7b10`  
 Implementation branch: `codex/day3-opportunity-plan`  
 Release candidate commit: `8f982fc`  
+Main integration / CI fix: `19b87ad` / `d283b40`  
 Expansion Gate: **FAIL — automated candidate ready, manual E2E/human gates remain**
 
 ## Automated evidence
 
 | Gate | Actual | State | Evidence | Owner |
 |---|---|---|---|---|
-| Core regression | 347 backend tests; 64 frontend tests; TS typecheck + Next production build pass | PASS | `python -m pytest -q`; `npm test`; `npm run typecheck`; `npm run build` | M1 |
+| Core regression | 347 backend tests; 64 frontend tests; TS typecheck + Next production build pass; Ubuntu CI backend/frontend pass | PASS | [GitHub Actions run 29639845313](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29639845313) | M1 |
 | Snapshot provenance | Manifest/card synchronized at 3.865 normalized rows; stable SHA-256 `4ecfc1…` | PASS | `data/processed/manifest.json`, `docs/DATA_SNAPSHOT.md` | M2 |
 | Acquisition integrity | 3.914 unique raw records; raw/full text ignored; source limitations retained | PASS_WITH_CAVEATS | `DATA_SNAPSHOT_AUDIT.md` | M2 |
 | Extraction held-out | Dictionary extraction ran on 3.865; held-out human F1 not rerun | NOT_RUN | `postings_enriched.report.json` | M2/M3 |
@@ -18,7 +19,9 @@ Expansion Gate: **FAIL — automated candidate ready, manual E2E/human gates rem
 | Research isolation/citations/fallback | Typed 11th tool, policy stage, safe URLs, local/replay fallback, candidate/profile isolation | PASS | research unit/integration/contract tests | M4 |
 | DuckDuckGo live gate | 7/10 queries with >=3 relevant safe links; p95 1.129s; rate-limit/empty on last 3 | FAIL | `python -m scripts.run_research_spike` | M4/M1 |
 | UI/UX | Cream editorial system, serif/mono split, 2px geometry, compare/inspector/research/what-if, print stylesheet | PASS_AUTOMATED | Vitest/typecheck/build; visual human QA pending | M5/M6 |
-| Explore/Launch/Replay E2E on deployed URLs | Backend is hosted on another machine; not run here | NOT_RUN | run `docs/DEPLOY.md` smoke matrix | M1 |
+| Offline Explore/Launch/Replay E2E | GitHub Actions Ubuntu E2E step pass | PASS | CI run above | M1 |
+| Vercel production routes | Deployment success; `/`, Explore, Launch, Market, Results, How-it-works all HTTP 200 | PASS_HTTP | `docs/DEPLOY.md` production record | M1/M6 |
+| Render health + live CORS E2E | Render dashboard URL chưa được bàn giao; guessed service URL timeout, không dùng làm evidence | NOT_RUN / BLOCKED | cần URL thật + `/api/health` | M1 |
 | Student usability | No fresh Day-3 participant session recorded | NOT_RUN | `docs/next/EVALUATION.md` U1–U6 | M1 |
 | Counselor usefulness | Print flow exists; no counselor timing/feedback recorded | NOT_RUN | counselor protocol | M1/M5 |
 

@@ -61,7 +61,9 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 
 ## Kết quả thật (điền sau khi bấm)
 
-- Backend URL: `TBD`
-- Frontend URL: `TBD`
-- Ngày deploy lần đầu: `TBD`
-- Known limitations: `TBD`
+- Main/CI: `d283b40`; [workflow 29639845313](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29639845313) — backend + frontend PASS trên Ubuntu.
+- Backend URL: `UNVERIFIED` — Render dashboard owner cần bàn giao URL thật; URL suy từ service name đã timeout và không được ghi là production evidence.
+- Frontend URL: `https://titan-hack-careercompass-rg81hcrn5-mrxz194s-projects.vercel.app`
+- Production deployment: `success`, ngày `2026-07-18`, commit `d283b40`.
+- Route smoke: `/`, `/explore`, `/explore?mode=launch`, `/market`, `/results`, `/how-it-works` đều HTTP 200.
+- Known limitations: chưa smoke `/api/health`, CORS và live FE→BE vì thiếu Render URL thật; student/counselor test vẫn chưa chạy; `WEB_RESEARCH_MODE` phải giữ `replay` do DDG gate chỉ đạt 7/10.
