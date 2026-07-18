@@ -11,6 +11,7 @@ from sqlalchemy import create_engine
 
 from app.core import db as db_module
 from app.routers import market as market_router
+from app.services import market as market_service
 
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
@@ -66,4 +67,12 @@ def test_api_reads_aggregate_db_and_handles_empty_region(
     empty = market_router.overview("danang")
     assert empty.postings_count == 0
     assert empty.rising_careers == []
+
+    # A career absent from a valid real snapshot must return an honest zero,
+    # never silently mix in seed demand/salary numbers.
+    absent = market_service.get_career_market("lap-trinh-vien-web", "all")
+    assert absent.demand_count_90d == 0
+    assert absent.salary_p50_trieu is None
+    assert absent.low_confidence is True
+    assert "fixture-mi04" in absent.source_note
     engine.dispose()

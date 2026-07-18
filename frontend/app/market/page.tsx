@@ -61,7 +61,7 @@ export default function MarketPage() {
           🎯 Radar Nhu cầu Kỹ năng Tuyển dụng
         </h1>
         <p className="text-sm text-[var(--cc-muted)] leading-relaxed">
-          Tín hiệu tổng hợp từ tin tuyển dụng được khảo sát trong 90 ngày gần nhất. Đây là dữ liệu thực tế đo lường <b>nhu cầu tuyển dụng quan sát được</b> (Hiring Demand Proxy), không phải kết luận tuyệt đối về sự thiếu hụt nhân lực trên thị trường.
+          Tín hiệu tổng hợp từ snapshot tin tuyển dụng hiện có, với cửa sổ phân tích tối đa 90 ngày. Đây là <b>nhu cầu tuyển dụng quan sát được</b> (Hiring Demand Proxy), không phải dữ liệu thời gian thực hay kết luận tuyệt đối về thiếu hụt nhân lực.
         </p>
       </div>
 
@@ -111,7 +111,7 @@ export default function MarketPage() {
                     Kỹ năng có nhu cầu tuyển dụng cao
                   </Tooltip>
                 </h2>
-                <p className="text-[10px] text-[var(--cc-muted)] italic mt-0.5">Xếp hạng theo điểm nhu cầu trích xuất (Gap Score)</p>
+                <p className="text-[10px] text-[var(--cc-muted)] italic mt-0.5">Xếp hạng theo điểm tín hiệu nhu cầu từ snapshot</p>
               </div>
 
               <div className="space-y-4">
@@ -141,7 +141,7 @@ export default function MarketPage() {
                         </div>
 
                         {s.low_confidence && (
-                          <p className="text-[9px] text-amber-800/80 italic font-serif">⚠ Cỡ mẫu tin nhỏ — số liệu xu hướng có thể kém ổn định.</p>
+                          <p className="text-[9px] text-amber-800/80 italic font-serif">⚠ Cỡ mẫu nhỏ — tín hiệu nhu cầu này cần được kiểm chứng thêm.</p>
                         )}
                       </div>
                     );
@@ -164,8 +164,8 @@ export default function MarketPage() {
                 {/* Section: Nghề tăng trưởng */}
                 <section className="rounded-2xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-5 shadow-sm space-y-4">
                   <div>
-                    <h2 className="text-base font-bold font-serif text-[var(--cc-ink)]">Nghề đang tăng trưởng</h2>
-                    <p className="text-[10px] text-[var(--cc-muted)] italic mt-0.5">Tốc độ tăng trưởng tin tuyển dụng 45 ngày qua</p>
+                    <h2 className="text-base font-bold font-serif text-[var(--cc-ink)]">Nghề có tín hiệu thay đổi theo thời gian</h2>
+                    <p className="text-[10px] text-[var(--cc-muted)] italic mt-0.5">Chỉ hiển thị xu hướng khi snapshot có đủ hai cửa sổ dữ liệu</p>
                   </div>
 
                   <div className="space-y-2.5">
@@ -183,7 +183,7 @@ export default function MarketPage() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-[var(--cc-muted)] italic font-serif text-center py-6">Không có dữ liệu xu hướng nghề nghiệp.</p>
+                      <p className="text-xs text-[var(--cc-muted)] italic font-serif text-center py-6">Snapshot hiện chưa đủ dữ liệu nhiều thời điểm để kết luận xu hướng.</p>
                     )}
                   </div>
                 </section>

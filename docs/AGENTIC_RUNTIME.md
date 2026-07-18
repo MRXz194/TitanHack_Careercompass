@@ -243,7 +243,7 @@ Sau policy/tool execution, composer chỉ nhận `AgentObservation[]` đã sanit
 | M5 | chat agent status + editable evidence | status copy, correction UX, no private reasoning UI |
 | M6 | result provenance/"why" panel + limitations | trace presentation, snapshot freshness/confidence |
 
-Task chính: `PR-12` (policy/registry/planner), `PR-13` (chat orchestrator + degradation), `PR-14` (agent evaluation/red-team). Trên branch `kaguya` ba task này **đã implement** (default `AGENT_MODE=deterministic`; `langgraph` optional). Đây là **cách triển khai mới bên trong PR-02/03**, không thay thế PR-05/06/07 deterministic recommendation và không mở thêm product scope.
+Task chính: `PR-12` (policy/registry/planner), `PR-13` (chat orchestrator + degradation), `PR-14` (agent evaluation/red-team). Ba task đã implement và release env dùng `AGENT_MODE=langgraph`; `deterministic` là kill switch. Đây là **cách triển khai bên trong PR-02/03**, không thay thế PR-05/06/07 deterministic recommendation và không mở thêm product scope.
 
 ## 8. Evaluation & red-team P0
 

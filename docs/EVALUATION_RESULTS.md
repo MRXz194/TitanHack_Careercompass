@@ -1,73 +1,67 @@
-# EVALUATION RESULTS — điền số thật, không cherry-pick
+# EVALUATION RESULTS — release integrity v2
 
-> Status: `M4_PARTIAL` — automated M4 gates measured at commit `52bbc15`. M1 owns final PASS/CONDITIONAL/FAIL at release. Không đưa proxy như human score lên slide.
-
-## Snapshot
+> Baseline: commit `99f463e` on 2026-07-18. Current branch adds release-integrity fixes; local full gates pass, CI for the new commit is pending until push. Không đổi `NOT_RUN` thành PASS nếu chưa có bằng chứng.
 
 | Field | Value |
 |---|---|
-| Commit SHA | `52bbc15` |
-| Career KB count | 25 |
-| Profiler prompt | `profiler-v2` |
-| Chat p95 (offline) | 8.8 ms |
-| Recommendation p95 (offline) | 7.3 ms |
-| Agent orchestrator p95 (offline) | 0.4 ms |
-| Agent engine default | `deterministic` (langgraph optional; no planner on recommend) |
-| Tool policy version | `agent-policy-v1` |
-| Tool registry version | `agent-tools-v1` |
-| Max agent tools / turn | 2 |
-| Agent deadline | 8000 ms |
+| Commit SHA | `99f463e` |
+| Tool policy / registry | `agent-policy-v1` / `agent-tools-v1` |
+
+Không cherry-pick chỉ số đẹp: automated proxy, live test và human test được báo thành các nhóm riêng.
+
+## Automated evidence
+
+| Gate | Current evidence | Status |
+|---|---|---|
+| Baseline backend CI | 285/285 tests passed on Python 3.11; compile + route check passed | PASS at `99f463e` |
+| Baseline frontend | 61/61 Vitest, typecheck, Next production build | PASS locally at `99f463e` |
+| Current backend local | compile/import; 262 unit+contract; 29 integration; 2 E2E; route check 25/25 | PASS on Python 3.11.9 |
+| Current frontend local | 61 Vitest; typecheck; Next production build 8/8 pages | PASS on Node 24 (CI remains Node 20) |
+| Release E2E | Explore/LangGraph + correction + recommend + market; Launch/replay + readiness; added to CI | 2/2 PASS local, PENDING CI |
+| Agent policy/red-team | allowlist, budget, injection, sanitized trace suites from PR-12/13/14 | PASS at baseline |
+| Route invariant | 25 careers; ≥2 routes and ≥1 vocational/college/certificate | PASS at baseline |
+| Aggregate artifact | 43 `career_stats`, 548 `skill_stats`, 16 `market_meta`; no description column | PASS, inspected locally |
+| Mapping coverage | 89/298 = 29,87% | MEASURED, not accuracy |
+| Skill extraction coverage | 261/298 has ≥1 skill; live LLM success 0 | MEASURED_WITH_CAVEAT |
+| Trend | no reliable two-window signal | Correctly `NULL` |
 
 ## Metrics
 
-| Gate | Target | Actual | Pass? | Evidence |
-|---|---:|---:|---|---|
-| pytest:profiler_unit | all green | 44 passed in 0.37s | PASS | tests/unit/test_profiler_engine.py tests/unit/test_profiler_prompts.py tests/unit/test_profiler_transcripts.py tests/unit/test_quality_tuning.py |
-| pytest:profiler_integration | all green | 15 passed in 0.49s | PASS | tests/integration/test_profiler_session.py tests/integration/test_quality_chat.py tests/integration/test_api_smoke.py |
-| pytest:grounding | all green | 9 passed in 0.14s | PASS | tests/unit/test_evidence.py tests/integration/test_evidence_grounding.py |
-| pytest:readiness | all green | 12 passed in 0.18s | PASS | tests/unit/test_pathways.py tests/integration/test_launch_pathways.py |
-| pytest:bias | all green | 17 passed in 0.27s | PASS | tests/unit/test_bias_audit.py |
-| pytest:matching | all green | 13 passed in 0.22s | PASS | tests/unit/test_matching.py tests/integration/test_recommendations.py |
-| pytest:agent | all green | 61 passed in 0.85s | PASS | tests/unit/test_agent_policy.py tests/unit/test_agent_tools.py tests/unit/test_agent_graph.py tests/unit/test_agent_chat.py tests/unit/test_agent_redteam.py tests/contract/test_agent_tool_contract.py tests/integration/test_agent_chat_api.py |
-| route_structural | 100% | 100% | PASS | scripts/check_routes.py |
-| recommendation_rubric_automated_proxy_n12 | ≥3.5/5 human (proxy automated) | 4.25/5 mean criteria; hard_fail_personas=0 | PASS | 8 Explore + 4 Launch structural gold profiles |
-| chat_p95 | <5000ms | 8.8ms (n=40, deterministic) | PASS | TestClient offline path |
-| recommendation_p95 | <8000ms | 7.3ms (n=10, deterministic) | PASS | TestClient offline path |
-| profiler_valid_structured_path | ≥99% JSON valid after retry | 100% offline structured/fixtures (no live LLM this run) | PASS | profiler unit+integration; live LLM NOT_RUN |
-| evidence_number_grounding | 100% | 100% | PASS | test_evidence + test_evidence_grounding |
-| launch_readiness_invariants | 100% | 100% | PASS | test_pathways + test_launch_pathways |
-| gender_paired_top5_overlap | ≥4/5 | PASS suite | PASS | docs/BIAS_AUDIT.md + test_bias_audit |
-| agent_tool_selection_allowlist | 100% stage allowlist | PASS suite | PASS | fixtures agent/allow|deny + test_agent_redteam + test_agent_policy |
-| agent_prompt_injection | no policy/tool scope change | PASS suite | PASS | fixtures agent/injection + test_injection_* |
-| agent_personas_n12 | ≤2 tools/turn; allowlist only | 12 personas offline | PASS | fixtures agent/personas/personas_12.json |
-| agent_provenance_budget_replay | provenance + ≤2 tools + sanitized replay | PASS suite | PASS | fallback fixtures + app/data/replay/agent_sanitized_trace.json |
-| agent_orchestrator_p95 | <100ms offline / <8000ms budget | 0.4ms (n=40, plain_python) | PASS | plain_python_orchestrator; LangGraph optional via AGENT_MODE |
-| agent_langgraph_gates | 100% allowlist/fallback | PASS offline red-team; policy=agent-policy-v1; tools=agent-tools-v1; default_mode=deterministic | PASS | PR-12/13/14: tests/unit/test_agent_*.py + fixtures/agent; recommendation remains deterministic (no planner) |
-| skill_extraction_prf | ≥.80/.65/.70 | NOT_RUN | N/A | Owner M3 — not M4 PR-11 |
-| human_recommendation_rubric_dual_rater | ≥3.5/5 by ≥2 humans | NOT_RUN | NOT_RUN | Requires M3 dual human raters; automated proxy reported separately |
-| student_usefulness_n5 | median ≥4/5 | NOT_RUN | N/A | Owner M1 user testing L-11 |
+Các số latency dưới đây là evidence offline ở baseline `99f463e`, không phải đo provider live hoặc current-branch CI.
 
-## Failures, fixes, limitations
+| Gate | Actual | Status |
+|---|---:|---|
+| evidence_number_grounding | automated suite passed | PASS baseline |
+| launch_readiness_invariants | automated suite passed | PASS baseline |
+| gender_paired_top5_overlap | paired bias suite passed | PASS baseline |
+| route_structural | 25/25 careers pass | PASS baseline |
+| chat_p95 | 8,8 ms offline deterministic | PASS baseline |
+| recommendation_p95 | 7,3 ms offline deterministic | PASS baseline |
+| agent_langgraph_gates | compile/invoke, deny/fallback and contract suite passed | PASS baseline |
+| agent_tool_selection_allowlist | stage allowlist suite passed | PASS baseline |
+| agent_prompt_injection | policy/tool scope unchanged in red-team fixtures | PASS baseline |
+| agent_personas_n12 | 12 fictional personas passed bounded policy suite | PASS baseline |
+| agent_orchestrator_p95 | 0,4 ms plain-Python baseline; LangGraph current E2E pending | PASS baseline / PENDING current |
 
-| Failure/limitation | Impact | Fix/fallback | Owner/status |
-|---|---|---|---|
-| Posting data = demand proxy | Không claim shortage | UI Radar nhu cầu | M3/M6 |
-| Live LLM profiler quality not measured this run | Chat quality offline-only | Keys + session sample later | M4 |
-| Human dual-rater rubric NOT_RUN | Không claim ≥3.5 human | Automated proxy only | M4/M3 |
-| Live agent planner LLM NOT_RUN | Không claim fully autonomous agent | Offline policy/red-team PASS; default AGENT_MODE=deterministic | M4 |
-| User testing n≥5 N/A | Không claim usefulness median | M1 L-11 | M1 |
+## Human/live gates
 
-## Notes
+| Gate | Target | Actual |
+|---|---:|---|
+| Skill extraction precision/recall/F1 | ≥0,80 / 0,65 / 0,70 | `NOT_RUN` — sanitized independent gold labels required |
+| Career mapping accuracy | report denominator + accuracy | `NOT_RUN` — 50 independent labels required |
+| Recommendation dual-rater rubric | mean ≥3,5/5 by ≥2 raters | `NOT_RUN` |
+| Student usefulness | median ≥4/5, n≥5 | `NOT_RUN` |
+| Counselor usefulness | qualitative + issue log | `NOT_RUN` |
+| Live LLM Vietnamese/structured success | ≥80% valid after retry | `NOT_RUN` for current provider/key |
 
-- CHAT_API_KEY set=False; DEMO_MODE=off; AGENT_MODE default=deterministic; latency measured offline deterministic path only.
-- Do not present automated rubric proxy as dual-human scores in pitch.
-- Agent claim boundary: offline allowlist/policy/fallback/replay gates PASS; live multi-turn LLM planner NOT_RUN. Do not claim fully autonomous agent.
+## Release claims
 
-## Release decision (M1)
+- Được claim: bounded LangGraph agent trên `/api/chat`, deterministic recommendation core, explainable evidence, anti-bias tests, real aggregate snapshot có caveat, replay safety net.
+- Không claim: fully autonomous career-deciding agent, real-time market, proven labor shortage, production-grade extraction accuracy, hiring probability, human usefulness score.
+- `AGENT_MODE=langgraph` là release path; `deterministic` là kill switch. `/api/recommendations` không có planner.
 
-- P0 demo: ⬜ PASS / ⬜ FAIL
-- Live mode: ⬜ allowed / ⬜ replay only
-- Claims removed from pitch: TBD
-- M1 sign-off + time: TBD
+## Release decision
 
-_Generated by `backend/scripts/run_m4_evaluation.py` at commit 52bbc15._
+- Code local: `PASS`; current-commit CI/deploy: `PENDING` cho branch release-integrity v2.
+- Live mode: chỉ bật sau deploy smoke test có `market_db_loaded=true`; nếu provider/network lỗi dùng `DEMO_MODE=replay`.
+- Human validation: chưa chặn demo kỹ thuật nhưng phải nói rõ `NOT_RUN` và ưu tiên chạy nếu còn thời gian.

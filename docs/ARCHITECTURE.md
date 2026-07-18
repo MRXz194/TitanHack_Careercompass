@@ -9,16 +9,15 @@ graph TB
     B --> C[extract_skills.py<br/>hybrid: taxonomy dict + LLM]
     C --> D[build_market_stats.py<br/>aggregate theo career × region]
     D --> E[(SQLite<br/>market.db)]
-    C --> F[embed_careers.py] --> G[careers.npy<br/>embeddings]
   end
 
   subgraph "Backend — FastAPI :8000"
     E --> H[/api/market/*<br/>stats, skill gap/]
-    G --> I[Matching Engine<br/>cosine + skill overlap + market signal]
+    E --> I[Matching Engine<br/>5D fit + skill overlap + market signal]
     J[/api/chat<br/>Bounded ReAct Profiler/] --> R[LangGraph StateGraph<br/>custom nodes + policy + budget]
     R --> K[(SQLite<br/>sessions.db)]
     I --> L[/api/recommendations<br/>top5 + stretch + evidence + pathway/]
-    R -.->|structured planner/composer| M[LangChain Gateway<br/>ChatOpenAI + OpenAIEmbeddings<br/>provider config via env]
+    R -.->|structured planner/composer| M[LangChain Gateway<br/>ChatOpenAI<br/>provider config via env]
     L -.->|evidence gen| M
   end
 
@@ -45,10 +44,10 @@ graph TB
 |---|---|---|---|
 | Browser `session_id`, selected mode | FE | FE/BE | reset/delete by user; no PII |
 | Session profile/messages | Profiler service | chat/recommender | SQLite demo, TTL target 24h; mode locked |
-| Raw/processed snapshot | M2 pipeline | M3 batch only | immutable snapshot ID + SHA-256 |
+| Raw/processed full text | M2 pipeline | M3 batch only, local/CI-secure storage | immutable snapshot ID + SHA-256; never committed |
 | Taxonomy/career KB | M3 / M2+M4 | extraction/matching | semantic version/hash; refresh vectors together |
 | Market DB | stats builder | market/matching services read-only | atomic build then swap; meta has input hashes |
-| Career vectors | embed script | matching read-only | model + KB hash; mismatch refuses load |
+| Five-dimension career vectors | versioned career KB | matching read-only | named dimensions; same space as profile |
 | Replay fixtures | M1/M4 | demo routers | fictional data; contract version/commit |
 
 Không service online nào ghi raw/processed/market stats. Không pipeline nào đọc session data.
@@ -94,8 +93,8 @@ Node `Plan`/`Compose` gọi LangChain gateway; node policy/tool/validate là Car
 ```
 FE POST /api/recommendations {session_id}
  → load profile
- → profile_text = serialize(profile KHÔNG gồm giới tính — field này không tồn tại trong schema)
- → embed(profile_text) → cosine với careers.npy → top 20 ứng viên
+ → profile_dimensions (KHÔNG gồm giới tính/region/trường/GPA)
+ → cosine với career dimensions trong KB → top 20 ứng viên
  → rescore: α·cosine + β·skill_overlap + γ·market_signal  (config trong app/core/config.py)
  → top 5 + 1 stretch (điểm cao nhất NGOÀI cluster sở thích chính)
  → với mỗi career: đính stats từ market.db + routes từ career KB
@@ -140,7 +139,7 @@ flowchart LR
 | # | Quyết định | Lý do | Trade-off chấp nhận |
 |---|---|---|---|
 | 1 | SQLite thay vì Postgres | Zero setup, file-based, đủ cho vài nghìn postings + demo | Không concurrent write tốt — OK vì write chỉ xảy ra ở pipeline offline |
-| 2 | Cosine in-process (NumPy) thay vì vector DB | ~50 careers × 1536 dims = quá nhỏ; thêm vector DB là over-engineering | Không scale đến triệu vectors — chưa cần |
+| 2 | Cosine 5 chiều in-process, không vector DB | 25 careers, vector có tên và giải thích được; vector DB không tăng chất lượng | Khi KB >10k và cùng-space embedding thắng baseline mới cân nhắc ANN |
 | 3 | LLM Gateway 1 module duy nhất (`app/services/llm.py`) | Đổi provider/model = đổi env var; mock được toàn bộ khi test; đếm chi phí 1 chỗ | — |
 | 4 | Hybrid skill extraction (dict trước, LLM sau) | Dict: rẻ + deterministic + nhanh cho 80% case; LLM: bắt cách diễn đạt lạ | Phải maintain taxonomy — chính là tài sản của sản phẩm |
 | 5 | Pipeline offline tách khỏi serving | Demo không phụ thuộc crawl; chạy lại từng bước; đúng câu chuyện scalability | "Real-time" thành "near-real-time" — chấp nhận, pitch rõ |
@@ -234,7 +233,7 @@ Thiết kế hiện tại cố tình để mỗi thành phần có "đường th
 | Trigger đo được | Upgrade |
 |---|---|
 | SQLite lock/error hoặc >50 concurrent sessions trong load test | Postgres sessions; Redis chỉ nếu latency/session TTL cần |
-| Career vectors >10k hoặc p95 retrieval >100ms | pgvector/ANN; trước đó giữ NumPy |
+| Career KB >10k, cùng-space embedding đã thắng evaluation và p95 retrieval >100ms | pgvector/ANN; trước đó giữ scorer in-process |
 | Daily new postings > batch window hoặc extraction >2h | queue workers + incremental jobs |
 | Source freshness SLA <24h | scheduler + source monitoring/contracts |
 | Multi-school pilot có PII/roles | auth/RBAC/audit log/tenant isolation trước dashboard |
@@ -255,7 +254,7 @@ Không đưa production technology vào MVP nếu chưa có trigger; mỗi depen
 | Failure | Detect | User behavior | Operator action |
 |---|---|---|---|
 | Chat provider timeout/JSON fail | gateway metric/retry exhausted | deterministic phase question, session preserved | replay for demo; inspect prompt/model |
-| Embedding API unavailable | startup/build error | use cached vectors/skill baseline | do not rebuild during demo |
+| Embedding experiment unavailable/mismatch | artifact guard từ chối bật | giữ baseline 5 chiều + skill overlap | không đưa experiment vào release runtime |
 | Market DB missing/hash mismatch | health `data_loaded=false` | explicit seed/mock label, no “real data” claim | restore release artifact |
 | FE cannot reach BE | normalized API error | retry then mock/replay path for demo | check CORS/deploy health |
 | Low sample | schema `low_confidence` | hide trend/salary, explain limitation | collect more data later |

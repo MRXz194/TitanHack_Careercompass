@@ -1,6 +1,6 @@
 # ADR — AI runtime: LangChain + LangGraph tối giản
 
-**Status:** Accepted for MVP, dependency versions fixed; graph activation guarded by spike gate 90 phút
+**Status:** Accepted and activated for MVP release; dependency versions fixed; deterministic kill switch retained
 **Owner:** M4 · Reviewer: M1/M3  
 **Scope:** LangChain gateway/tool contracts dùng cho AI calls; LangGraph chỉ `POST /api/chat`; không graph hóa data pipeline hoặc `/api/recommendations`
 
@@ -8,7 +8,7 @@
 
 Dùng một ecosystem với ranh giới rõ:
 
-- **LangChain Core + `langchain-openai`:** `ChatOpenAI`/`OpenAIEmbeddings`, messages,
+- **LangChain Core + `langchain-openai`:** `ChatOpenAI`, messages,
   Pydantic structured output và typed tool schemas.
 - **LangGraph `StateGraph`:** nối các node/conditional edges của bounded ReAct chat.
 - **CareerCompass code:** sở hữu policy, session canonical, profile merge, timeout/budget,
@@ -28,7 +28,7 @@ flowchart LR
 ```
 
 `backend/app/services/llm.py` là provider gateway duy nhất. Domain service không import
-`ChatOpenAI`, `OpenAIEmbeddings` hoặc provider SDK. `agent_tools.py` được dùng LangChain
+`ChatOpenAI` hoặc provider SDK. `agent_tools.py` được dùng LangChain
 tool abstractions/Pydantic args nhưng policy quyết định tool có được chạy, không giao authority
 cho model hoặc prompt.
 
@@ -75,9 +75,9 @@ LangChain-typed tool registry + policy function + vòng lặp tối đa hai tool
 qua LangChain gateway; chỉ bỏ LangGraph routing. Vì vậy `AGENT_MODE=deterministic` không đổi API,
 tool contracts hoặc recommendation core.
 
-## Spike gate — tối đa 90 phút trong PR-12
+## Spike gate — completed in PR-12
 
-Dependency đã pin để team cài cùng baseline; chỉ bật `AGENT_MODE=langgraph` khi tất cả pass:
+Dependency đã pin và các gate dưới đây đã pass ở baseline `99f463e`; release env dùng `AGENT_MODE=langgraph`:
 
 - `StateGraph` compile/invoke với fake structured planner, không network và không đổi API contract.
 - LangChain tool args sinh schema đúng; unknown tool, policy deny, invalid output và timeout đều
@@ -87,12 +87,11 @@ Dependency đã pin để team cài cùng baseline; chỉ bật `AGENT_MODE=lang
 - Overhead orchestration không LLM `<100ms p95` trên 100 fixture turns.
 - `AGENT_MODE=deterministic` chạy cùng contract mà không compile/invoke graph path.
 
-Nếu gate fail: giữ dependencies/gateway đã kiểm thử, không bật graph; dùng bounded Python
-orchestrator và không làm trễ PR-03/PR-05/data critical path.
+Nếu current-commit CI/E2E hoặc deploy smoke fail: chuyển `AGENT_MODE=deterministic`; API contract và deterministic recommendation không đổi.
 
 ## Lý do phù hợp
 
-- LangChain chuẩn hóa model/embedding/tool schemas, giảm code provider-specific.
+- LangChain chuẩn hóa model/tool schemas, giảm code provider-specific.
 - LangGraph cho graph rõ để giải thích với judge và test conditional policy/fallback.
 - Deterministic domain core ngăn agent tự xếp hạng hay đóng khung người học.
 - Cùng contracts chạy được live, fake và replay; thuận lợi cho sáu thành viên dùng AI song song.

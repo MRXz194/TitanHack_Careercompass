@@ -66,7 +66,7 @@ Từ `backend/`:
 python -m compileall app scripts tests
 python -m pytest -q tests/unit tests/contract
 python -m pytest -q tests/integration
-python -m pytest -q -m e2e
+python -m pytest -q tests/e2e
 python -m scripts.check_routes
 ```
 
@@ -119,11 +119,11 @@ timeout và exception fixture. Recommendation tests xác nhận không có plann
 ```text
 compile → unit → contract → integration → route invariant → FE typecheck/build
                                               ↓
-                              release: E2E Explore/Launch/replay ×3
+                              CI: E2E Explore/LangGraph + Launch/replay
 ```
 
 - PR không được merge nếu unit/contract/integration hoặc FE build đỏ.
-- E2E chưa implement được ghi `NOT_IMPLEMENTED`, không tạo test placeholder pass giả.
+- E2E thật nằm ở `tests/e2e/test_journeys.py`, dùng TestClient + SQLite local và cấm network/provider.
 - Test flaky được coi là fail: fix clock/random/network dependency, không rerun đến xanh rồi bỏ qua.
 - Không giảm threshold trong `EVALUATION.md` để hợp kết quả.
 - Mọi handoff ghi command, output PASS/FAIL/NOT_RUN, commit và limitation. `NOT_RUN` không phải DONE.

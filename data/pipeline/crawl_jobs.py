@@ -13,6 +13,11 @@ import requests
 from curl_cffi import requests as curl_requests
 import cloudscraper
 
+try:
+    from data.pipeline.common import stable_job_id
+except ModuleNotFoundError:  # supports `python data/pipeline/crawl_jobs.py`
+    from common import stable_job_id
+
 # Reconfigure stdout/stderr for UTF-8 in Windows
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -319,10 +324,8 @@ def crawl_itviec():
                 if not skills:
                     skills = match_skills(title, desc_text)
                     
-                job_id = slug.split("-")[-1]
-                
                 job_obj = {
-                    "id": f"itviec_{job_id}",
+                    "id": stable_job_id("itviec", url),
                     "source": "itviec",
                     "url": url,
                     "title": title,
@@ -459,13 +462,8 @@ def crawl_topcv():
                     # Match skills
                     skills = match_skills(title, desc_text)
                     
-                    # Get Job ID from URL
-                    job_id = url.split("/")[-1].replace(".html", "").split("-")[-1]
-                    if job_id.startswith("j"):
-                        job_id = job_id[1:]
-                    
                     job_obj = {
-                        "id": f"topcv_{job_id}",
+                        "id": stable_job_id("topcv", url),
                         "source": "topcv",
                         "url": url,
                         "title": title,

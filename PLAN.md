@@ -227,11 +227,11 @@ Master schedule/dependency nằm ở `docs/TASKS.md`; mỗi member dùng task ca
 | Frontend | Next.js 15 + TypeScript + Tailwind v4 + Recharts | Team quen React; AI assistants hỗ trợ tốt nhất; deploy Vercel 1 click |
 | Backend | FastAPI (Python 3.11) + Pydantic v2 | Python mạnh nhất cho data/NLP; Swagger tự động = FE tự tra API |
 | DB | SQLite (qua SQLAlchemy) | Zero-setup, đủ cho scale hackathon; đường lên Postgres đã thiết kế sẵn |
-| Vector search | NumPy cosine in-process | ~200 careers, không cần vector DB — đừng over-engineer |
+| Matching retrieval | Cosine 5 chiều cùng-space in-process | 25 careers, dễ giải thích/test; chưa cần vector DB |
 | AI model/tool layer | LangChain Core + `langchain-openai`, chỉ qua `services/llm.py` | Một gateway cho provider adapters, typed tools, structured output; fake/test được |
 | LLM chat | DeepSeek `deepseek-v4-flash` qua LangChain `ChatOpenAI` + OpenAI-compatible env | Nhanh/rẻ; JSON mode; đổi provider qua gateway |
-| Agent runtime | LangGraph `StateGraph` custom tối giản; chỉ `/api/chat` | Conditional flow rõ; policy/tool/session do code sở hữu; có `AGENT_MODE=deterministic` fallback |
-| Embeddings | OpenAI `text-embedding-3-small` qua LangChain `OpenAIEmbeddings` | Rẻ, multilingual đủ tốt cho tiếng Việt |
+| Agent runtime | LangGraph `StateGraph` custom tối giản; chỉ `/api/chat` | Release dùng `AGENT_MODE=langgraph`; deterministic là kill switch |
+| Embeddings | Post-MVP experiment, không nằm trên release request path | Chỉ bật khi profile/career cùng encoder và thắng evaluation baseline |
 | Crawl | httpx + BeautifulSoup/selectolax (+ Playwright chỉ khi bắt buộc) | Nhẹ, nhanh |
 | Deploy | Vercel (FE) + Render/Railway (BE) | Free tier, nhanh |
 | Charts | Recharts | Đơn giản, đẹp đủ dùng |

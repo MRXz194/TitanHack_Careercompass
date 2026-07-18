@@ -7,7 +7,7 @@ services:
     runtime: python
     plan: free
     rootDir: backend
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python -c "from pathlib import Path; assert Path('market.db').is_file(), 'market.db release artifact missing'"
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
@@ -16,12 +16,6 @@ services:
       - key: CHAT_API_KEY
         sync: false
       - key: CHAT_MODEL
-        sync: false
-      - key: EMBED_API_BASE
-        sync: false
-      - key: EMBED_API_KEY
-        sync: false
-      - key: EMBED_MODEL
         sync: false
       - key: DATABASE_URL
         value: sqlite:///./market.db
@@ -32,4 +26,4 @@ services:
       - key: DEMO_MODE
         value: "off"
       - key: AGENT_MODE
-        value: deterministic
+        value: langgraph

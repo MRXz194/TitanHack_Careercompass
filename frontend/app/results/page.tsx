@@ -100,7 +100,7 @@ export default function ResultsPage() {
       {/* Danh sách các đề xuất nghề nghiệp chính */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Các gợi ý phù hợp nhất:</h2>
+          <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Các hướng đáng cân nhắc:</h2>
           <span className="text-xs text-[var(--cc-muted)]">Tổng số gợi ý: {data.recommendations.length}</span>
         </div>
 
@@ -112,7 +112,7 @@ export default function ResultsPage() {
           </div>
         ) : (
           <div className="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-6 text-center text-sm text-[var(--cc-muted)] italic font-serif">
-            Chưa tìm thấy hướng đi tương thích. Hãy thử thực hiện lại cuộc khảo sát chi tiết hơn.
+            Chưa có đủ bằng chứng để đề xuất hướng đi. Hãy tiếp tục trò chuyện hoặc bổ sung trải nghiệm, kỹ năng và điều kiện của em.
           </div>
         )}
       </div>

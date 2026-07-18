@@ -148,7 +148,14 @@ def parse_posted_date(posted_raw: str, crawled_at_str: str) -> str:
     except Exception:
         crawled_at = datetime.now(timezone.utc)
         
-    s = posted_raw.lower().strip()
+    s = (posted_raw or "").lower().strip()
+
+    # Job portals frequently expose an application deadline in the same slot as
+    # the publication date. A deadline must never be interpreted as evidence that
+    # the posting was published in the future.
+    deadline_markers = ("hạn", "han ", "deadline", "apply by", "hết hạn")
+    if any(marker in s for marker in deadline_markers):
+        return crawled_at.date().isoformat()
     
     # 1. Matches "3 ngày trước" / "3 days ago"
     match_days = re.search(r'(\d+)\s+ngày\s+trước', s)
@@ -166,14 +173,26 @@ def parse_posted_date(posted_raw: str, crawled_at_str: str) -> str:
         day = int(match_date_dmy.group(1))
         month = int(match_date_dmy.group(2))
         year = int(match_date_dmy.group(3))
-        return f"{year:04d}-{month:02d}-{day:02d}"
+        try:
+            parsed = datetime(year, month, day, tzinfo=crawled_at.tzinfo)
+        except ValueError:
+            return crawled_at.date().isoformat()
+        if parsed.date() > (crawled_at + timedelta(days=1)).date():
+            return crawled_at.date().isoformat()
+        return parsed.date().isoformat()
         
     match_date_ymd = re.search(r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})', s)
     if match_date_ymd:
         year = int(match_date_ymd.group(1))
         month = int(match_date_ymd.group(2))
         day = int(match_date_ymd.group(3))
-        return f"{year:04d}-{month:02d}-{day:02d}"
+        try:
+            parsed = datetime(year, month, day, tzinfo=crawled_at.tzinfo)
+        except ValueError:
+            return crawled_at.date().isoformat()
+        if parsed.date() > (crawled_at + timedelta(days=1)).date():
+            return crawled_at.date().isoformat()
+        return parsed.date().isoformat()
         
     return crawled_at.date().isoformat()
 

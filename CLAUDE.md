@@ -43,10 +43,10 @@ Judges prioritize: skill-signal extraction quality; personalization/explainabili
 
 - Frontend: Next.js 15 (App Router) + TypeScript + Tailwind v4 + Recharts. API calls only via `frontend/lib/api.ts` (has mock mode `NEXT_PUBLIC_USE_MOCK=1`).
 - Backend: FastAPI + Pydantic v2 + SQLAlchemy + SQLite. Python 3.11.
-- AI application layer: LangChain Core + `langchain-openai` for model adapters, typed tools and structured output; ONLY `backend/app/services/llm.py` may instantiate `ChatOpenAI`/`OpenAIEmbeddings`.
+- AI application layer: LangChain Core + `langchain-openai` for model adapters, typed tools and structured output; ONLY `backend/app/services/llm.py` may instantiate provider adapters.
 - Agent orchestration: minimal LangGraph `StateGraph` for `/api/chat` only, behind `AGENT_MODE`; use custom nodes/edges and CareerCompass policy, not LangChain `create_agent`, LangGraph prebuilt ReAct, LangSmith service, checkpointer or graph-based recommendation.
-- Providers: DeepSeek chat via OpenAI-compatible `CHAT_*`; OpenAI `text-embedding-3-small` via `EMBED_*`. Never import provider SDK/model adapters outside `llm.py`; never hardcode model names or API keys.
-- Vector search: NumPy cosine in-process. Do NOT add a vector DB.
+- Providers: DeepSeek chat via OpenAI-compatible `CHAT_*`. `EMBED_*` is experimental/post-MVP only; release matching does not call an embedding provider. Never import provider SDK/model adapters outside `llm.py`; never hardcode model names or API keys.
+- Matching retrieval: same-space five-dimension cosine in-process. Do NOT add a vector DB or load external vectors into release runtime.
 - All prompts live in `backend/app/prompts/` with a version comment.
 
 ## Hard rules (violations break the demo or the ethics criterion)
