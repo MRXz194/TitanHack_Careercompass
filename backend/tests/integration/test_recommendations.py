@@ -8,14 +8,14 @@ from fastapi.testclient import TestClient
 pytestmark = pytest.mark.integration
 
 
-def test_recommendations_without_session_still_returns_shape(client: TestClient) -> None:
+def test_recommendations_without_session_returns_404(client: TestClient) -> None:
+    """A session that never chatted has no profile to ground evidence in — must not
+    fabricate a "personalized" recommendation from an empty profile (docs/API_CONTRACT.md
+    §recommendations: 404 -> FE sends the user back to /explore)."""
     r = client.post("/api/recommendations", json={"session_id": "no-prior-chat"})
-    assert r.status_code == 200
+    assert r.status_code == 404
     body = r.json()
-    assert "disclaimer" in body
-    assert len(body["recommendations"]) == 5
-    assert body["stretch"]["is_stretch"] is True
-    assert "gender" not in body["recommendations"][0]
+    assert "error" in body
 
 
 def test_recommendations_after_chat_reflect_profile(client: TestClient) -> None:

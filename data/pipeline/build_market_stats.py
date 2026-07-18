@@ -248,7 +248,73 @@ def aggregate_career_stats(
     return output, meta
 
 
-def build_database(output: Path, rows: list[dict[str, Any]], meta: dict[str, Any]) -> None:
+def aggregate_skill_stats(
+    postings: list[dict[str, Any]],
+    *,
+    window_end: date,
+) -> list[dict[str, Any]]:
+    """MI-05: per (skill, region) demand + trend, mirroring aggregate_career_stats'
+    windowing/trend-readiness rules. Independent from aggregate_career_stats (not
+    sharing its `eligible` list) so that function's tested contract stays untouched;
+    this re-applies the same window filter over the same already-id-validated postings.
+
+    gap_score = demand_count normalized against the busiest skill in the SAME region
+    (0..1) -- a demand-signal ranking score, not a claim about labor scarcity (see
+    CLAUDE.md hard rule #9 "never overclaim gap_score").
+    """
+    window_start = window_end - timedelta(days=WINDOW_DAYS - 1)
+    eligible: list[dict[str, Any]] = []
+    for raw in postings:
+        posting = dict(raw)
+        posting["_posted_date"] = date.fromisoformat(posting["posted_date"])
+        if window_start <= posting["_posted_date"] <= window_end:
+            eligible.append(posting)
+
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for row in eligible:
+        region = str(row.get("region") or "other")
+        career_id = row.get("career_id")
+        for skill in row.get("skills") or []:
+            groups[(skill, region)].append(row)
+            groups[(skill, "all")].append(row)
+
+    max_demand_by_region: dict[str, int] = defaultdict(int)
+    for (_, region), rows in groups.items():
+        max_demand_by_region[region] = max(max_demand_by_region[region], len(rows))
+
+    early_start = window_end - timedelta(days=WINDOW_DAYS - 1)
+    late_start = window_end - timedelta(days=44)
+    output: list[dict[str, Any]] = []
+    for (skill, region), rows in sorted(groups.items()):
+        early = sum(early_start <= row["_posted_date"] < late_start for row in rows)
+        late = sum(late_start <= row["_posted_date"] <= window_end for row in rows)
+        trend_ready = len(rows) >= MIN_TREND_POSTINGS and early > 0 and late > 0
+        trend = round((late - early) / max(early, 5) * 100, 2) if trend_ready else None
+        related_careers = sorted(
+            {row["career_id"] for row in rows if row.get("career_id") != UNMAPPED}
+        )[:5]
+        max_demand = max(max_demand_by_region[region], 1)
+        output.append(
+            {
+                "skill": skill,
+                "region": region,
+                "gap_score": round(min(1.0, len(rows) / max_demand), 4),
+                "demand_count": len(rows),
+                "trend_pct": trend,
+                "low_confidence": not trend_ready,
+                "related_careers_json": _json(related_careers),
+                "posting_ids_json": _json(sorted(row["id"] for row in rows)),
+            }
+        )
+    return output
+
+
+def build_database(
+    output: Path,
+    rows: list[dict[str, Any]],
+    meta: dict[str, Any],
+    skill_rows: list[dict[str, Any]] | None = None,
+) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(f"sqlite:///{output}")
     metadata.drop_all(engine)
@@ -256,6 +322,8 @@ def build_database(output: Path, rows: list[dict[str, Any]], meta: dict[str, Any
     with engine.begin() as connection:
         if rows:
             connection.execute(career_stats.insert(), rows)
+        if skill_rows:
+            connection.execute(skill_stats.insert(), skill_rows)
         connection.execute(
             market_meta.insert(),
             [
@@ -292,17 +360,20 @@ def main(argv: list[str] | None = None) -> int:
                 f"input hash mismatch: expected {args.expected_input_hash}, got {input_hash}"
             )
         inferred_end = max(date.fromisoformat(row["posted_date"]) for row in postings)
+        window_end = args.window_end or inferred_end
         rows, meta = aggregate_career_stats(
-            postings, _load_titles(args.kb), window_end=args.window_end or inferred_end
+            postings, _load_titles(args.kb), window_end=window_end
         )
+        skill_rows = aggregate_skill_stats(postings, window_end=window_end)
         meta.update(
             {
                 "input_content_hash": input_hash,
                 "snapshot_id": args.snapshot_id,
                 "snapshot_sha256": args.snapshot_sha256,
+                "skill_row_count": len(skill_rows),
             }
         )
-        build_database(args.output, rows, meta)
+        build_database(args.output, rows, meta, skill_rows)
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

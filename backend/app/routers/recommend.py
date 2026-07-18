@@ -21,12 +21,8 @@ def recommendations(body: dict) -> RecommendationResponse:
 
     state = session_store.get_session(session_id)
     if state is None:
-        # Allow FE/demo with ephemeral profile-less session: empty explore profile
-        from app.models.schemas import Profile
-
-        profile = Profile(session_id=session_id, journey_mode="explore")
-    else:
-        profile = state.profile
+        raise HTTPException(404, detail="session not found; complete profiling first")
+    profile = state.profile
 
     try:
         top5, stretch = matching.recommend(profile)

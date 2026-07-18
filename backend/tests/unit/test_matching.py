@@ -74,9 +74,15 @@ def test_market_cannot_dominate_low_fit() -> None:
     p.dimensions["xa_hoi"] = 0.95
     p.skills = [ProfileSkill(name="chăm sóc bệnh nhân", source_quote="em thích chăm người ốm")]
     ranked = matching.top_k_careers(p, k=10)
-    top_id = ranked[0][0]
-    # Should prefer dieu-duong-like over pure market spike web dev when fit is social
-    assert top_id in ("dieu-duong", "digital-marketing", "ke-toan", "logistics-van-hanh") or ranked[0][2]["skill"] >= ranked[0][2]["market_component"]
+    top_id, top_score, top_detail = ranked[0]
+    # Real market.db now reports honest per-career demand (often 0 for careers absent
+    # from this small IT-skewed crawl sample, e.g. "dieu-duong") instead of a fabricated
+    # seed number — so which exact social career wins a close race can shift with real
+    # data. The actual invariant: the WINNER must be won on human-fit (cosine), not
+    # carried by market_component, and must not be an unrelated tech/market-spike pick.
+    assert top_id != "lap-trinh-vien-web"
+    assert top_detail["cosine"] >= 0.7
+    assert top_detail["cosine"] > top_detail["market_component"]
 
 
 def test_region_does_not_change_candidate_set() -> None:

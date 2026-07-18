@@ -2,25 +2,18 @@
 
 > Status: `BUILT`. Dữ liệu snapshot hiring thực tế được xử lý thành công.
 
-## Go/no-go decision (L-06, M1) — 2026-07-17
-
-- **Quyết định: Plan A — tiếp tục crawl nguồn hiện tại (topcv/vietnamworks/itviec).** Snapshot hiện tại (298/298 normalized, raw_count đúng 100/nguồn) là batch test, chưa phải giới hạn thật của nguồn; chưa tới mốc H+10 nên còn thời gian để đạt ≥1k. Plan B (dataset mở/Kaggle) không cần kích hoạt lúc này.
-- **Action cho M2**: gỡ giới hạn 100 posting/nguồn, chạy full crawl D-02/D-03 theo `docs/DATA_PIPELINE.md`, target tổng ≥3k theo `TASKS.md` D-03.
-- **Re-check**: M1 xem lại `data/processed/manifest.json` tại H+10; nếu vẫn <1k hoặc nguồn bị block (403/429), chuyển Plan B ngay, không cố gắng bypass.
-- **Watch item (không chặn quyết định go/no-go)**: phân bố vùng hiện lệch — HCM 12.8% (< 15% target của D-06), Đà Nẵng 0.7%. Chưa cần hành động ở H+0→5, nhưng D-06 (H+20→26) cần crawl bù nếu vẫn lệch.
-
 | Field | Value |
 |---|---|
-| Snapshot ID / SHA-256 | `real_jobs_snapshot_20260717` / `192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430` |
-| Built at / window | 2026-07-17T15:39:29.791113+00:00 / 90 days |
+| Snapshot ID / SHA-256 | `real_jobs_snapshot_20260718` / `c6c1db099370db28c10ccd032ceb173078930349191ccdd09939b70676831dfd` |
+| Built at / window | 2026-07-18T02:43:13.736836+00:00 / 90 days |
 | Sources + terms/license URLs | TopCV ([dieu-khoan](https://www.topcv.vn/dieu-khoan-bao-mat)), VietnamWorks ([chinh-sach](https://www.vietnamworks.com/chinh-sach-bao-mat)), ITViec ([privacy](https://itviec.com/privacy-policy)) |
-| Raw / normalized / enriched count | Raw: 300 | Normalized: 298 | Enriched (has skills[]): 234/298 (78.5%) |
+| Raw / normalized / enriched count | Raw: 300 | Normalized: 298 | Enriched (has skills[], MI-02 hybrid dict+LLM-fallback): 261/298 (87.6%) |
 | Count theo source và region | Nguồn: itviec: 99 (33.2%), topcv: 100 (33.6%), vietnamworks: 99 (33.2%) <br> Vùng: hanoi: 158 (53.0%), hcm: 38 (12.8%), other: 100 (33.6%), danang: 2 (0.7%) |
 | Salary coverage | 127/298 (42.6%) |
 | Experience/seniority coverage + entry-level count | Exp: 199/298 (66.8%) <br> Seniority: {"entry": 76, "mid": 59, "senior": 86, "unknown": 77} <br> Entry-level: 76 |
 | Dedupe/drop rate | Deduped: 2 (0.67%) |
 | Skill extraction version | skills_vi_v1.0 |
-| Career mapping coverage | 89/298 (29.9%) — rule-based title_patterns match against 25-career KB (`data/pipeline/build_market_stats.py`); LLM catch-up tier (MI-02/03 tầng 2) not run, so titles outside the current KB stay unmapped |
+| Career mapping coverage | 89/298 (29.9%) — title-pattern-only against the 25-career KB (`data/pipeline/map_careers.py --provisional`); bounded LLM fallback not configured (no live API key), so titles outside the KB's `title_patterns` stay unmapped. Unmapped postings are excluded from `career_stats` but counted in `market_meta`. |
 
 ## Allowed use và attribution
 
@@ -33,9 +26,7 @@
 - Posting count không bằng vacancy count (một tin có thể tuyển nhiều người hoặc đã đóng).
 - Nguồn/region coverage không đại diện hoàn bộ thị trường Việt Nam (phần lớn tập trung ở Hà Nội/HCM, thiếu các tỉnh lẻ).
 - Salary chỉ phản ánh tin có công khai lương (hơn 50% tin ghi Thỏa thuận).
-- Trend chỉ có ý nghĩa khi đủ cửa sổ thời gian và số lượng mẫu lớn hơn — dataset hiện tại là
-  **1 lần crawl duy nhất** (98% postings cùng ngày 2026-07-17), nên `build_market_stats.py`
-  cố ý ghi `trend_pct = NULL` cho mọi career/skill thay vì tính một con số artifact. `market.db`
-  đã được build và wire vào `/api/market/*` (fallback về seed khi 1 vùng/nghề chưa đủ dữ liệu).
-- Career mapping mới đạt 29.9% (rule-based only) — 70% postings không rơi vào 25 career hiện có
-  trong KB; mở rộng KB hoặc chạy tầng LLM catch-up (MI-02/03) sẽ nâng coverage này.
+- Trend chỉ có ý nghĩa khi đủ cửa sổ thời gian và số lượng mẫu lớn hơn — dataset hiện tại gần như 1 lần crawl duy nhất (posted_date cụm quanh 2026-07-17), nên `build_market_stats.py` đúng thiết kế trả `trend_pct = NULL` cho mọi career/skill (`career_stats`/`skill_stats` đã build, `/api/market/*` wired với fallback seed khi thiếu dữ liệu vùng).
+- **2 bản vá dữ liệu đã áp dụng trước khi build** (không sửa nội dung tin tuyển, chỉ sửa lỗi ID/ngày parse):
+  1. Trùng `id` (`itviec_5804` xuất hiện 2 lần cho 2 tin khác nhau — crawler lấy số cuối URL làm ID, bị trùng ngẫu nhiên) → đổi ID bản ghi thứ 2 thành `itviec_5804-dup1`.
+  2. 50/298 tin có `posted_date_raw = "Hạn DD/MM/YYYY"` (hạn nộp hồ sơ) bị `normalize.py` hiểu nhầm thành ngày đăng → `posted_date` rơi vào tương lai (tới 2027-01-20), khiến `window_end` (tính bằng max(posted_date)) lệch hẳn và loại gần như toàn bộ 298 tin khỏi cửa sổ 90 ngày. Đã clamp `posted_date` về ngày crawl (`crawled_at`) cho 50 dòng này — **cần M2 sửa gốc `normalize.py`** để phân biệt "Hạn nộp" khỏi ngày đăng thật, đây chỉ là vá tạm ở tầng dữ liệu.

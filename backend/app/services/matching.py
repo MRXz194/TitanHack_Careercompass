@@ -35,6 +35,7 @@ from app.core.config import get_settings
 from app.data.seed_loader import get_career, load_careers
 from app.models.schemas import MarketStats, Profile, Recommendation
 from app.services import evidence as evidence_service
+from app.services import market as market_service
 from app.services import pathways
 
 log = logging.getLogger("matching")
@@ -247,8 +248,14 @@ def cosine_fit(profile: Profile, career: dict) -> float:
 def score_career(profile: Profile, career: dict, *, use_market: bool = True) -> dict[str, float]:
     settings = get_settings()
     cos = cosine_fit(profile, career)
-    sk = skill_overlap(profile, (career.get("seed_market") or {}).get("top_skills") or [])
-    raw_m = market_signal(career.get("seed_market") or {}, profile.constraints.region_pref)
+    # Region-agnostic stats for RANKING: two profiles differing only in region_pref must
+    # rank identically (region informs display, never the score — CLAUDE.md hard rule #3
+    # and the region-invariance bias test). market_signal() below still applies its own
+    # small, capped "top_regions" boost using region_pref — that boost is intentional and
+    # bounded; it must not be compounded by ALSO varying the underlying demand/trend numbers.
+    stats = _market_stats(career, None)
+    sk = skill_overlap(profile, stats.top_skills)
+    raw_m = market_signal(stats.model_dump(), profile.constraints.region_pref)
     m_comp = _capped_market_component(raw_m, settings.w_market_signal) if use_market else 0.0
     total = settings.w_cosine * cos + settings.w_skill_overlap * sk + m_comp
     # When market disabled, renormalize human-fit weights for fair ranking
@@ -304,7 +311,13 @@ def pick_stretch(
     return ranked[-1][0], ranked[-1][1]
 
 
-def _market_stats(career: dict) -> MarketStats:
+def _market_stats(career: dict, region_pref: Optional[str] = None) -> MarketStats:
+    try:
+        return market_service.get_career_market(career["career_id"], region_pref or "all")
+    except market_service.MarketDataUnavailable:
+        # Honest fallback for careers not represented in the current snapshot / no market.db yet.
+        # The existing seed source_note is preserved and shown by the frontend.
+        pass
     m = career.get("seed_market") or {}
     return MarketStats(
         demand_count_90d=int(m.get("demand_count_90d") or 0),
@@ -362,7 +375,16 @@ def build_recommendation(
     career = get_career(career_id)
     if not career:
         raise KeyError(career_id)
-    market = _market_stats(career)
+    market = _market_stats(career, profile.constraints.region_pref)
+    # job_readiness's matched/missing skills MUST be validated against the exact top_skills
+    # shown in `market` above (CLAUDE.md rule #12: "missing skill must come from role market
+    # skills") -- when market.db has real per-career data, its top_skills can differ from the
+    # seed's curated list, so give pathways the resolved list rather than letting it re-derive
+    # from career["seed_market"] independently.
+    career_for_readiness = {
+        **career,
+        "seed_market": {**(career.get("seed_market") or {}), "top_skills": market.top_skills},
+    }
     routes = pathways.ensure_routes(career, journey_mode=profile.journey_mode)
     roadmap = pathways.ensure_skill_roadmap(career)
     # PR-06: grounded evidence (code selects quotes/stats; LLM optional; template fallback)
@@ -382,7 +404,7 @@ def build_recommendation(
         market=market,
         routes=routes,
         skill_roadmap=roadmap,
-        job_readiness=pathways.build_job_readiness(profile, career),
+        job_readiness=pathways.build_job_readiness(profile, career_for_readiness),
     )
 
 

@@ -109,6 +109,8 @@ PATCH semantics: field bị bỏ qua = giữ nguyên; gửi `education_stage`/`j
 
 Request: `{ "session_id": "…" }`
 
+Trả `404` nếu session không tồn tại; FE phải đưa người dùng về `/explore`, không sinh gợi ý generic rồi gắn nhãn cá nhân hóa.
+
 Response:
 ```json
 {

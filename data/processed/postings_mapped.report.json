@@ -1,0 +1,99 @@
+{
+  "mapping_version": "career-mapping-v1-stub",
+  "mapping_mode": "title-pattern-only",
+  "provisional": true,
+  "input_guard_mode": "fixture-unpinned",
+  "kb_schema_version": "career-title-pattern-kb-v1",
+  "kb_hash": "sha256:67df6e0f8824e190ca6878d3b5137f08fca27d54889dd258790b06ce395830f6",
+  "kb_career_count": 25,
+  "extraction_version": "skill-extraction-v1",
+  "taxonomy_version": "1.0.0",
+  "taxonomy_hash": "sha256:67c18ff3a8bd14f71d29e0c3de27f7035fb387e6aa797c5c39ecccd9fd961e2a",
+  "hash_method": "sha256:canonical-json-sort-keys",
+  "source_snapshot_hash": "sha256:27e831db7f0731fe32e370526857f8d03b67264f127224dd336656d955c171b0",
+  "mapping_input_snapshot_hash": "sha256:23f09e3450e97e8bfdbc193db3117a5bed007dd5388a69dcb0e777d831d231c5",
+  "output_content_hash": "sha256:314853520b3ba8c87c9a1c3cb49695c6c04b1f5ea70ffaf7e6e8d50117fece05",
+  "postings_total": 298,
+  "postings_output": 298,
+  "mapped_postings": 89,
+  "mapping_coverage_denominator": 298,
+  "mapping_coverage": 0.2987,
+  "mapping_accuracy": "NOT_RUN",
+  "mapping_accuracy_denominator": 0,
+  "unmapped_postings": 209,
+  "unmapped_denominator": 298,
+  "ambiguous_postings": 0,
+  "resumed_postings": 0,
+  "resume_denominator": 298,
+  "llm_calls": 0,
+  "estimated_cost_usd": 0,
+  "career_counts": {
+    "cham-soc-khach-hang": 2,
+    "chup-anh-quay-phim": 1,
+    "co-khi-cnc": 5,
+    "data-analyst": 1,
+    "digital-marketing": 2,
+    "giao-vien-tieng-anh": 1,
+    "ke-toan": 3,
+    "lap-trinh-vien-web": 59,
+    "logistics-van-hanh": 3,
+    "nhan-vien-ban-hang": 2,
+    "nhan-vien-hanh-chinh": 1,
+    "nhan-vien-nhan-su": 3,
+    "thiet-ke-do-hoa": 2,
+    "tu-van-tuyen-sinh": 2,
+    "unmapped": 209,
+    "viet-content-copywriter": 2
+  },
+  "coverage_by_source": {
+    "itviec": {
+      "mapped": 59,
+      "unmapped": 40,
+      "denominator": 99,
+      "coverage": 0.596
+    },
+    "topcv": {
+      "mapped": 21,
+      "unmapped": 79,
+      "denominator": 100,
+      "coverage": 0.21
+    },
+    "vietnamworks": {
+      "mapped": 9,
+      "unmapped": 90,
+      "denominator": 99,
+      "coverage": 0.0909
+    }
+  },
+  "coverage_by_region": {
+    "danang": {
+      "mapped": 0,
+      "unmapped": 2,
+      "denominator": 2,
+      "coverage": 0.0
+    },
+    "hanoi": {
+      "mapped": 70,
+      "unmapped": 88,
+      "denominator": 158,
+      "coverage": 0.443
+    },
+    "hcm": {
+      "mapped": 5,
+      "unmapped": 33,
+      "denominator": 38,
+      "coverage": 0.1316
+    },
+    "other": {
+      "mapped": 14,
+      "unmapped": 86,
+      "denominator": 100,
+      "coverage": 0.14
+    }
+  },
+  "limitations": [
+    "Provisional mapping against the versioned career KB pinned by kb_hash.",
+    "Title-pattern only; bounded LLM fallback is not configured.",
+    "Accuracy is NOT_RUN until 50 independent labels are available."
+  ]
+}

@@ -1,7 +1,7 @@
 {
-  "snapshot_id": "real_jobs_snapshot_20260717",
-  "sha256": "192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430",
-  "built_at": "2026-07-17T15:39:29.791113+00:00",
+  "snapshot_id": "real_jobs_snapshot_20260718",
+  "sha256": "c6c1db099370db28c10ccd032ceb173078930349191ccdd09939b70676831dfd",
+  "built_at": "2026-07-18T02:43:13.736836+00:00",
   "window_days": 90,
   "sources": {
     "topcv": {
