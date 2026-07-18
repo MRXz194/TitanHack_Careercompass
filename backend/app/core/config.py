@@ -1,5 +1,6 @@
 """All app settings come from env vars (backend/.env). Never read os.environ elsewhere."""
 from functools import lru_cache
+from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,6 +17,9 @@ class Settings(BaseSettings):
     embed_api_base: str = "https://api.openai.com/v1"
     embed_api_key: str = ""
     embed_model: str = "text-embedding-3-small"
+    embed_dimensions: Optional[int] = None
+    embed_input_type: str = ""
+    embed_input_text_truncate: str = ""
 
     database_url: str = "sqlite:///./market.db"
     sessions_db_url: str = "sqlite:///./sessions.db"

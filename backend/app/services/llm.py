@@ -40,10 +40,21 @@ def _chat_model() -> ChatOpenAI:
 
 def _embedding_model() -> OpenAIEmbeddings:
     s = get_settings()
+    extra_body: dict[str, str] = {}
+    if s.embed_input_type:
+        extra_body["input_type"] = s.embed_input_type
+    if s.embed_input_text_truncate:
+        extra_body["input_text_truncate"] = s.embed_input_text_truncate
+    model_kwargs: dict[str, object] = {"encoding_format": "float"}
+    if extra_body:
+        model_kwargs["extra_body"] = extra_body
     return OpenAIEmbeddings(
         model=s.embed_model,
         base_url=s.embed_api_base,
         api_key=s.embed_api_key,
+        dimensions=s.embed_dimensions,
+        model_kwargs=model_kwargs,
+        check_embedding_ctx_length=False,
         request_timeout=30,
         max_retries=2,
     )

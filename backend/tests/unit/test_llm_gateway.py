@@ -118,3 +118,34 @@ def test_embed_empty_input_does_not_build_provider_adapter(monkeypatch: pytest.M
     monkeypatch.setattr(llm, "_embedding_model", fail_if_called)
 
     assert llm.embed([]) == []
+
+
+def test_fpt_embedding_adapter_sends_raw_text_and_provider_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict = {}
+
+    class FakeSettings:
+        embed_model = "Vietnamese_Embedding"
+        embed_api_base = "https://mkp-api.fptcloud.com/v1"
+        embed_api_key = "test-only"
+        embed_dimensions = 1024
+        embed_input_type = "passage"
+        embed_input_text_truncate = "none"
+
+    class FakeAdapter:
+        def __init__(self, **kwargs) -> None:
+            captured.update(kwargs)
+
+    monkeypatch.setattr(llm, "get_settings", lambda: FakeSettings())
+    monkeypatch.setattr(llm, "OpenAIEmbeddings", FakeAdapter)
+
+    llm._embedding_model()
+
+    assert captured["dimensions"] == 1024
+    assert captured["check_embedding_ctx_length"] is False
+    assert captured["model_kwargs"]["encoding_format"] == "float"
+    assert captured["model_kwargs"]["extra_body"] == {
+        "input_type": "passage",
+        "input_text_truncate": "none",
+    }
