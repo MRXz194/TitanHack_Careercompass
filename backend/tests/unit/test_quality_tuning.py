@@ -41,6 +41,90 @@ def test_compact_interest_does_not_dump_long_noise() -> None:
     assert "sửa" in label.lower() or "điện" in label.lower()
 
 
+def test_dim_keywords_require_word_boundaries() -> None:
+    """Persona-corruption bug: "hàn" (welding) is a substring of "hàng" (goods) —
+    one of the most common Vietnamese words — so a business persona talking about
+    "bán hàng/tiền hàng" got ky_thuat bumped and an all-technical top-5, identical
+    to a technical persona. Keywords must match whole words, not substrings."""
+    out = deterministic_turn(
+        journey_mode="explore",
+        phase="interests",
+        message="em hay bán đồ handmade online, tự quản lý tiền hàng và chốt đơn",
+        turn=2,
+        fallback_index=0,
+    )
+    assert "ky_thuat" not in out.profile_delta.dimensions
+
+    out2 = deterministic_turn(
+        journey_mode="explore",
+        phase="interests",
+        message="em thích đi du lịch và khám phá chỗ mới",
+        turn=2,
+        fallback_index=0,
+    )
+    # "lịch" (schedule → quan_ly) must not fire inside "du lịch" (travel)
+    assert "quan_ly" not in out2.profile_delta.dimensions
+
+    out3 = deterministic_turn(
+        journey_mode="explore",
+        phase="interests",
+        message="em hay hàn dây điện và sửa mạch",
+        turn=2,
+        fallback_index=0,
+    )
+    assert out3.profile_delta.dimensions.get("ky_thuat", 0) > 0
+
+
+def test_interest_label_prefers_activity_clause_over_first_clause() -> None:
+    """"em học lớp 12, em thích vẽ và thiết kế" must yield an interest about
+    drawing/design — not the leading "em học lớp 12" clause, which is an
+    education statement, not an interest (this junk was visible in the live UI)."""
+    label = _compact_interest_label("em học lớp 12, em thích vẽ và thiết kế")
+    assert label is not None
+    assert "lớp 12" not in label
+    assert "vẽ" in label or "thiết kế" in label
+
+
+def test_constraint_and_done_messages_do_not_become_interests() -> None:
+    """Messages that are purely region/budget constraints or "show me results"
+    confirmations must not be stored as interests."""
+    assert _compact_interest_label("em ở đà nẵng, gia đình không có nhiều tiền") is None
+    assert _compact_interest_label("đúng rồi, cho em xem gợi ý nghề nghiệp đi") is None
+    assert _compact_interest_label("ok em sẵn sàng rồi, cho em xem gợi ý đi") is None
+    assert _compact_interest_label("em học lớp 12") is None
+
+
+def test_repeated_evidence_deepens_dimension_instead_of_flatlining() -> None:
+    """Every persona used to sit at a flat 0.55 forever, clustering all match
+    scores around ~40% and making results feel identical. A second, later piece
+    of evidence for the same dimension should deepen it (capped)."""
+    from app.models.schemas import Profile as P
+
+    profile = P(session_id="deep-1", journey_mode="explore",
+                dimensions={"ky_thuat": 0.55})
+    out = deterministic_turn(
+        journey_mode="explore",
+        phase="abilities",
+        message="em còn tự sửa được cả xe đạp điện và quạt máy",
+        turn=3,
+        fallback_index=1,
+        profile=profile,
+    )
+    assert out.profile_delta.dimensions.get("ky_thuat", 0) > 0.55
+    # capped: never runs away past 0.8 in deterministic mode
+    profile2 = P(session_id="deep-2", journey_mode="explore",
+                 dimensions={"ky_thuat": 0.8})
+    out2 = deterministic_turn(
+        journey_mode="explore",
+        phase="abilities",
+        message="em sửa đồ điện rất nhanh",
+        turn=4,
+        fallback_index=2,
+        profile=profile2,
+    )
+    assert out2.profile_delta.dimensions.get("ky_thuat", 0) <= 0.8
+
+
 def test_job_goal_not_set_on_random_viec_mention_in_abilities() -> None:
     # "việc" alone in abilities should not become full job_goal dump
     assert _extract_job_goal("Em làm việc nhóm khá ổn", "abilities") is None

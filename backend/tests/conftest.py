@@ -20,6 +20,9 @@ def isolated_sessions_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Ite
     monkeypatch.setenv("CHAT_API_KEY", "")
     monkeypatch.setenv("EMBED_API_KEY", "")
     monkeypatch.setenv("CHAT_STRUCTURED_METHOD", "json_mode")
+    # A developer's backend/.env may set replay/ddg for manual smoke tests;
+    # the suite must always run with research off (offline by contract).
+    monkeypatch.setenv("WEB_RESEARCH_MODE", "off")
     get_settings.cache_clear()
     url = f"sqlite:///{tmp_path / 'test_sessions.db'}"
     db_module.rebind_sessions_engine(url)
