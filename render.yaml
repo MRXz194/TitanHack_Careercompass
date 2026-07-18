@@ -17,6 +17,8 @@ services:
         sync: false
       - key: CHAT_MODEL
         sync: false
+      - key: CHAT_STRUCTURED_METHOD
+        value: prompt
       - key: DATABASE_URL
         value: sqlite:///./market.db
       - key: SESSIONS_DB_URL
@@ -27,3 +29,9 @@ services:
         value: "off"
       - key: AGENT_MODE
         value: langgraph
+      - key: READINESS_READY_COVERAGE
+        value: "0.75"
+      - key: READINESS_NEAR_COVERAGE
+        value: "0.45"
+      - key: READINESS_MIN_EVIDENCE_SKILLS
+        value: "2"

@@ -1,6 +1,6 @@
 # DEPLOY — L-03 deploy skeleton + L-02 GitHub guardrails checklist
 
-> Production target hiện tại: Vercel + Railway. Runbook copy-paste và env matrix mới nằm tại `docs/DEPLOY_VERCEL_RAILWAY.md`. Phần Render bên dưới được giữ làm fallback.
+> Production target hiện tại: **Vercel + Render**. `render.yaml` ở root là cấu hình backend chính; phần B bên dưới là runbook triển khai chuẩn. Tài liệu Railway được giữ làm phương án dự phòng.
 
 > M1 sở hữu file này. Checklist dưới đây là thao tác bấm tay trong GitHub/Vercel/Render UI —
 > không tự động hoá được từ CLI trong môi trường build hiện tại vì cần credentials cá nhân
@@ -23,7 +23,7 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 
 ### Backend → Render (Blueprint, dùng `render.yaml` ở root repo)
 1. [ ] Render dashboard → New → Blueprint → connect repo `MRXz194/TitanHack_Careercompass` → Render đọc `render.yaml`.
-2. [ ] Điền các env var chat đánh dấu `sync: false` (`CHAT_API_BASE`, `CHAT_API_KEY`, `CHAT_MODEL`) — copy giá trị thật từ `.env` local, KHÔNG paste vào chat/issue/log. Release không cần embedding key.
+2. [ ] Điền các env var chat đánh dấu `sync: false` (`CHAT_API_BASE`, `CHAT_API_KEY`, `CHAT_MODEL`) — dùng API key production đã rotate, KHÔNG paste vào chat/issue/log. `CHAT_STRUCTURED_METHOD=prompt` đã được khóa trong Blueprint vì FPT DeepSeek không hỗ trợ ổn định `response_format=json_object`. Release không cần embedding key.
 3. [ ] Build phải xác nhận file `backend/market.db` tồn tại; đây là aggregate-only release artifact, không chứa mô tả tuyển dụng. Thiếu file thì Render fail build thay vì âm thầm dùng seed.
 4. [ ] Deploy xong → mở `https://<service>.onrender.com/api/health` → phải có `status=ok`, `market_db_loaded=true`, `postings_count=298`.
 5. **Known limitation cần ghi vào pitch/runbook**: Render free plan spin-down khi idle (cold start ~30-50s). `market.db` được phục hồi từ Git ở mỗi deploy; `sessions.db` là ephemeral nên session có thể mất khi restart. Nếu ảnh hưởng demo, dùng `DEMO_MODE=replay` làm lưới an toàn.
