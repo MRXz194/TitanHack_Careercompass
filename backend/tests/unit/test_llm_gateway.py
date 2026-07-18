@@ -74,6 +74,24 @@ def test_chat_json_retries_once_then_returns_valid_result(monkeypatch: pytest.Mo
     assert structured.calls == 2
 
 
+def test_chat_json_repairs_malformed_structured_output(monkeypatch: pytest.MonkeyPatch) -> None:
+    malformed = {
+        "raw": None,
+        "parsed": None,
+        "parsing_error": ValueError("malformed JSON"),
+    }
+    structured = FakeStructuredModel([malformed, _success("repaired")])
+    monkeypatch.setattr(llm, "_chat_model", lambda: FakeChatModel(structured))
+
+    result = llm.chat_json("Return JSON", [], ExampleOutput, max_retries=1)
+
+    assert result.value == "repaired"
+    assert structured.calls == 2
+    assert "failed validation" in str(
+        getattr(structured.last_messages[-1], "content", "")
+    )
+
+
 def test_chat_json_raises_gateway_error_after_budget(monkeypatch: pytest.MonkeyPatch) -> None:
     structured = FakeStructuredModel([RuntimeError("provider unavailable")])
     monkeypatch.setattr(llm, "_chat_model", lambda: FakeChatModel(structured))

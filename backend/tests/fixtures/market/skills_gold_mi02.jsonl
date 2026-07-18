@@ -1,0 +1,10 @@
+{"posting_id":"fixture_software_001","region":"hanoi","career_group":"software","skills":["Python","phát triển REST API","FastAPI"]}
+{"posting_id":"fixture_data_002","region":"hcm","career_group":"data-office","skills":["Microsoft Excel"]}
+{"posting_id":"fixture_office_003","region":"danang","career_group":"data-office","skills":["Microsoft Excel"]}
+{"posting_id":"fixture_manufacturing_004","region":"hcm","career_group":"manufacturing","skills":["đọc bản vẽ kỹ thuật","vận hành máy CNC","tiện và phay"]}
+{"posting_id":"fixture_hvac_005","region":"danang","career_group":"skilled-trades","skills":["lắp đặt và bảo trì HVAC","sửa chữa điện lạnh"]}
+{"posting_id":"fixture_marketing_006","region":"hanoi","career_group":"marketing","skills":["SEO","content marketing","marketing mạng xã hội","viết nội dung"]}
+{"posting_id":"fixture_health_007","region":"hcm","career_group":"healthcare","skills":["chăm sóc người bệnh","theo dõi dấu hiệu sinh tồn","kiểm soát nhiễm khuẩn"]}
+{"posting_id":"fixture_accounting_008","region":"hanoi","career_group":"accounting","skills":["MISA","hạch toán kế toán","lập báo cáo tài chính"]}
+{"posting_id":"fixture_operations_009","region":"danang","career_group":"operations","skills":[]}
+{"posting_id":"fixture_mobile_010","region":"hcm","career_group":"software","skills":["phát triển ứng dụng di động","React Native","Firebase"]}

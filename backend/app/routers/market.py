@@ -76,13 +76,14 @@ def skill_gaps(region: str = Query("all")) -> SkillGapResponse:
 
 @router.get("/careers/{career_id}", response_model=CareerDetail)
 def career_detail(career_id: str, region: str = Query("all")) -> CareerDetail:
-    # STATUS: still seed-only — no route in the app calls this today (results/market
-    # pages get career market data from recommendations/overview instead). Wiring to
-    # market.db is a straightforward follow-up if a screen starts using it.
     c = get_career(career_id)
     if not c:
         raise HTTPException(404, detail="career not found")
-    m = dict(c["seed_market"])
-    m["source_note"] = SEED_NOTE
+    try:
+        stats = market_service.get_career_market(career_id, region)
+    except MarketDataUnavailable:
+        seed = dict(c["seed_market"])
+        seed["source_note"] = SEED_NOTE
+        stats = MarketStats(**seed)
     return CareerDetail(career_id=c["career_id"], title=c["title"], description=c["description"],
-                        market=MarketStats(**m), routes=[Route(**r) for r in c["routes"]])
+                        market=stats, routes=[Route(**r) for r in c["routes"]])
