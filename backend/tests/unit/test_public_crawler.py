@@ -59,6 +59,20 @@ def test_parse_jsonld_skips_expired_job():
     assert parse_jsonld_job(html, "itviec", "https://example.com/expired") is None
 
 
+def test_parse_jsonld_rejects_non_numeric_salary_marketing_copy():
+    payload = {
+        "@type": "JobPosting",
+        "title": "Data Analyst",
+        "validThrough": "2099-01-01",
+        "description": "Phân tích dữ liệu tuyển dụng và xây dựng báo cáo. " * 4,
+        "baseSalary": {"currency": "USD", "value": "You'll love it"},
+    }
+    html = f'<script type="application/ld+json">{json.dumps(payload)}</script>'
+    parsed = parse_jsonld_job(html, "itviec", "https://example.com/job/marketing-salary")
+    assert parsed is not None
+    assert parsed["salary_raw"] == "Thỏa thuận"
+
+
 def test_parse_vietnamworks_flight_payload_without_cookie():
     job = {
         "jobId": 123,

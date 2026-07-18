@@ -134,11 +134,20 @@ def _flatten_text(value: Any) -> str:
 def _salary_text(base_salary: Any) -> str:
     if not isinstance(base_salary, dict):
         return "Thỏa thuận"
+
+    def numeric(value: Any) -> Any | None:
+        if isinstance(value, bool) or value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return value
+        text = str(value).strip()
+        return text if re.fullmatch(r"\d+(?:[.,]\d+)?", text) else None
+
     currency = base_salary.get("currency") or ""
     value = base_salary.get("value")
     if isinstance(value, dict):
-        minimum = value.get("minValue")
-        maximum = value.get("maxValue")
+        minimum = numeric(value.get("minValue"))
+        maximum = numeric(value.get("maxValue"))
         unit = value.get("unitText") or ""
         if minimum is not None and maximum is not None:
             return f"{minimum} - {maximum} {currency} {unit}".strip()
@@ -146,10 +155,12 @@ def _salary_text(base_salary: Any) -> str:
             return f"Từ {minimum} {currency} {unit}".strip()
         if maximum is not None:
             return f"Đến {maximum} {currency} {unit}".strip()
-        if value.get("value") is not None:
-            return f"{value['value']} {currency} {unit}".strip()
-    if value is not None:
-        return f"{value} {currency}".strip()
+        scalar = numeric(value.get("value"))
+        if scalar is not None:
+            return f"{scalar} {currency} {unit}".strip()
+    scalar = numeric(value)
+    if scalar is not None:
+        return f"{scalar} {currency}".strip()
     return "Thỏa thuận"
 
 
