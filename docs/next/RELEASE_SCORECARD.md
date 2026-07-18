@@ -8,7 +8,7 @@ Release candidate commit: `8f982fc`
 
 Main integration / CI fix: `19b87ad` / `d283b40`
 
-Persona/workflow hardening branch: `codex/persona-workflow-hardening` (commit pending)
+Persona/workflow hardening implementation: `codex/persona-workflow-hardening` @ `8f809a5`
 
 Expansion Gate: **FAIL — automated candidate ready, manual E2E/human gates remain**
 
