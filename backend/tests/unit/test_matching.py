@@ -112,6 +112,17 @@ def test_region_does_not_change_candidate_set() -> None:
     assert len(set1) == n
 
 
+def test_personal_signal_guard_rejects_blank_and_accepts_evidence() -> None:
+    blank = Profile(session_id="blank-personal-signal")
+    assert matching.has_personal_signal(blank) is False
+
+    with_evidence = Profile(
+        session_id="evidence-personal-signal",
+        skills=[ProfileSkill(name="Excel", source_quote="em dùng Excel")],
+    )
+    assert matching.has_personal_signal(with_evidence) is True
+
+
 def test_recommend_returns_top5_and_stretch() -> None:
     p = _tech_profile()
     top5, stretch = matching.recommend(p)

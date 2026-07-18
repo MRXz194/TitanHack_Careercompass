@@ -31,6 +31,7 @@ data/eval/*.jsonl
 backend/*.db
 !backend/market.db
 backend/.cache/
+backend/workflow-pipeline.json
 
 # OS / editor
 .DS_Store

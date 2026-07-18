@@ -14,6 +14,11 @@ def research_careers(body: CareerResearchRequest) -> CareerResearchResponse:
     state = session_store.get_session(body.session_id)
     if state is None:
         raise HTTPException(404, detail="session not found; complete profiling first")
+    if not matching.has_personal_signal(state.profile):
+        raise HTTPException(
+            409,
+            detail="profile has insufficient personal evidence; continue profiling first",
+        )
 
     top5, stretch = matching.recommend(state.profile)
     allowed_ids = {item.career_id for item in top5} | {stretch.career_id}

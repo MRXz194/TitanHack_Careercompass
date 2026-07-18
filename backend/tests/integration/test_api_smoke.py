@@ -10,6 +10,8 @@ def test_health_uses_seed_data(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
+    assert body["llm_configured"] is False
+    assert body["llm_ok"] is body["llm_configured"]
     assert body["data_loaded"] is True
     assert body["postings_count"] > 0
 
@@ -51,6 +53,23 @@ def test_career_detail_matches_contract(client: TestClient) -> None:
     body = response.json()
     assert {"career_id", "title", "description", "market", "routes"} <= body.keys()
     assert len(body["routes"]) >= 2
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/market/overview?region=invalid",
+        "/api/market/skills?region=invalid",
+        "/api/market/careers/data-analyst?region=invalid",
+    ],
+)
+def test_market_routes_reject_unknown_region(client: TestClient, path: str) -> None:
+    response = client.get(path)
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "error": {"code": "422", "message": "Dữ liệu gửi lên không hợp lệ"}
+    }
 
 
 def test_launch_opening_preserves_mode_without_inference(client: TestClient) -> None:

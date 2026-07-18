@@ -76,9 +76,33 @@ def test_missing_session_id_422(client: TestClient) -> None:
 def test_what_if_invalid_skill_returns_422_not_500(client: TestClient) -> None:
     sid = "what-if-invalid"
     client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+    client.post(
+        "/api/chat",
+        json={
+            "session_id": sid,
+            "message": "Em thích phân tích dữ liệu bằng Excel.",
+            "journey_mode": "explore",
+        },
+    )
     response = client.post(
         "/api/recommendations/what-if",
         json={"session_id": sid, "skill": "GPA 3.8"},
     )
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "422"
+
+
+def test_what_if_rejects_blank_profile_before_generic_preview(client: TestClient) -> None:
+    sid = "what-if-blank"
+    client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": None, "journey_mode": "explore"},
+    )
+
+    response = client.post(
+        "/api/recommendations/what-if",
+        json={"session_id": sid, "skill": "SQL"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "409"

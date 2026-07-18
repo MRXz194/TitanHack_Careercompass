@@ -28,6 +28,19 @@ jobs:
         run: python -m pytest -q tests/integration
       - name: Offline end-to-end journeys
         run: python -m pytest -q tests/e2e
+      - name: Show release workflow pipeline
+        run: |
+          python -m scripts.show_workflow_pipeline --output workflow-pipeline.json
+          echo '## CareerCompass runtime workflow' >> "$GITHUB_STEP_SUMMARY"
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat workflow-pipeline.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload workflow evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-workflow-${{ github.sha }}
+          path: backend/workflow-pipeline.json
+          retention-days: 7
       - run: python -m scripts.check_routes
 
   frontend:

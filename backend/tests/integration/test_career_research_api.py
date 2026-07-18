@@ -38,6 +38,30 @@ def test_research_rejects_career_outside_session_recommendations(client: TestCli
     assert response.status_code == 422
 
 
+def test_research_rejects_blank_profile_before_generic_candidates(
+    client: TestClient,
+) -> None:
+    sid = "research-blank"
+    opened = client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": None, "journey_mode": "explore"},
+    )
+    assert opened.status_code == 200
+
+    response = client.post(
+        "/api/research/careers",
+        json={
+            "session_id": sid,
+            "career_ids": ["data-analyst"],
+            "intent": "overview",
+            "region": "all",
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "409"
+
+
 def test_research_off_mode_returns_grounded_local_block(client: TestClient) -> None:
     _open_session(client, "research-ok")
     rec_response = client.post(

@@ -87,6 +87,17 @@ def profile_text(profile: Profile) -> str:
     return sanitize_scoring_text(" | ".join(parts))
 
 
+def has_personal_signal(profile: Profile) -> bool:
+    """Return whether recommendations can be described as personalized."""
+    return bool(
+        profile.skills
+        or profile.interests
+        or profile.experiences
+        or profile.job_goal
+        or max(profile.dimensions.values(), default=0.0) >= 0.3
+    )
+
+
 def _normalize(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip().lower())
 

@@ -69,6 +69,7 @@ python -m compileall app scripts tests
 python -m pytest -q tests/unit tests/contract
 python -m pytest -q tests/integration
 python -m pytest -q tests/e2e
+python -m scripts.show_workflow_pipeline --output workflow-pipeline.json
 python -m scripts.check_routes
 ```
 
@@ -175,4 +176,23 @@ ngưỡng regression của KB hiện tại, không phải claim khoa học về 
 Edge cases bắt buộc ở unit/integration: tiếng Việt không dấu; từ đồng âm sau bỏ dấu
 (`về/vẽ`, `đây/dạy`, `hạn/hàn`); “điện thoại” không phải skill kỹ thuật; “chưa có project”
 không tạo experience; “chưa biết Python nhưng đã dùng SQL” chỉ ghi SQL; profile trống trả 409.
+
+## 10. Runtime workflow evidence
+
+`python -m scripts.show_workflow_pipeline` gọi FastAPI thật qua `TestClient`, SQLite release
+aggregate và session DB tạm, nhưng khóa provider/network ở chế độ offline. Nó fail-fast nếu một
+mắt xích sau hỏng:
+
+```mermaid
+flowchart LR
+  H["Health + market artifact"] --> E["Explore chat"]
+  E --> R["5 recommendations + stretch"]
+  R --> D["Research + What-if immutability"]
+  D --> L["Graduate Launch readiness"]
+  L --> M["Market overview + skill signals"]
+  M --> P["Privacy-only turn unchanged"]
+```
+
+CI ghi JSON aggregate vào Job Summary và upload artifact `runtime-workflow-<sha>` trong 7 ngày.
+Report chỉ chứa status/count/career ID; không chứa raw chat, profile, secret hoặc chain-of-thought.
 

@@ -114,4 +114,19 @@ describe("mock fallback — persona integrity", () => {
     expect(privacyOnly.profile).toEqual(opened.profile);
     expect(privacyOnly.reply).toMatch(/không dùng thông tin nhận dạng/i);
   });
+
+  it("turn chỉ có nhiều nhãn liên hệ vẫn không làm tăng tiến độ profiling", async () => {
+    const opened = await finish(mockChat(null, "explore"), 600);
+    const privacyOnly = await finish(mockChat(
+      "Tên em là An, em là nữ, email của em là an@example.com, "
+        + "liên hệ qua số điện thoại 0912345678, API key là sk-abcdefgh123",
+      "explore",
+    ), 600);
+
+    expect(privacyOnly.turn).toBe(opened.turn);
+    expect(privacyOnly.phase).toBe(opened.phase);
+    expect(privacyOnly.profile).toEqual(opened.profile);
+    expect(privacyOnly.reply).toMatch(/không dùng thông tin nhận dạng/i);
+    expect(localStorage.getItem("cc_mock_profile")).toBeNull();
+  });
 });

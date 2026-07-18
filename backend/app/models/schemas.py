@@ -21,6 +21,17 @@ ResearchIntent = Literal["overview", "skills", "routes", "local_market"]
 ResearchStatus = Literal["live", "cached", "replay", "unavailable"]
 
 
+# ---------- Service health ----------
+
+class HealthResponse(BaseModel):
+    status: Literal["ok"] = "ok"
+    llm_configured: bool
+    llm_ok: bool
+    data_loaded: bool
+    market_db_loaded: bool
+    postings_count: int
+
+
 # ---------- Profile ----------
 
 class ProfileSkill(BaseModel):

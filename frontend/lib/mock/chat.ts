@@ -69,11 +69,19 @@ function redactForProfile(value: string): string {
 }
 
 function hasMeaningfulProfileText(value: string): boolean {
-  const withoutMarkers = value.replace(
+  const withoutRedactedFields = value.replace(
+    /\b(?:e-?mail|mail|số(?:\s+điện\s+thoại)?|sđt|phone|điện\s+thoại|api\s*key|key)\s*[:=]?\s*\[(?:email|số điện thoại|khóa bí mật) đã ẩn\]/gi,
+    " ",
+  );
+  const withoutMarkers = withoutRedactedFields.replace(
     /\[(?:email|số điện thoại|khóa bí mật) đã ẩn\]/gi,
     " ",
   );
-  return /[\p{L}\p{N}_]/u.test(withoutMarkers);
+  const withoutPrivacyBoilerplate = withoutMarkers.replace(
+    /(^|[^\p{L}\p{N}_])(?:em|tôi|toi|mình|minh|cháu|chau|của|cua|là|la|và|va|liên\s+hệ|lien\s+he|qua|số|so|điện\s+thoại|dien\s+thoai|e-?mail|mail|sđt|sdt|phone|api|key)(?=$|[^\p{L}\p{N}_])/giu,
+    "$1",
+  );
+  return /[\p{L}\p{N}_]/u.test(withoutPrivacyBoilerplate);
 }
 
 function persistMockProfile(profile: Profile): void {

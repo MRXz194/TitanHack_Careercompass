@@ -8,6 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.data.seed_loader import load_careers
+from app.models.schemas import HealthResponse
 from app.routers import chat, market, recommend, research
 from app.services import market as market_service
 
@@ -57,7 +58,7 @@ app.include_router(research.router)
 
 
 # A never-real key some devs leave in place after copying .env.example — don't report
-# llm_ok:true for it (see docs/DEPLOY.md; a truthy-but-fake key made every chat turn
+# llm_configured:true for it (see docs/DEPLOY.md; a truthy-but-fake key made every chat turn
 # attempt a doomed live call before falling back).
 _PLACEHOLDER_KEYS = {
     "",
@@ -67,8 +68,9 @@ _PLACEHOLDER_KEYS = {
 }
 
 
-@app.get("/api/health")
-def health() -> dict:
+@app.get("/api/health", response_model=HealthResponse)
+def health() -> HealthResponse:
+    current_settings = get_settings()
     careers = load_careers()
     try:
         market_meta = market_service.get_market_meta()
@@ -77,10 +79,13 @@ def health() -> dict:
     except market_service.MarketDataUnavailable:
         market_db_loaded = False
         postings_count = sum(c["seed_market"]["demand_count_90d"] for c in careers)
-    return {
-        "status": "ok",
-        "llm_ok": settings.chat_api_key not in _PLACEHOLDER_KEYS,
-        "data_loaded": len(careers) > 0,
-        "market_db_loaded": market_db_loaded,
-        "postings_count": postings_count,
-    }
+    llm_configured = current_settings.chat_api_key.strip() not in _PLACEHOLDER_KEYS
+    return HealthResponse(
+        status="ok",
+        llm_configured=llm_configured,
+        # Backward-compatible alias. This is configuration state, not a provider probe.
+        llm_ok=llm_configured,
+        data_loaded=len(careers) > 0,
+        market_db_loaded=market_db_loaded,
+        postings_count=postings_count,
+    )

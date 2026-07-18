@@ -255,7 +255,7 @@ Không đưa production technology vào MVP nếu chưa có trigger; mỗi depen
 - CORS: chỉ allow origin FE (config trong `main.py`).
 - Rate limit thô cho `/api/chat` (chống trẻ em spam lúc demo booth): 30 req/phút/session.
 - Log mọi LLM call (model, tokens, latency) ra console — debug chi phí và chậm ở đâu.
-- `/api/health` trả `{status, llm_ok, data_loaded}` — M1 check sau mỗi deploy.
+- `/api/health` trả `{status, llm_configured, llm_ok, data_loaded, market_db_loaded, postings_count}` — M1 check sau mỗi deploy. `llm_configured` chỉ là trạng thái cấu hình; provider phải có bounded chat smoke riêng.
 - Student-data retention, source-use và release checklist: `docs/SECURITY_PRIVACY.md`.
 
 ### Failure matrix và degradation
@@ -264,7 +264,7 @@ Không đưa production technology vào MVP nếu chưa có trigger; mỗi depen
 |---|---|---|---|
 | Chat provider timeout/JSON fail | gateway metric/retry exhausted | deterministic phase question, session preserved | replay for demo; inspect prompt/model |
 | Embedding experiment unavailable/mismatch | artifact guard từ chối bật | giữ baseline 5 chiều + skill overlap | không đưa experiment vào release runtime |
-| Market DB missing/hash mismatch | health `data_loaded=false` | explicit seed/mock label, no “real data” claim | restore release artifact |
+| Market DB missing/hash mismatch | health `market_db_loaded=false` | explicit seed/mock label, no “real data” claim | restore release artifact |
 | FE cannot reach BE | normalized API error | retry then mock/replay path for demo | check CORS/deploy health |
 | Low sample | schema `low_confidence` | hide trend/salary, explain limitation | collect more data later |
 | Contract mismatch | CI/type/schema fixture | block merge/deploy | contract owner fixes all 3 places |

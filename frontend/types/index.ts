@@ -14,6 +14,18 @@ export type ReadinessBand = "ready_now" | "near_ready" | "build_foundation";
 export type ResearchIntent = "overview" | "skills" | "routes" | "local_market";
 export type ResearchStatus = "live" | "cached" | "replay" | "unavailable";
 
+// ---------- Service health ----------
+
+export interface HealthResponse {
+  status: "ok";
+  llm_configured: boolean;
+  /** @deprecated Use llm_configured; this legacy field is not a provider probe. */
+  llm_ok: boolean;
+  data_loaded: boolean;
+  market_db_loaded: boolean;
+  postings_count: number;
+}
+
 // ---------- Profile ----------
 
 export interface ProfileSkill {

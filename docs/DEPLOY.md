@@ -25,7 +25,7 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 1. [ ] Render dashboard → New → Blueprint → connect repo `MRXz194/TitanHack_Careercompass` → Render đọc `render.yaml`.
 2. [ ] Điền các env var chat đánh dấu `sync: false` (`CHAT_API_BASE`, `CHAT_API_KEY`, `CHAT_MODEL`) — dùng API key production đã rotate, KHÔNG paste vào chat/issue/log. `CHAT_STRUCTURED_METHOD=prompt` đã được khóa trong Blueprint vì FPT DeepSeek không hỗ trợ ổn định `response_format=json_object`. Release không cần embedding key.
 3. [ ] Build phải xác nhận file `backend/market.db` tồn tại; đây là aggregate-only release artifact, không chứa mô tả tuyển dụng. Thiếu file thì Render fail build thay vì âm thầm dùng seed.
-4. [ ] Deploy xong → mở `https://<service>.onrender.com/api/health` → phải có `status=ok`, `market_db_loaded=true`, `postings_count=298`.
+4. [ ] Deploy xong → mở `https://<service>.onrender.com/api/health` → phải có `status=ok`, `llm_configured=true`, `market_db_loaded=true`, `postings_count=298`. Health chỉ xác nhận cấu hình; chạy thêm một bounded chat smoke để kiểm tra provider thật.
 5. **Known limitation cần ghi vào pitch/runbook**: Render free plan spin-down khi idle (cold start ~30-50s). `market.db` được phục hồi từ Git ở mỗi deploy; `sessions.db` là ephemeral nên session có thể mất khi restart. Nếu ảnh hưởng demo, dùng `DEMO_MODE=replay` làm lưới an toàn.
 
 ### Frontend → Vercel
@@ -53,7 +53,7 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 
 ## Smoke test sau deploy (bắt buộc, ~3 phút — chạy lại sau MỌI redeploy)
 
-- [ ] `GET /api/health` trên Render: `status: ok`, `market_db_loaded: true`, `postings_count: 298`
+- [ ] `GET /api/health` trên Render: `status: ok`, `llm_configured: true`, `market_db_loaded: true`, `postings_count: 298`; một bounded chat smoke riêng trả 200
 - [ ] Mở FE → `/explore` → lượt chào xuất hiện (không phải lỗi mạng) → trả lời 2 lượt → profile nhích %
 - [ ] `/explore?mode=launch` → câu mở đầu launch khác explore
 - [ ] Xóa 1 skill trong profile card → không có banner lỗi đỏ (verify optimistic-patch rollback không kích hoạt sai)

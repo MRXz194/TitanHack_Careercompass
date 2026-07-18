@@ -11,8 +11,17 @@ import logging
 from fastapi import APIRouter, HTTPException, Query
 
 from app.data.seed_loader import get_career, load_careers
-from app.models.schemas import (CareerDetail, MarketOverview, MarketStats, Route,
-                                RisingCareer, SkillGapItem, SkillGapResponse, TopPayingCareer)
+from app.models.schemas import (
+    CareerDetail,
+    MarketOverview,
+    MarketStats,
+    Region,
+    RisingCareer,
+    Route,
+    SkillGapItem,
+    SkillGapResponse,
+    TopPayingCareer,
+)
 from app.services import market as market_service
 from app.services.market import MarketDataUnavailable
 
@@ -22,7 +31,7 @@ log = logging.getLogger("app.market")
 SEED_NOTE = "Dữ liệu mẫu (seed) — pipeline chưa chạy hoặc chưa đủ dữ liệu cho vùng này"
 
 
-def _seed_overview(region: str) -> MarketOverview:
+def _seed_overview(region: Region) -> MarketOverview:
     careers = load_careers()
     rising = sorted(careers, key=lambda c: c["seed_market"]["trend_pct"], reverse=True)[:8]
     paying = sorted(careers, key=lambda c: c["seed_market"]["salary_p50_trieu"], reverse=True)[:5]
@@ -38,7 +47,7 @@ def _seed_overview(region: str) -> MarketOverview:
     )
 
 
-def _seed_skill_gaps(region: str) -> SkillGapResponse:
+def _seed_skill_gaps(region: Region) -> SkillGapResponse:
     items: dict[str, SkillGapItem] = {}
     for c in load_careers():
         m = c["seed_market"]
@@ -57,7 +66,7 @@ def _seed_skill_gaps(region: str) -> SkillGapResponse:
 
 
 @router.get("/overview", response_model=MarketOverview)
-def overview(region: str = Query("all")) -> MarketOverview:
+def overview(region: Region = Query("all")) -> MarketOverview:
     try:
         return market_service.get_overview(region)
     except MarketDataUnavailable as e:
@@ -66,7 +75,7 @@ def overview(region: str = Query("all")) -> MarketOverview:
 
 
 @router.get("/skills", response_model=SkillGapResponse)
-def skill_gaps(region: str = Query("all")) -> SkillGapResponse:
+def skill_gaps(region: Region = Query("all")) -> SkillGapResponse:
     try:
         return market_service.get_skill_gaps(region)
     except MarketDataUnavailable as e:
@@ -75,10 +84,8 @@ def skill_gaps(region: str = Query("all")) -> SkillGapResponse:
 
 
 @router.get("/careers/{career_id}", response_model=CareerDetail)
-def career_detail(career_id: str, region: str = Query("all")) -> CareerDetail:
-    # STATUS: still seed-only — no route in the app calls this today (results/market
-    # pages get career market data from recommendations/overview instead). Wiring to
-    # market.db is a straightforward follow-up if a screen starts using it.
+def career_detail(career_id: str, region: Region = Query("all")) -> CareerDetail:
+    # Read the released aggregate first; seed is an explicit availability fallback.
     c = get_career(career_id)
     if not c:
         raise HTTPException(404, detail="career not found")

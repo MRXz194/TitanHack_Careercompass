@@ -249,15 +249,28 @@ def test_chat_redacts_direct_identifiers_before_persistence(client: TestClient) 
     assert "sửa đồ điện" in persisted
 
 
-def test_identifier_only_turn_does_not_advance_or_persist_user_text(client: TestClient) -> None:
-    sid = "privacy-only-turn"
+@pytest.mark.parametrize(
+    "case_name,message",
+    [
+        ("gender", "Em là nữ"),
+        (
+            "combined-contact",
+            "Tên em là An, em là nữ, email của em là an@example.com, "
+            "liên hệ qua số điện thoại 0912345678, API key là sk-abcdefgh123",
+        ),
+    ],
+)
+def test_identifier_only_turn_does_not_advance_or_persist_user_text(
+    client: TestClient, case_name: str, message: str
+) -> None:
+    sid = f"privacy-only-turn-{case_name}"
     opened = client.post(
         "/api/chat",
         json={"session_id": sid, "message": None, "journey_mode": "explore"},
     ).json()
     response = client.post(
         "/api/chat",
-        json={"session_id": sid, "message": "Em là nữ", "journey_mode": "explore"},
+        json={"session_id": sid, "message": message, "journey_mode": "explore"},
     ).json()
     assert response["turn"] == opened["turn"]
     assert response["phase"] == opened["phase"]

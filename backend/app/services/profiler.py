@@ -736,12 +736,26 @@ _REDACTION_MARKER_RE = re.compile(
     r"\[(?:email|số điện thoại|khóa bí mật) đã ẩn\]",
     flags=re.IGNORECASE,
 )
+_REDACTED_FIELD_RE = re.compile(
+    r"\b(?:e-?mail|mail|số(?:\s+điện\s+thoại)?|sđt|phone|điện\s+thoại|"
+    r"api\s*key|key)\s*[:=]?\s*"
+    r"\[(?:email|số điện thoại|khóa bí mật) đã ẩn\]",
+    flags=re.IGNORECASE,
+)
+_PRIVACY_BOILERPLATE_RE = re.compile(
+    r"\b(?:em|tôi|toi|mình|minh|cháu|chau|của|cua|là|la|và|va|"
+    r"liên\s+hệ|lien\s+he|qua|số|so|điện\s+thoại|dien\s+thoai|"
+    r"e-?mail|mail|sđt|sdt|phone|api|key)\b",
+    flags=re.IGNORECASE,
+)
 
 
 def _has_meaningful_profile_text(text: str) -> bool:
     """Privacy-only/contact-only turns must not advance profiling progress."""
-    without_markers = _REDACTION_MARKER_RE.sub(" ", text or "")
-    return bool(re.search(r"[\wÀ-ỹ]", without_markers, flags=re.UNICODE))
+    without_fields = _REDACTED_FIELD_RE.sub(" ", text or "")
+    without_markers = _REDACTION_MARKER_RE.sub(" ", without_fields)
+    without_boilerplate = _PRIVACY_BOILERPLATE_RE.sub(" ", without_markers)
+    return bool(re.search(r"[\wÀ-ỹ]", without_boilerplate, flags=re.UNICODE))
 
 
 def _extract_job_goal(text: str, phase: Phase) -> str | None:
