@@ -74,11 +74,12 @@ def merge_delta(
     for key, value in corrections.dimension_overrides.items():
         profile.dimensions[key] = value
 
-    # Interests (union)
+    # Interests (union) — same injection guard as skills/evidence_quotes, since an LLM-produced
+    # delta is not otherwise re-checked past the skill-name filter below.
     seen_i = {i.lower() for i in profile.interests}
     for interest in delta.interests or []:
         text = (interest or "").strip()
-        if text and text.lower() not in seen_i:
+        if text and text.lower() not in seen_i and not _looks_like_injection(text):
             profile.interests.append(text)
             seen_i.add(text.lower())
 
@@ -147,7 +148,11 @@ def merge_delta(
             c.study_budget = delta.constraints.study_budget
         if delta.constraints.study_duration_pref is not None:
             c.study_duration_pref = delta.constraints.study_duration_pref
-        if delta.constraints.notes is not None and delta.constraints.notes != "":
+        if (
+            delta.constraints.notes is not None
+            and delta.constraints.notes != ""
+            and not _looks_like_injection(delta.constraints.notes)
+        ):
             if c.notes:
                 c.notes = f"{c.notes}; {delta.constraints.notes}"
             else:
@@ -159,10 +164,11 @@ def merge_delta(
     if not corrections.locked_job_goal and delta.job_goal is not None:
         profile.job_goal = delta.job_goal
 
-    # Evidence quotes
+    # Evidence quotes — the deterministic path already guards this at the call site (line
+    # ~559 below); an LLM-produced delta needs the same guard here since nothing else re-checks it.
     for eq in delta.evidence_quotes or []:
         quote = (eq.quote or "").strip()
-        if not quote:
+        if not quote or _looks_like_injection(quote):
             continue
         profile.evidence_quotes.append(
             EvidenceQuote(turn=eq.turn or turn, quote=quote[:500], mapped_to=eq.mapped_to or "")
@@ -532,11 +538,14 @@ def deterministic_turn(
         if label:
             delta.interests = [label]
 
-    # Dimension bumps from keywords
+    # Dimension bumps from keywords — skip entirely if the whole message looks like an
+    # injection attempt, even if it also contains a legit-sounding keyword substring
+    # (e.g. "code" inside an "ignore previous instructions... code" message).
     dims: dict[str, float] = {}
-    for dim, kws in _DIM_KEYWORDS.items():
-        if any(k in lower for k in kws):
-            dims[dim] = 0.55
+    if not _looks_like_injection(text):
+        for dim, kws in _DIM_KEYWORDS.items():
+            if any(k in lower for k in kws):
+                dims[dim] = 0.55
     delta.dimensions = dims
 
     # Skills from tool keywords if not already added
@@ -768,6 +777,12 @@ def _produce_turn_output(state: SessionState, user_text: str) -> ProfilerTurnOut
             return chat_json(system, history, ProfilerTurnOutput, max_retries=2)
         except LLMError as exc:
             log.warning("profiler LLM fallback session=%s err=%s", state.session_id, type(exc).__name__)
+        except Exception as exc:  # noqa: BLE001 — never let an LLM-path bug 500 the chat endpoint
+            log.error(
+                "profiler LLM path raised unexpected error session=%s err=%s",
+                state.session_id,
+                type(exc).__name__,
+            )
 
     out = deterministic_turn(
         journey_mode=state.journey_mode,

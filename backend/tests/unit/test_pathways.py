@@ -167,6 +167,31 @@ def test_market_demand_does_not_raise_band_for_empty_skills() -> None:
     assert set(jr.missing_skills) <= set(career["seed_market"]["top_skills"])
 
 
+@pytest.mark.parametrize(
+    "short,long_unrelated",
+    [
+        ("C", "CI/CD"),
+        ("C", "C#"),
+        ("Go", "Google"),
+        ("AI", "Amazon Web Services"),
+        ("R", "HR"),
+    ],
+)
+def test_skill_match_short_tokens_require_exact_match(short: str, long_unrelated: str) -> None:
+    """1c: a bare short skill label must not spuriously containment-match an unrelated
+    longer label just because the short string happens to be a substring of it."""
+    assert pathways.skill_match(short, long_unrelated) is False
+
+
+def test_skill_match_exact_short_tokens_still_match() -> None:
+    assert pathways.skill_match("Go", "go") is True
+    assert pathways.skill_match("C#", "c#") is True
+
+
+def test_skill_match_long_tokens_still_use_containment() -> None:
+    assert pathways.skill_match("Excel", "Microsoft Excel nâng cao") is True
+
+
 def test_check_routes_script_logic() -> None:
     """Mirror scripts/check_routes.py on current seed."""
     failures = []

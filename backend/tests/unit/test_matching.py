@@ -53,6 +53,20 @@ def test_skill_overlap_and_cosine_in_unit_range() -> None:
     assert 0.0 <= parts["total"] <= 1.0
 
 
+def test_skill_overlap_short_token_does_not_spuriously_match() -> None:
+    """1c: a bare "C" skill must not inflate overlap against "CI/CD" via substring
+    containment — shares the length-guarded primitive with pathways.skill_match."""
+    p = Profile(
+        session_id="short-tok",
+        journey_mode="explore",
+        skills=[ProfileSkill(name="C", source_quote="em học ngôn ngữ C ở trường")],
+    )
+    overlap_unrelated = matching.skill_overlap(p, ["CI/CD", "Kubernetes"])
+    assert overlap_unrelated == 0.0
+    overlap_exact = matching.skill_overlap(p, ["C", "Kubernetes"])
+    assert overlap_exact > 0.0
+
+
 def test_market_component_is_capped() -> None:
     settings = get_settings()
     # Even with huge demand, market contribution after cap logic ≤ MARKET_SIGNAL_CAP

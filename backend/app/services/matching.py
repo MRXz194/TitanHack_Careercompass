@@ -141,13 +141,14 @@ def skill_overlap(profile: Profile, career_top_skills: list[str]) -> float:
     if not career:
         return 0.0
 
-    # soft match: token containment
+    # soft match: shared primitive with pathways.skill_match (length-guarded containment —
+    # a bare "C"/"Go"/"AI" must not spuriously match "CI/CD"/"Google"/"Amazon Web Services").
     inter_w = 0.0
     matched_c: set[str] = set()
     for csk in career:
         best = 0.0
         for psk in prof:
-            if psk == csk or psk in csk or csk in psk:
+            if pathways.skill_match(psk, csk):
                 best = max(best, weights.get(psk, 0.5))
                 matched_c.add(csk)
         inter_w += best

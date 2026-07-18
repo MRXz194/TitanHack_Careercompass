@@ -48,12 +48,21 @@ def _normalize(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip().lower())
 
 
+_SHORT_TOKEN_LEN = 3  # below this, require exact match — containment on short tokens
+# false-positives badly (e.g. "C" in "CI/CD", "C#"; "Go" in "Google"; "AI" in "Amazon Web Services").
+
+
 def skill_match(a: str, b: str) -> bool:
-    """Soft equality for skill labels (substring either way)."""
+    """Soft equality for skill labels. Containment (substring either way) only applies
+    when both sides are long enough to be unambiguous; short tokens require exact match."""
     an, bn = _normalize(a), _normalize(b)
     if not an or not bn:
         return False
-    return an == bn or an in bn or bn in an
+    if an == bn:
+        return True
+    if len(an) < _SHORT_TOKEN_LEN or len(bn) < _SHORT_TOKEN_LEN:
+        return False
+    return an in bn or bn in an
 
 
 def ensure_routes(career: dict, *, journey_mode: str = "explore") -> list[Route]:
