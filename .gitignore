@@ -17,10 +17,19 @@ node_modules/
 out/
 *.tsbuildinfo
 
-# Data (raw & processed are rebuilt by pipeline; seed/ IS committed)
+# Data: private/full-text inputs stay local; only release-safe aggregates and
+# reproducibility reports are committed.
+data/raw/*
 !data/raw/.gitkeep
+data/processed/*
 !data/processed/.gitkeep
+!data/processed/manifest.json
+!data/processed/postings_enriched.report.json
+!data/processed/postings_mapped.report.json
+!data/processed/traceability_report.json
+data/eval/*.jsonl
 backend/*.db
+!backend/market.db
 backend/.cache/
 
 # OS / editor

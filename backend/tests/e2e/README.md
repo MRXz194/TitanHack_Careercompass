@@ -1,12 +1,11 @@
 # E2E tests
 
-Đặt full-journey tests tại đây khi PR-03/PR-13 hoàn tất. E2E phải dùng fictional
-persona/replay, không dùng transcript thật; đánh marker `@pytest.mark.e2e` và không gọi
-network nếu không có explicit live-test flag.
+Full-journey tests ở `test_journeys.py` dùng fictional persona/replay, không dùng
+transcript thật, không gọi network và được chạy bắt buộc trong CI.
 
-Target P0:
+Coverage P0:
 
-- Explore: opening → profile correction → recommendations → market evidence.
-- Launch: opening → project evidence → readiness/actions.
-- Replay: ngắt model provider vẫn hoàn thành hai journey với cùng API contract.
+- Explore + LangGraph: opening → evidence → profile correction → recommendations → market.
+- Launch + replay: opening → project evidence → readiness/actions, model provider bị cấm gọi.
+- Cả hai: 5 hướng + stretch, pathway đa dạng, source note và autonomy disclaimer.
 

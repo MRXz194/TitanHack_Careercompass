@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 
 import pytest
+from langchain_core.messages import AIMessage
 from pydantic import BaseModel
 
 from app.services import llm
@@ -74,12 +75,52 @@ def test_chat_json_retries_once_then_returns_valid_result(monkeypatch: pytest.Mo
     assert structured.calls == 2
 
 
+def test_chat_json_repairs_malformed_structured_output(monkeypatch: pytest.MonkeyPatch) -> None:
+    malformed = {
+        "raw": None,
+        "parsed": None,
+        "parsing_error": ValueError("malformed JSON"),
+    }
+    structured = FakeStructuredModel([malformed, _success("repaired")])
+    monkeypatch.setattr(llm, "_chat_model", lambda: FakeChatModel(structured))
+
+    result = llm.chat_json("Return JSON", [], ExampleOutput, max_retries=1)
+
+    assert result.value == "repaired"
+    assert structured.calls == 2
+    assert "failed validation" in str(
+        getattr(structured.last_messages[-1], "content", "")
+    )
+
+
 def test_chat_json_raises_gateway_error_after_budget(monkeypatch: pytest.MonkeyPatch) -> None:
     structured = FakeStructuredModel([RuntimeError("provider unavailable")])
     monkeypatch.setattr(llm, "_chat_model", lambda: FakeChatModel(structured))
 
     with pytest.raises(llm.LLMError, match="after 1 attempts"):
         llm.chat_json("Return JSON", [], ExampleOutput, max_retries=0)
+
+
+def test_chat_json_prompt_strategy_for_fpt_without_response_format(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeSettings:
+        chat_model = "DeepSeek-V4-Flash"
+        chat_structured_method = "prompt"
+
+    class PromptModel:
+        def invoke(self, messages: list[object]) -> AIMessage:
+            assert messages
+            return AIMessage(content='```json\n{"value":"fpt-ok"}\n```')
+
+        def with_structured_output(self, *args, **kwargs):
+            raise AssertionError("FPT prompt strategy must not send response_format")
+
+    monkeypatch.setattr(llm, "get_settings", lambda: FakeSettings())
+    monkeypatch.setattr(llm, "_chat_model", lambda: PromptModel())
+
+    result = llm.chat_json("Return JSON", [], ExampleOutput, max_retries=0)
+    assert result.value == "fpt-ok"
 
 
 def test_embed_uses_gateway_adapter_without_network(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -100,3 +141,34 @@ def test_embed_empty_input_does_not_build_provider_adapter(monkeypatch: pytest.M
     monkeypatch.setattr(llm, "_embedding_model", fail_if_called)
 
     assert llm.embed([]) == []
+
+
+def test_fpt_embedding_adapter_sends_raw_text_and_provider_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict = {}
+
+    class FakeSettings:
+        embed_model = "Vietnamese_Embedding"
+        embed_api_base = "https://mkp-api.fptcloud.com/v1"
+        embed_api_key = "test-only"
+        embed_dimensions = 1024
+        embed_input_type = "passage"
+        embed_input_text_truncate = "none"
+
+    class FakeAdapter:
+        def __init__(self, **kwargs) -> None:
+            captured.update(kwargs)
+
+    monkeypatch.setattr(llm, "get_settings", lambda: FakeSettings())
+    monkeypatch.setattr(llm, "OpenAIEmbeddings", FakeAdapter)
+
+    llm._embedding_model()
+
+    assert captured["dimensions"] == 1024
+    assert captured["check_embedding_ctx_length"] is False
+    assert captured["model_kwargs"]["encoding_format"] == "float"
+    assert captured["model_kwargs"]["extra_body"] == {
+        "input_type": "passage",
+        "input_text_truncate": "none",
+    }

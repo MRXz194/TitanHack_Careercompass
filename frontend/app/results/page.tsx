@@ -5,6 +5,7 @@ import { fetchRecommendations } from "@/lib/api";
 import type { RecommendationResponse, JourneyMode } from "@/types";
 import ResultsHeader from "@/components/results/ResultsHeader";
 import RecommendationCard from "@/components/results/RecommendationCard";
+import StretchCard from "@/components/results/StretchCard";
 
 export default function ResultsPage() {
   const [data, setData] = useState<RecommendationResponse | null>(null);
@@ -99,7 +100,7 @@ export default function ResultsPage() {
       {/* Danh sách các đề xuất nghề nghiệp chính */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Các gợi ý phù hợp nhất:</h2>
+          <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Các hướng đáng cân nhắc:</h2>
           <span className="text-xs text-[var(--cc-muted)]">Tổng số gợi ý: {data.recommendations.length}</span>
         </div>
 
@@ -111,7 +112,7 @@ export default function ResultsPage() {
           </div>
         ) : (
           <div className="rounded-xl border border-[var(--cc-border)] bg-[var(--cc-card-bg)] p-6 text-center text-sm text-[var(--cc-muted)] italic font-serif">
-            Chưa tìm thấy hướng đi tương thích. Hãy thử thực hiện lại cuộc khảo sát chi tiết hơn.
+            Chưa có đủ bằng chứng để đề xuất hướng đi. Hãy tiếp tục trò chuyện hoặc bổ sung trải nghiệm, kỹ năng và điều kiện của em.
           </div>
         )}
       </div>
@@ -120,7 +121,7 @@ export default function ResultsPage() {
       {data.stretch && (
         <div className="space-y-3.5 pt-4 border-t border-[var(--cc-border)]/60">
           <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Vùng mở rộng cơ hội (Stretch Suggestion):</h2>
-          <RecommendationCard rec={data.stretch} />
+          <StretchCard rec={data.stretch} />
         </div>
       )}
 

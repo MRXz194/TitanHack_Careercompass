@@ -1,34 +1,42 @@
-# DATA SNAPSHOT CARD — điền tại D-10
+# DATA SNAPSHOT CARD — release artifact
 
-> Status: `BUILT`. Dữ liệu snapshot hiring thực tế được xử lý thành công.
+> Status: `BUILT_WITH_CAVEATS`. Đây là snapshot nhu cầu tuyển dụng quan sát được, không phải dữ liệu thời gian thực và không đo nguồn cung lao động.
 
 | Field | Value |
 |---|---|
-| Snapshot ID / SHA-256 | `real_jobs_snapshot_20260717` / `192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430` |
-| Built at / window | 2026-07-17T13:46:45.860780+00:00 / 90 days |
-| Sources + terms/license URLs | TopCV ([dieu-khoan](https://www.topcv.vn/dieu-khoan-bao-mat)), VietnamWorks ([chinh-sach](https://www.vietnamworks.com/chinh-sach-bao-mat)), ITViec ([privacy](https://itviec.com/privacy-policy)) |
-| Raw / normalized / enriched count | Raw: 300 | Normalized: 298 | Enriched (has skills[]): 234/298 (78.5%) |
-| Count theo source và region | Nguồn: itviec: 99 (33.2%), topcv: 100 (33.6%), vietnamworks: 99 (33.2%) <br> Vùng: hanoi: 158 (53.0%), hcm: 38 (12.8%), other: 100 (33.6%), danang: 2 (0.7%) |
-| Salary coverage | 127/298 (42.6%) |
-| Experience/seniority coverage + entry-level count | Exp: 199/298 (66.8%) <br> Seniority: {"entry": 76, "mid": 59, "senior": 86, "unknown": 77} <br> Entry-level: 76 |
-| Dedupe/drop rate | Deduped: 2 (0.67%) |
-| Skill extraction version | skills_vi_v1.0 |
-| Career mapping coverage | 89/298 (29.9%) — rule-based title_patterns match against 25-career KB (`data/pipeline/build_market_stats.py`); LLM catch-up tier (MI-02/03 tầng 2) not run, so titles outside the current KB stay unmapped |
+| Snapshot / SHA-256 | `real_jobs_snapshot_20260718` / `c6c1db099370db28c10ccd032ceb173078930349191ccdd09939b70676831dfd` |
+| Built at / analysis window | `2026-07-18T02:43:13Z` / tối đa 90 ngày |
+| Raw / normalized | 300 / 298; 2 dòng drop hoặc dedupe (0,67%) |
+| Sources | TopCV 100, VietnamWorks 99, ITViec 99 |
+| Regions | Hà Nội 158, HCM 38, Đà Nẵng 2, other 100 |
+| Salary evidence | 127/298 (42,62%); percentile null khi mẫu không đủ |
+| Experience evidence | 199/298 (66,78%); entry-level 76 |
+| Skill extraction | `skill-extraction-v1`; 261/298 có ít nhất 1 skill; 127 low-signal dùng dictionary fallback; live LLM success 0 |
+| Career mapping | `career-mapping-v1-stub`; 89/298 (29,87%); title-pattern-only; accuracy `NOT_RUN` |
+| Deploy artifact | `backend/market.db`: 43 career-stat rows, 548 skill-stat rows, 16 metadata rows; không chứa job description |
+| Trend | `NULL` cho snapshot hiện tại vì chưa đủ hai cửa sổ thời gian đáng tin |
 
-## Allowed use và attribution
+## Nguồn và quyền sử dụng
 
-- Dữ liệu thu thập từ các nguồn công khai: TopCV, VietnamWorks, ITViec.
-- Mục đích sử dụng: Phân tích giáo dục hướng nghiệp trong khuôn khổ Hackathon. Không kinh doanh, không xuất bản lại mô tả công việc (job descriptions) chi tiết của nhà tuyển dụng.
-- Ghi nhận nguồn gốc trên giao diện: Tất cả số liệu hiển thị đi kèm chú thích nguồn gốc tương ứng.
+- Policy pages được ghi trong `data/processed/manifest.json`; `permission_status=unverified` cho cả ba nguồn. Privacy/terms page không được diễn giải thành giấy phép tái phân phối.
+- Raw JSON, processed full text và auto-labeled gold không còn nằm trong Git HEAD. Chúng chỉ được giữ local/secure storage để tái chạy pipeline.
+- Repo chỉ phát hành aggregate SQLite, manifest và report tái lập; không công bố lại nội dung mô tả việc làm.
+- UI phải ghi “hiring-demand proxy / nhu cầu quan sát được”, không gọi là “thiếu hụt kỹ năng” nếu chưa có dữ liệu supply.
 
-## Known limitations
+## Chất lượng và giới hạn
 
-- Posting count không bằng vacancy count (một tin có thể tuyển nhiều người hoặc đã đóng).
-- Nguồn/region coverage không đại diện hoàn bộ thị trường Việt Nam (phần lớn tập trung ở Hà Nội/HCM, thiếu các tỉnh lẻ).
-- Salary chỉ phản ánh tin có công khai lương (hơn 50% tin ghi Thỏa thuận).
-- Trend chỉ có ý nghĩa khi đủ cửa sổ thời gian và số lượng mẫu lớn hơn — dataset hiện tại là
-  **1 lần crawl duy nhất** (98% postings cùng ngày 2026-07-17), nên `build_market_stats.py`
-  cố ý ghi `trend_pct = NULL` cho mọi career/skill thay vì tính một con số artifact. `market.db`
-  đã được build và wire vào `/api/market/*` (fallback về seed khi 1 vùng/nghề chưa đủ dữ liệu).
-- Career mapping mới đạt 29.9% (rule-based only) — 70% postings không rơi vào 25 career hiện có
-  trong KB; mở rộng KB hoặc chạy tầng LLM catch-up (MI-02/03) sẽ nâng coverage này.
+- Posting count không bằng vacancy count; một tin có thể tuyển nhiều người hoặc đã đóng.
+- Mẫu nhỏ và lệch Hà Nội/IT, không đại diện toàn bộ Việt Nam. Đà Nẵng chỉ có 2 tin.
+- 209/298 tin chưa map vào KB 25 career; aggregate theo career vì vậy chỉ phản ánh phần mapped.
+- LLM extraction live đã thất bại/không cấu hình ở snapshot này; số skill hiện tại chủ yếu đến từ taxonomy deterministic. Không được trình bày là LLM extraction đã đạt chất lượng production.
+- Skill/career mapping accuracy và human usefulness vẫn `NOT_RUN`; coverage không thay thế accuracy.
+
+## Fix nguồn đã đưa vào code
+
+- `normalize.parse_posted_date` nhận biết “Hạn/Deadline”, ngày không hợp lệ và ngày tương lai; các trường hợp này quay về ngày crawl thay vì giả làm ngày đăng.
+- `stable_job_id` dùng SHA-256 của URL chuẩn hóa, tránh hai URL khác nhau có cùng số đuôi bị trùng ID.
+- Hai fix có unit regression test. Snapshot hiện tại đã được vá tương đương trước khi build; lần crawl kế tiếp sẽ nhận fix từ nguồn.
+
+## Claim được phép khi pitch
+
+“CareerCompass đã xử lý một snapshot 298 tin từ ba nguồn để trích tín hiệu kỹ năng, lương và khu vực. Đây là proxy quan sát có caveat; sản phẩm hiển thị denominator, độ tin cậy và không bịa trend khi dữ liệu chưa đủ.”

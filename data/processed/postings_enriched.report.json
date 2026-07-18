@@ -1,0 +1,52 @@
+{
+  "extraction_version": "skill-extraction-v1",
+  "prompt_version": "skill-extraction-prompt-v1",
+  "taxonomy_version": "1.0.0",
+  "taxonomy_hash": "sha256:67c18ff3a8bd14f71d29e0c3de27f7035fb387e6aa797c5c39ecccd9fd961e2a",
+  "model_id": "deepseek-v4-flash",
+  "text_scope": "title+description_before_benefits",
+  "hash_method": "sha256:canonical-json-sort-keys",
+  "input_snapshot_hash": "sha256:05647d355fa1680da8cd0c772ffea238092a4cbd8ba6399225e824653dc6e773",
+  "extraction_input_hash": "sha256:dd58b116979b9de505abe6ddc24feea78cd11b5c185daee9fd766a78851401e5",
+  "output_content_hash": "sha256:23f09e3450e97e8bfdbc193db3117a5bed007dd5388a69dcb0e777d831d231c5",
+  "postings_total": 298,
+  "postings_output": 298,
+  "source_counts": {
+    "itviec": 99,
+    "topcv": 100,
+    "vietnamworks": 99
+  },
+  "region_counts": {
+    "danang": 2,
+    "hanoi": 158,
+    "hcm": 38,
+    "other": 100
+  },
+  "low_signal_postings": 127,
+  "low_signal_denominator": 298,
+  "cache_hits": 0,
+  "llm_calls": 13,
+  "llm_attempted_postings": 127,
+  "llm_success_postings": 0,
+  "llm_success_denominator": 127,
+  "fallback_postings": 127,
+  "fallback_denominator": 127,
+  "llm_status_counts": {
+    "dictionary_fallback": 127,
+    "not_needed": 171
+  },
+  "zero_skill_postings": 37,
+  "zero_skill_denominator": 298,
+  "average_skills_per_posting": 6.299,
+  "new_skill_candidates": 0,
+  "new_skill_candidate_counts": {},
+  "failure_categories": {
+    "LLMError": 127
+  },
+  "failure_category_unit": "postings",
+  "estimated_input_tokens": 48665,
+  "estimated_output_tokens": 0,
+  "estimated_cost_usd": null,
+  "estimated_cost_per_1k_postings_usd": null,
+  "cost_limitation": "Token counts use chars/4 and prices must be supplied by M1; provider logs are the source for actual billed tokens and cost."
+}

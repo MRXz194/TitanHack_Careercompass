@@ -38,7 +38,7 @@ export default function ResultsHeader({ journeyMode, generatedAt, isMock = true 
       <p className="text-sm text-[var(--cc-muted)] leading-relaxed">
         {journeyMode === "launch"
           ? "Phân tích mức độ sẵn sàng cho các vị trí khởi điểm (entry-level) dựa trên năng lực, dự án thực tế của bạn và tín hiệu nhu cầu từ thị trường tuyển dụng."
-          : "Khám phá các lựa chọn ngành nghề phù hợp nhất dựa trên tính cách, sở thích, thế mạnh và mong muốn cá nhân do chính bạn chia sẻ."}
+          : "Khám phá nhiều lựa chọn nghề đáng cân nhắc từ sở thích, năng lực có bằng chứng và tín hiệu tuyển dụng; đây không phải kết luận đóng khung em."}
       </p>
     </div>
   );

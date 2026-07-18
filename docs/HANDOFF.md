@@ -27,9 +27,8 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 | Processed postings | `data/processed/postings.jsonl` | M2 | M3 | D-04 QA report pass |
 | Skill taxonomy | `data/taxonomy/skills_vi.json` | M3 | pipeline + M4 | version/hash được ghi |
 | Enriched postings | `data/processed/postings_enriched.jsonl` | M3 | stats builder | extraction report đi kèm |
-| Market DB | `backend/market.db` hoặc release artifact | M3 | BE/M6 | meta table + spot-check pass |
+| Market DB | `backend/market.db` tracked aggregate-only release artifact | M3 | BE/M6/Render | chỉ aggregate tables, meta + spot-check pass; build fail nếu thiếu |
 | Career KB | `data/seed/careers_seed.json` | M2 + M4 | matching/FE | route check pass |
-| Career embeddings | `.npy` + career IDs | M3 | M4 | cùng KB hash |
 | Replay fixtures | `backend/app/data/replay/*.json` | M1 + M4 | demo | ngắt mạng vẫn E2E |
 | Evaluation results | `docs/EVALUATION_RESULTS.md` | M1 | pitch/judges | ghi cả fail/caveat |
 | Launch profile/result fixture | replay + contract | M4 | M5/M6/M1 | matched/missing/actions invariants pass |
@@ -40,7 +39,7 @@ Link file không thay cho lệnh chạy. “Code xong rồi” không phải han
 
 1. FE làm mock đúng contract; BE stub trả cùng shape.
 2. M4 handoff chat thật cho M5; M1 thu replay ngay.
-3. M3 handoff `top_k` chạy trên seed sớm; refresh embeddings sau khi KB mở rộng.
+3. M3 handoff `top_k` chạy trên KB 5 chiều; không thêm embedding nếu chưa có same-model profile encoder + evaluation.
 4. M3 handoff market DB/API cho M6; UI vẫn giữ fallback seed.
 5. M4 thay stub recommendation bằng scoring; M6 chuyển mock → real bằng env, không xóa mock.
 6. M1 chạy contract smoke test và E2E sau mỗi integration PR.

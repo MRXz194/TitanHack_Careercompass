@@ -25,6 +25,8 @@ jobs:
         run: python -m pytest -q tests/unit tests/contract
       - name: Integration tests
         run: python -m pytest -q tests/integration
+      - name: Offline end-to-end journeys
+        run: python -m pytest -q tests/e2e
       - run: python -m scripts.check_routes
 
   frontend:

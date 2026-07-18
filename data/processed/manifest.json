@@ -1,24 +1,27 @@
 {
-  "snapshot_id": "real_jobs_snapshot_20260717",
-  "sha256": "192e492fa2984f908525ac556a893767ab19a431831e7ea144558d0f8383a430",
-  "built_at": "2026-07-17T13:46:45.860780+00:00",
+  "snapshot_id": "real_jobs_snapshot_20260718",
+  "sha256": "c6c1db099370db28c10ccd032ceb173078930349191ccdd09939b70676831dfd",
+  "built_at": "2026-07-18T02:43:13.736836+00:00",
   "window_days": 90,
   "sources": {
     "topcv": {
-      "terms_url": "https://www.topcv.vn/dieu-khoan-bao-mat",
-      "license": "Educational and non-commercial research use only",
+      "policy_url": "https://www.topcv.vn/dieu-khoan-bao-mat",
+      "permission_status": "unverified",
+      "usage_note": "Aggregate-only hackathon snapshot; redistribution rights are not claimed.",
       "raw_count": 100,
       "processed_count": 100
     },
     "vietnamworks": {
-      "terms_url": "https://www.vietnamworks.com/chinh-sach-bao-mat",
-      "license": "Educational and non-commercial research use only",
+      "policy_url": "https://www.vietnamworks.com/chinh-sach-bao-mat",
+      "permission_status": "unverified",
+      "usage_note": "Aggregate-only hackathon snapshot; redistribution rights are not claimed.",
       "raw_count": 100,
       "processed_count": 99
     },
     "itviec": {
-      "terms_url": "https://itviec.com/privacy-policy",
-      "license": "Educational and non-commercial research use only",
+      "policy_url": "https://itviec.com/privacy-policy",
+      "permission_status": "unverified",
+      "usage_note": "Aggregate-only hackathon snapshot; redistribution rights are not claimed.",
       "raw_count": 100,
       "processed_count": 99
     }
@@ -64,6 +67,21 @@
     "entry_level_count": 76
   },
   "taxonomy_version": "skills_vi_v1.0",
-  "career_mapping_coverage_pct": 0.0,
+  "skill_extraction": {
+    "version": "skill-extraction-v1",
+    "postings_output": 298,
+    "postings_with_skills": 261,
+    "zero_skill_postings": 37,
+    "llm_success_postings": 0,
+    "fallback_postings": 127
+  },
+  "career_mapping": {
+    "version": "career-mapping-v1-stub",
+    "mapped_postings": 89,
+    "denominator": 298,
+    "coverage_pct": 29.87,
+    "accuracy": "NOT_RUN"
+  },
+  "career_mapping_coverage_pct": 29.87,
   "caveat": "Hiring demand proxy from crawled job descriptions. Not representative of total employment supply."
 }

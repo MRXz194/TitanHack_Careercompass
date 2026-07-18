@@ -114,6 +114,21 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Test lay
 **M4 implementation status (branch `kaguya`, post PR-14):** PR-01…PR-14 **DONE** offline. Scorecard `docs/EVALUATION_RESULTS.md` = `M4_PARTIAL` until M1 release sign-off. Consumer ack checkboxes on handoffs remain open for M5/M1. Detail: `docs/workstreams/M4_PROFILE_RECOMMENDER.md` rollup.
 
 **Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render); PR-12…14 → M1/M5 (agent status + claim boundary).
+
+### Release integrity v2 — M1 cross-stream integration
+
+| ID | Owner/reviewer | Xử lý | Expected output | Test/verify | Scale later / không chặn MVP |
+|---|---|---|---|---|---|
+| RI-01 | M2 → M1 | Sửa deadline/future-date parser và crawler ID collision | source fix + regression fixtures | `test_normalize.py`, `test_crawl_ids.py` | incremental crawler/scheduler |
+| RI-02 | M3 → M1 | Đồng bộ manifest với extraction/mapping report; bỏ claim license | coverage đúng 29,87%, permission `unverified` | parse JSON + compare report denominators | source contracts/legal review |
+| RI-03 | M3 → M1 | Phát hành `backend/market.db` aggregate-only; Render fail nếu thiếu | deploy dùng stats thật, không seed âm thầm | inspect schema/count + `/api/health` | Postgres/materialized views |
+| RI-04 | M4 → M1 | Loại cosine mixed-space; giữ same-space 5D baseline | ranking đúng toán học, explainable | matching + paired bias tests | same-encoder embedding A/B gate |
+| RI-05 | M4/M6 → M1 | Đổi market/results copy để không overclaim real-time/trend/“best fit” | autonomy + confidence wording đúng dữ liệu | FE unit/typecheck/build + manual copy review | localized copy experiments |
+| RI-06 | M1 → M4/M5/M6 | E2E Explore/LangGraph và Launch/replay bắt buộc CI | full API journey, correction, routes, source, readiness | `pytest -q tests/e2e` | Playwright browser E2E |
+| RI-07 | M1 | Bỏ raw/full-description/auto-gold khỏi Git HEAD; giữ local ignored | public HEAD chỉ aggregate/reports | `git ls-files data/raw data/eval data/processed` | separate private object storage |
+| RI-08 | M1 → all | Đồng bộ PLAN/architecture/AI/deploy/testing/evaluation/preflight/handoff | một claim boundary, một release mode | doc reference scan + reviewer ack | human usefulness study |
+
+DoD chung RI: current commit CI xanh, health có `market_db_loaded=true`, E2E pass, docs không claim metric `NOT_RUN`, và M1 ghi deploy URL/commit vào `PREFLIGHT.md`.
 **⚠️ Rule riêng:** mọi prompt để trong `backend/app/prompts/*.py` có version comment — không giấu prompt trong code logic.
 
 ---

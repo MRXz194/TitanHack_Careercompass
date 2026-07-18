@@ -1,62 +1,48 @@
-# PREFLIGHT — gate trước khi bấm giờ 48h
+# PREFLIGHT — release gate 48h
 
-> M1 chỉ tuyên bố `READY` khi toàn bộ P0 checkbox pass. Tài liệu chi tiết không thay cho môi trường chạy được.
+> M1 chỉ ghi `READY` khi các mục P0 kỹ thuật bên dưới có evidence ở đúng commit. Checkbox con người/deploy không được tự tick bằng code.
 
-## A. Product/scope
+## P0 kỹ thuật
 
-- [ ] 6/6 hiểu đề bài và nói lại 4 tiêu chí chấm.
-- [ ] Explore là live demo chính; Launch là shared-core P1 + replay safety net.
-- [ ] P0/P1/P2 và kill switches được cả team chấp nhận.
-- [ ] Out-of-scope job board/CV/auto-apply/hiring prediction được chốt.
-- [ ] Persona Minh/An và demo timebox được duyệt.
+- [x] Scope: Explore + Graduate Launch dùng shared core; không job board/CV/auto-apply/hiring probability.
+- [x] LangChain provider/typed contracts + custom LangGraph chỉ cho `/api/chat`; recommendation/data aggregation deterministic.
+- [x] API contract, Pydantic, TypeScript và mocks cùng schema; error envelope thống nhất.
+- [x] `backend/market.db` aggregate-only có 43 career rows, 548 skill rows, 16 metadata rows.
+- [x] Raw/full-description/auto-gold bị ignore và được bỏ khỏi Git HEAD; manifest không tự nhận license.
+- [x] Parser deadline/future-date và crawler ID collision có regression tests.
+- [x] Embedding mixed-space bị loại khỏi runtime; scorer dùng một không gian 5 chiều rõ ràng.
+- [x] E2E Explore/LangGraph và Launch/replay tồn tại, chạy trong CI.
+- [x] Render build fail nếu thiếu aggregate DB; local FE dùng API thật (`NEXT_PUBLIC_USE_MOCK=0`).
+- [x] Release env chọn `AGENT_MODE=langgraph`; `deterministic` và `DEMO_MODE=replay` là kill switches.
 
-## B. Team/ownership
+## Evidence hiện có
 
-- [ ] Gán tên thật/GitHub handle vào M1–M6; buddy pairs xác nhận.
-- [ ] Mỗi người mở đúng `docs/workstreams/M*.md`, chọn task đầu và nói expected output/test/handoff.
-- [ ] Sleep shifts, sync times và `#blockers` sẵn sàng.
-- [ ] Không hai người/agent cùng sở hữu một file ở task đầu.
+- Baseline `99f463e`: GitHub CI PASS; backend 285 tests; frontend 61 tests + typecheck + build.
+- Current branch local: Python 3.11.9 venv; compile/import PASS; backend 262 unit+contract + 29 integration + 2 E2E; route 25/25; frontend 61 tests + typecheck + build PASS. CI vẫn phải chạy lại sau push.
+- Local aggregate inspection bằng SQLite: đúng ba tables, không có description column.
+- Mapping coverage 29,87%; accuracy, live LLM quality và human usefulness vẫn `NOT_RUN`.
 
-## C. Repo/environment
+## Việc M1 phải xác nhận thủ công
 
-- [ ] Python 3.11 + Node 20 trên ít nhất 4 máy; 6/6 chạy FE mock.
-- [x] Backend install + smoke tests pass trên 1 máy (2026-07-17, M1 dry-run): `compileall`, `pytest tests/unit tests/contract` (10 passed), `pytest tests/integration` (5 passed), `scripts.check_routes` (OK) đều xanh. Cần thêm ≥1 máy khác để tick đủ điều kiện.
-- [x] Frontend `npm run typecheck` + `npm run build` pass (2026-07-17, Next.js 15.5.20, 6 routes build tĩnh OK).
-- [ ] CI test PR pass; branch protection/review active — **chưa bấm**: cần leader làm theo `docs/DEPLOY.md` §A (branch protection rule + labels), CI (`ci.yml`) mới chỉ chạy trên push/PR chứ chưa được xác nhận pass trên PR thật.
-- [x] `.env` không tracked (`git ls-files` chỉ thấy `.env.example`, `.gitignore` có `.env`/`.env.local`; không tìm thấy secret lỡ commit qua `git grep`). Dev/demo env matrix ghi ở `docs/DEPLOY.md`; key owner = M1 (chưa gán tên thật).
-- [ ] Mock/live/replay flags được giải thích và thử — `DEMO_MODE`/mode table đã ghi trong `scripts/dev.md` §4, nhưng **replay short-circuit chưa wired trong code** (chat router `backend/app/routers/chat.py` vẫn là stub PR-03/04 chưa tới, chưa đọc `settings.demo_mode` ở đâu cả) — L-08 chờ PR-04 xong mới capture fixture thật.
-
-## D. Contract/fixtures
-
-- [ ] API contract + Pydantic + TS + mocks đồng bộ Explore/Launch.
-- [ ] Contract version/label trước H+0; breaking change process rõ.
-- [ ] Explore/Launch request/result fixtures parse được.
-- [ ] Error envelope, null/low-confidence and no-session states có fixture.
-
-## E. Data/AI cost
-
-- [ ] M2 có ít nhất 1 source candidate + Plan B dataset/license.
-- [ ] M1 chốt crawl/API/LLM budget và ngưỡng 70% chuyển fallback.
-- [ ] LLM/embedding keys test bằng call tối thiểu, không paste key vào chat/issue.
-- [ ] Cache/artifact/replay directories và hash/version rule rõ.
-- [ ] M4/M1 cài đúng pinned LangChain/LangGraph từ `requirements.txt`; gateway import smoke pass; chốt spike 90 phút, `/api/chat` only, no `create_agent`/prebuilt/checkpointer/LangSmith service; `AGENT_MODE=deterministic` fallback chạy được.
-- [x] M1 chạy test gates theo `TESTING.md`: compile; unit; contract; integration; route invariant — tất cả xanh (chạy 2026-07-17: `compileall` OK, `pytest tests/unit tests/contract` 10 passed, `pytest tests/integration` 5 passed, `scripts.check_routes` OK). E2E folder tồn tại (`backend/tests/e2e`) nhưng rỗng → `NOT_IMPLEMENTED`, chưa có owner/status thật, cần L-07 gán khi core sẵn sàng.
-
-## F. Ethics/security/evaluation
-
-- [ ] No-gender/region-not-filter/readiness-not-probability rules được 6/6 hiểu.
-- [ ] Data source/PII/session retention checklist có owner.
-- [ ] Gold data/persona templates sẵn, không tune trên test set sau khi đo baseline.
-- [ ] Người test dự kiến và consent quote template đã liên hệ.
+- [ ] 6/6 tên thật/GitHub handle, owner M1–M6, buddy reviewer và sleep shift đã chốt.
+- [ ] Branch protection yêu cầu backend/frontend CI và một approval.
+- [ ] Render/Vercel deploy đúng current commit; `/api/health` trả `market_db_loaded=true`, `postings_count=298`.
+- [ ] CORS chỉ đúng Vercel origin; không dùng `*`; không có secret trong log/diff.
+- [ ] Chạy Explore và Launch trên mobile/ẩn danh; profile correction, market page, results đều pass.
+- [ ] Diễn tập kill switch: `AGENT_MODE=deterministic`, sau đó `DEMO_MODE=replay`.
+- [ ] Pitch nói đúng claim boundary trong `EVALUATION_RESULTS.md` và caveat trong `DATA_SNAPSHOT.md`.
+- [ ] Nếu còn thời gian: ≥5 student + ≥2 counselor/dual-rater; lưu consent và kết quả aggregate, không commit transcript.
 
 ## Go/no-go record
 
 ```md
 Status: NOT_READY | READY_WITH_CAVEATS | READY
-Time/commit: ...
+Commit/deployment: ...
+Backend CI / Frontend CI / E2E: ...
+Health: market_db_loaded=... / postings_count=...
 Unmet item + owner + deadline: ...
-Approved P0/P1 cuts: ...
-M1 sign-off: ...
+Activated kill switch (if any): ...
+M1 sign-off + time: ...
 ```
 
-Repo hiện chỉ là `READY_FOR_TEAM_REVIEW` cho đến khi runtime/CI/source/key items được kiểm chứng trên máy team.
+Hiện tại: `READY_FOR_CURRENT_BRANCH_CI`, chưa phải `READY_TO_DEMO` cho đến khi push + CI + deploy smoke pass.

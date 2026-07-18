@@ -7,11 +7,10 @@ score(career) = w_cosine * cosine(profile, career)
 Weights from Settings. profile_text / fit vectors NEVER include gender or region.
 Region only enters market_signal for informational ordering — never filters candidates.
 
-Cosine source:
-1. If data/processed/careers.npy + career_ids.json exist and align → use them
-   (MI-06 artifact). Profile side uses a bag-of-tokens hash projection so we
-   stay offline without calling embed API in the request path.
-2. Else fallback: cosine on the shared 5-dimension vectors (always available).
+Fit source: cosine on the shared five evidence-backed profile dimensions.
+Offline career vectors and online profile vectors must never be compared unless
+they were produced by the same encoder/model. MI-06 artifacts are therefore not
+loaded by the release runtime; see docs/AI_DESIGN.md.
 
 Stretch: among ranks 6..15 (or remainder), pick highest score whose dominant
 career dimension differs from the user's dominant dimension.
@@ -21,23 +20,16 @@ Launch matched/missing/band/queries/actions with GRADUATE_LAUNCH invariants.
 """
 from __future__ import annotations
 
-import json
-import logging
 import math
 import re
-from functools import lru_cache
-from pathlib import Path
 from typing import Any, Optional
-
-import numpy as np
 
 from app.core.config import get_settings
 from app.data.seed_loader import get_career, load_careers
 from app.models.schemas import MarketStats, Profile, Recommendation
 from app.services import evidence as evidence_service
+from app.services import market as market_service
 from app.services import pathways
-
-log = logging.getLogger("matching")
 
 DIM_KEYS = ("ky_thuat", "phan_tich", "sang_tao", "xa_hoi", "quan_ly")
 DIM_LABELS_VI = {
@@ -50,10 +42,6 @@ DIM_LABELS_VI = {
 
 # Cap so a market spike cannot dominate a low-fit profile (PR-05 invariant).
 MARKET_SIGNAL_CAP = 0.35
-REPO_ROOT = Path(__file__).resolve().parents[3]
-PROCESSED = REPO_ROOT / "data" / "processed"
-CAREERS_NPY = PROCESSED / "careers.npy"
-CAREER_IDS_JSON = PROCESSED / "career_ids.json"
 
 
 # Stripped from scoring text so free-text leaks cannot bias ranking (PR-08).
@@ -194,61 +182,22 @@ def _capped_market_component(raw_signal: float, w_market: float) -> float:
     return min(MARKET_SIGNAL_CAP, w_market * raw_signal)
 
 
-@lru_cache
-def _load_embedding_index() -> tuple[Optional[np.ndarray], tuple[str, ...]]:
-    if not CAREERS_NPY.is_file() or not CAREER_IDS_JSON.is_file():
-        return None, tuple()
-    try:
-        ids = json.loads(CAREER_IDS_JSON.read_text(encoding="utf-8"))
-        if isinstance(ids, dict):
-            ids = ids.get("career_ids") or ids.get("ids") or []
-        mat = np.load(CAREERS_NPY)
-        if len(ids) != mat.shape[0]:
-            log.warning("careers.npy / career_ids length mismatch — using dim fallback")
-            return None, tuple()
-        return mat, tuple(str(i) for i in ids)
-    except Exception as exc:  # noqa: BLE001 — offline demo must not die
-        log.warning("failed to load embeddings: %s", type(exc).__name__)
-        return None, tuple()
-
-
-def _hash_embed(text: str, dim: int) -> np.ndarray:
-    """Deterministic bag-of-tokens projection for offline profile embedding."""
-    vec = np.zeros(dim, dtype=np.float64)
-    tokens = re.findall(r"[\wÀ-ỹ]+", text.lower())
-    if not tokens:
-        return vec
-    for tok in tokens:
-        h = hash(tok) % dim
-        vec[h] += 1.0
-    n = np.linalg.norm(vec)
-    if n > 1e-12:
-        vec /= n
-    return vec
-
-
 def cosine_fit(profile: Profile, career: dict) -> float:
-    """Cosine similarity profile↔career (embeddings or dimension fallback)."""
-    mat, ids = _load_embedding_index()
-    cid = career["career_id"]
-    if mat is not None and cid in ids:
-        idx = ids.index(cid)
-        dim = mat.shape[1]
-        pvec = _hash_embed(profile_text(profile), dim)
-        cvec = mat[idx].astype(np.float64)
-        cn = np.linalg.norm(cvec)
-        if cn > 1e-12:
-            cvec = cvec / cn
-        return float(max(0.0, min(1.0, np.dot(pvec, cvec))))
-    # Dimension fallback (MI-06 not ready)
+    """Cosine similarity in one explicit, shared five-dimension space."""
     return _cosine(_dim_vector(profile.dimensions), _dim_vector(career.get("dimensions") or {}))
 
 
 def score_career(profile: Profile, career: dict, *, use_market: bool = True) -> dict[str, float]:
     settings = get_settings()
     cos = cosine_fit(profile, career)
-    sk = skill_overlap(profile, (career.get("seed_market") or {}).get("top_skills") or [])
-    raw_m = market_signal(career.get("seed_market") or {}, profile.constraints.region_pref)
+    # Region-agnostic stats for RANKING: two profiles differing only in region_pref must
+    # rank identically (region informs display, never the score — CLAUDE.md hard rule #3
+    # and the region-invariance bias test). market_signal() below still applies its own
+    # small, capped "top_regions" boost using region_pref — that boost is intentional and
+    # bounded; it must not be compounded by ALSO varying the underlying demand/trend numbers.
+    stats = _market_stats(career, None)
+    sk = skill_overlap(profile, stats.top_skills)
+    raw_m = market_signal(stats.model_dump(), profile.constraints.region_pref)
     m_comp = _capped_market_component(raw_m, settings.w_market_signal) if use_market else 0.0
     total = settings.w_cosine * cos + settings.w_skill_overlap * sk + m_comp
     # When market disabled, renormalize human-fit weights for fair ranking
@@ -304,7 +253,13 @@ def pick_stretch(
     return ranked[-1][0], ranked[-1][1]
 
 
-def _market_stats(career: dict) -> MarketStats:
+def _market_stats(career: dict, region_pref: Optional[str] = None) -> MarketStats:
+    try:
+        return market_service.get_career_market(career["career_id"], region_pref or "all")
+    except market_service.MarketDataUnavailable:
+        # Honest fallback for careers not represented in the current snapshot / no market.db yet.
+        # The existing seed source_note is preserved and shown by the frontend.
+        pass
     m = career.get("seed_market") or {}
     return MarketStats(
         demand_count_90d=int(m.get("demand_count_90d") or 0),
@@ -362,7 +317,16 @@ def build_recommendation(
     career = get_career(career_id)
     if not career:
         raise KeyError(career_id)
-    market = _market_stats(career)
+    market = _market_stats(career, profile.constraints.region_pref)
+    # job_readiness's matched/missing skills MUST be validated against the exact top_skills
+    # shown in `market` above (CLAUDE.md rule #12: "missing skill must come from role market
+    # skills") -- when market.db has real per-career data, its top_skills can differ from the
+    # seed's curated list, so give pathways the resolved list rather than letting it re-derive
+    # from career["seed_market"] independently.
+    career_for_readiness = {
+        **career,
+        "seed_market": {**(career.get("seed_market") or {}), "top_skills": market.top_skills},
+    }
     routes = pathways.ensure_routes(career, journey_mode=profile.journey_mode)
     roadmap = pathways.ensure_skill_roadmap(career)
     # PR-06: grounded evidence (code selects quotes/stats; LLM optional; template fallback)
@@ -382,7 +346,7 @@ def build_recommendation(
         market=market,
         routes=routes,
         skill_roadmap=roadmap,
-        job_readiness=pathways.build_job_readiness(profile, career),
+        job_readiness=pathways.build_job_readiness(profile, career_for_readiness),
     )
 
 

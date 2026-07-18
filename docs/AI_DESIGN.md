@@ -77,11 +77,12 @@ Nếu trend low-confidence, dùng demand-only và gắn cờ. Posting data chỉ
 
 ### Scoring
 ```
-score(career) = 0.5·cosine(embed(profile_text), embed(career))
+score(career) = 0.5·cosine(profile_dimensions, career_dimensions)
               + 0.3·skill_overlap(profile.skills ∪ interests, career.top_skills)   # Jaccard có trọng số
               + 0.2·market_signal(career, profile.constraints.region_pref)          # norm(demand)·(1+trend/200)
 ```
 - Hệ số trong `config.py` — judge hỏi "sao 0.5" → trả lời: ưu tiên phù hợp con người trước, thị trường sau (đúng tinh thần "tham khảo, không đóng khung"), và có thể tune.
+- Hai vector cosine cùng nằm trong không gian 5 chiều có tên rõ (`ky_thuat`, `phan_tich`, `sang_tao`, `xa_hoi`, `quan_ly`). Release không nạp `careers.npy`: vector career từ OpenAI và vector profile hash cục bộ là hai không gian khác nhau, so cosine giữa chúng là sai về mặt toán học. Embedding chỉ được bật lại khi cả hai phía dùng đúng cùng model/version và có metadata guard.
 - `profile_text` KHÔNG chứa: giới tính (không tồn tại trong schema), tên, region. **Region chỉ vào `market_signal`** để xếp thứ tự thông tin thị trường — không loại nghề nào vì vùng.
 - **Stretch pick:** trong top 6–15, chọn career có dimension chủ đạo KHÁC dimension mạnh nhất của user — "cửa sổ mở rộng", đúng yêu cầu "expand choices".
 
@@ -126,7 +127,7 @@ band = deterministic config thresholds(coverage, evidence_strength)
 | Việc | Model | Ghi chú |
 |---|---|---|
 | Chat profiling, evidence | DeepSeek `deepseek-v4-flash` (OpenAI-compatible, `CHAT_API_BASE` + `CHAT_MODEL`) | JSON mode; test chất lượng TV ngay Phase 1 (PR-02) |
-| Embeddings | OpenAI `text-embedding-3-small` (`EMBED_*` riêng — DeepSeek không có embeddings) | 1536 dims, rẻ |
+| Embeddings | Không nằm trên MVP request path | Chỉ làm post-MVP khi profile/career dùng cùng encoder, có model+KB hash và evaluation thắng baseline 5 chiều |
 | Fallback | Đổi `CHAT_MODEL`/`CHAT_API_BASE` sang `gpt-4o-mini` (hoặc model khác) — 1 biến env | Quyết định fallback do M4 + M1 tại H+8 nếu DeepSeek vỡ JSON > 20% |
 
 Mọi call qua `app/services/llm.py`: log model + tokens + latency, timeout 30s, retry có backoff. Không import SDK LLM ở bất kỳ file nào khác.
