@@ -26,9 +26,9 @@ export function ChatThread({
         <div className="border-b border-slate-100 px-4 py-2">
           <p className="text-xs text-[var(--cc-muted)]">{statusText}</p>
           {progress != null && (
-            <div className="mt-1 h-1 rounded-full bg-slate-100">
+            <div className="mt-1 h-1 bg-[var(--cc-fog)]">
               <div
-                className="h-1 rounded-full bg-[var(--cc-primary)] transition-all duration-500"
+                className="h-1 bg-[var(--cc-primary)] transition-all duration-500"
                 style={{ width: `${Math.round(progress * 100)}%` }}
               />
             </div>
@@ -40,10 +40,10 @@ export function ChatThread({
         {messages.map((m, i) => (
           <div
             key={i}
-            className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[15px] leading-relaxed ${
+            className={`max-w-[88%] whitespace-pre-wrap rounded-[2px] border px-4 py-2.5 text-[15px] leading-relaxed ${
               m.role === "ai"
-                ? "rounded-bl-md bg-[var(--cc-primary-soft)]"
-                : "ml-auto rounded-br-md bg-slate-100"
+                ? "border-[var(--cc-primary)]/20 bg-[var(--cc-primary-soft)]"
+                : "ml-auto border-[var(--cc-border)] bg-[var(--cc-fog)]"
             }`}
           >
             {m.text}
@@ -51,7 +51,7 @@ export function ChatThread({
         ))}
 
         {pending && (
-          <div className="flex w-fit items-center gap-1.5 rounded-2xl rounded-bl-md bg-[var(--cc-primary-soft)] px-4 py-3" aria-label="Đang trả lời">
+          <div className="flex w-fit items-center gap-1.5 rounded-[2px] border border-[var(--cc-primary)]/20 bg-[var(--cc-primary-soft)] px-4 py-3" aria-label="Đang trả lời">
             {[0, 150, 300].map((delay) => (
               <span
                 key={delay}
@@ -63,11 +63,11 @@ export function ChatThread({
         )}
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm">
+          <div className="rounded-[2px] border border-red-200 bg-red-50 p-3 text-sm">
             <p>Mạng chập chờn một chút, tin nhắn của bạn chưa gửi được.</p>
             <button
               onClick={onRetry}
-              className="mt-2 rounded-lg bg-[var(--cc-primary)] px-3 py-1.5 text-xs font-semibold text-white"
+              className="mt-2 rounded-[2px] bg-[var(--cc-primary)] px-3 py-1.5 font-mono text-xs font-medium uppercase text-white"
             >
               Gửi lại
             </button>

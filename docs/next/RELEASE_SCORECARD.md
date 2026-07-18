@@ -1,16 +1,23 @@
 # Day 3 Release Scorecard
 
-Baseline commit: `e76a0a919505e7d534153fd95f41b72e5abc7b10`  
-Implementation branch: `codex/day3-opportunity-plan`  
-Release candidate commit: `8f982fc`  
+Baseline commit: `e76a0a919505e7d534153fd95f41b72e5abc7b10`
+
+Implementation branch: `codex/day3-opportunity-plan`
+
+Release candidate commit: `8f982fc`
+
 Main integration / CI fix: `19b87ad` / `d283b40`
+
+Persona/workflow hardening code head: `codex/persona-workflow-hardening` @ `b6c8c39`
+
 Expansion Gate: **FAIL — automated candidate ready, manual E2E/human gates remain**
 
 ## Automated evidence
 
 | Gate | Actual | State | Evidence | Owner |
 |---|---|---|---|---|
-| Core regression | 347 backend tests; 64 frontend tests; TS typecheck + Next production build pass; Ubuntu CI backend/frontend pass | PASS | [GitHub Actions run 29639845313](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29639845313) | M1 |
+| Core regression (main baseline) | 347 backend tests; 64 frontend tests; TS typecheck + Next production build pass; Ubuntu CI backend/frontend pass | PASS_BASELINE | [GitHub Actions run 29639845313](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29639845313) | M1 |
+| Persona/workflow hardening candidate | 334 unit/contract + 40 integration + 7 E2E = 381 backend tests; route invariant; 79/79 frontend tests + typecheck + production build | PASS_CI | [GitHub Actions run 29654386126](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29654386126) on `b6c8c39` | M1/M4/M5 |
 | Snapshot provenance | Manifest/card synchronized at 3.865 normalized rows; stable SHA-256 `4ecfc1…` | PASS | `data/processed/manifest.json`, `docs/DATA_SNAPSHOT.md` | M2 |
 | Acquisition integrity | 3.914 unique raw records; raw/full text ignored; source limitations retained | PASS_WITH_CAVEATS | `DATA_SNAPSHOT_AUDIT.md` | M2 |
 | Extraction held-out | Dictionary extraction ran on 3.865; held-out human F1 not rerun | NOT_RUN | `postings_enriched.report.json` | M2/M3 |
@@ -18,9 +25,10 @@ Expansion Gate: **FAIL — automated candidate ready, manual E2E/human gates rem
 | What-if isolation | Deep copy, one hypothetical skill, deterministic real scoring, original profile byte-stable, invalid input 422 | PASS | `test_what_if.py`, `test_recommendations.py` | M4 |
 | Research isolation/citations/fallback | Typed 11th tool, policy stage, safe URLs, local/replay fallback, candidate/profile isolation | PASS | research unit/integration/contract tests | M4 |
 | DuckDuckGo live gate | 7/10 queries with >=3 relevant safe links; p95 1.129s; rate-limit/empty on last 3 | FAIL | `python -m scripts.run_research_spike` | M4/M1 |
-| UI/UX | Cream editorial system, serif/mono split, 2px geometry, compare/inspector/research/what-if, print stylesheet | PASS_AUTOMATED | Vitest/typecheck/build; visual human QA pending | M5/M6 |
-| Offline Explore/Launch/Replay E2E | GitHub Actions Ubuntu E2E step pass | PASS | CI run above | M1 |
-| Vercel production routes | Deployment success; `/`, Explore, Launch, Market, Results, How-it-works all HTTP 200 | PASS_HTTP | `docs/DEPLOY.md` production record | M1/M6 |
+| UI/UX | Cream editorial system, serif/mono split, 2px geometry, compare-first, region research, retry/new-profile recovery; mobile DOM at 390px has no horizontal overflow; Launch readiness is visible before expanding a card | PASS_AUTOMATED | 79 Vitest tests/typecheck/build + Edge headless/DevTools measurement; visual human QA pending | M5/M6 |
+| Persona browser smoke | Technical and creative Explore profiles produced different dominant dimensions/top careers; Launch retained only stated Excel evidence, did not invent a dashboard, and exposed readiness in one click | PASS_LOCAL_MOCK | Real React UI in headless Edge; backend persona workflows pass CI, deployed-browser repetition remains | M1/M5/M6 |
+| Offline Explore/Launch/Replay E2E | 7/7 E2E including five-persona distinctness and Launch isolation | PASS_CI | [GitHub Actions run 29654386126](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29654386126) | M1 |
+| Vercel public production routes | Deployment URLs redirect to Vercel login; earlier HTTP 200 was auth HTML, not app route evidence | FAIL / BLOCKED | `docs/DEPLOY.md`; disable Deployment Protection then rerun incognito smoke | M1/M6 |
 | Render health + live CORS E2E | Render dashboard URL chưa được bàn giao; guessed service URL timeout, không dùng làm evidence | NOT_RUN / BLOCKED | cần URL thật + `/api/health` | M1 |
 | Student usability | No fresh Day-3 participant session recorded | NOT_RUN | `docs/next/EVALUATION.md` U1–U6 | M1 |
 | Counselor usefulness | Print flow exists; no counselor timing/feedback recorded | NOT_RUN | counselor protocol | M1/M5 |
@@ -61,7 +69,14 @@ Expansion Gate: **FAIL — automated candidate ready, manual E2E/human gates rem
 3. Run U1–U5 with at least 2 Explore + 2 Launch users and one counselor; record denominators and one observed fix.
 4. Either complete 50-label mapping accuracy + region QA or keep the existing release `market.db` and current limitations.
 5. Only set `WEB_RESEARCH_MODE=ddg` after a fresh target-host spike reaches >=8/10; otherwise keep replay.
+6. **Completed:** hardening CI xanh cho persona workflows, no-accent/negation/privacy,
+   blank-profile 409 và frontend request-race tại run `29654386126`.
+7. Disable Vercel Deployment Protection for production and verify the final URL remains on the app domain in an incognito browser.
 
-Open Sev-1/2: none found by automated suites.  
-Features disabled by kill switch: live web research.  
+Open Sev-1: public Vercel access blocked by Deployment Protection.
+
+Local limitation: máy audit không có Python; backend hardening đã được xác nhận bằng CI Ubuntu ở trên.
+
+Features disabled by kill switch: live web research.
+
 Release decision now: **DO_NOT_SHIP_DAY3 AS FINAL** until manual E2E/human gates; safe to review/merge as an automated release candidate with replay mode.

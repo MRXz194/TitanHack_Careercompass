@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchRecommendations } from "@/lib/api";
 import type { RecommendationResponse, JourneyMode } from "@/types";
 import ResultsHeader from "@/components/results/ResultsHeader";
@@ -14,29 +14,29 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null);
   const [journeyMode, setJourneyMode] = useState<JourneyMode>("explore");
 
-  useEffect(() => {
+  const loadRecommendations = useCallback(async () => {
     // Đọc chế độ hành trình từ LocalStorage
     const savedMode = typeof window !== "undefined" ? localStorage.getItem("cc_journey_mode") as JourneyMode : null;
     const mode = savedMode === "launch" ? "launch" : "explore";
     setJourneyMode(mode);
-
     setLoading(true);
-    fetchRecommendations(mode)
-      .then((res) => {
-        setData(res);
-        // Nếu đề xuất đầu tiên có trường job_readiness (không null), chắc chắn là Launch mode
-        if (res.recommendations?.[0]?.job_readiness) {
-          setJourneyMode("launch");
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Không thể tải kết quả định hướng của em. Vui lòng kiểm tra lại kết nối mạng hoặc thử lại từ màn hình khảo sát.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    setError(null);
+    try {
+      const res = await fetchRecommendations(mode);
+      setData(res);
+      // Nếu đề xuất đầu tiên có job_readiness, session backend đang ở Launch mode.
+      if (res.recommendations?.[0]?.job_readiness) setJourneyMode("launch");
+    } catch {
+      setData(null);
+      setError("Không thể tải kết quả định hướng. Phiên có thể đã hết hạn hoặc kết nối backend đang gián đoạn.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void loadRecommendations();
+  }, [loadRecommendations]);
 
   const isMock = process.env.NEXT_PUBLIC_USE_MOCK === "1";
 
@@ -61,18 +61,21 @@ export default function ResultsPage() {
         <p className="text-sm text-[var(--cc-muted)] max-w-md leading-relaxed">
           {error || "Không tìm thấy dữ liệu phiên khảo sát. Hãy đảm bảo em đã hoàn thành cuộc hội thoại trước."}
         </p>
-        <div className="flex gap-4 pt-2">
+        <div className="flex flex-wrap justify-center gap-3 pt-2">
+          <button type="button" className="cc-button-dark" onClick={() => void loadRecommendations()}>
+            THỬ TẢI LẠI
+          </button>
           <a
             href="/"
-            className="rounded-xl border border-[var(--cc-border)] bg-white px-5 py-2.5 text-xs font-semibold text-[var(--cc-ink)] hover:bg-slate-50 shadow-sm font-serif"
+            className="cc-button-ghost"
           >
-            Quay về Trang chủ
+            VỀ TRANG CHỦ
           </a>
           <a
-            href="/explore"
-            className="rounded-xl bg-[var(--cc-primary)] px-5 py-2.5 text-xs font-semibold text-white hover:opacity-90 shadow-sm"
+            href={`/explore?mode=${journeyMode}&new=1`}
+            className="cc-button-orange"
           >
-            Bắt đầu khảo sát lại
+            TẠO HỒ SƠ MỚI
           </a>
         </div>
       </main>
@@ -95,8 +98,17 @@ export default function ResultsPage() {
       {/* Header trang kết quả */}
       <ResultsHeader journeyMode={journeyMode} generatedAt={data.generated_at} isMock={isMock} />
 
+      <nav className="cc-results-jump" aria-label="Đi tới phần kết quả">
+        <a href="#decision-lab">01 · SO SÁNH & KIỂM CHỨNG</a>
+        <a href="#recommendation-details">02 · XEM CHI TIẾT 5 HƯỚNG</a>
+        <a href="#stretch-option">03 · MỞ RỘNG LỰA CHỌN</a>
+      </nav>
+
+      {/* Đưa công cụ ra quyết định lên trước danh sách dài để người dùng không bỏ lỡ. */}
+      <DecisionLab options={[...data.recommendations, data.stretch]} />
+
       {/* Danh sách các đề xuất nghề nghiệp chính */}
-      <div className="space-y-6">
+      <div id="recommendation-details" className="scroll-mt-6 space-y-6 border-t border-[var(--cc-border)] pt-10">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Các hướng đáng cân nhắc:</h2>
           <span className="text-xs text-[var(--cc-muted)]">Tổng số gợi ý: {data.recommendations.length}</span>
@@ -117,20 +129,18 @@ export default function ResultsPage() {
 
       {/* Gợi ý mở rộng cơ hội học tập & nghề nghiệp (Stretch card) */}
       {data.stretch && (
-        <div className="space-y-3.5 pt-4 border-t border-[var(--cc-border)]/60">
+        <div id="stretch-option" className="scroll-mt-6 space-y-3.5 pt-4 border-t border-[var(--cc-border)]/60">
           <h2 className="text-lg font-bold font-serif text-[var(--cc-ink)]">Vùng mở rộng cơ hội (Stretch Suggestion):</h2>
           <StretchCard rec={data.stretch} />
         </div>
       )}
-
-      <DecisionLab options={[...data.recommendations, data.stretch]} />
 
       {/* Khung Footer ghi chú miễn trừ trách nhiệm */}
       <div className="rounded-xl bg-[var(--cc-primary-soft)]/40 border border-[var(--cc-border)]/50 p-5 text-center text-xs text-[var(--cc-muted)] leading-relaxed font-serif shadow-sm">
         <p className="font-bold text-[var(--cc-ink)] mb-1">Ghi chú định hướng</p>
         <p>{data.disclaimer}</p>
         <div className="flex justify-center gap-4 pt-3.5 text-[10px] uppercase font-bold tracking-wider text-[var(--cc-primary)]">
-          <a href="/explore" className="hover:underline">Làm lại khảo sát</a>
+          <a href={`/explore?mode=${journeyMode}&new=1`} className="hover:underline">Bắt đầu hồ sơ mới</a>
           <span>·</span>
           <a href="/how-it-works" className="hover:underline">Tìm hiểu thuật toán</a>
         </div>

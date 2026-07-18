@@ -54,6 +54,19 @@ def test_get_market_context_has_provenance() -> None:
     assert out["provenance"].get("source")
 
 
+def test_apply_correction_tool_supports_interest_removal() -> None:
+    reg = get_registry()
+    out = reg.invoke(
+        "apply_profile_correction",
+        {"remove_interests": ["vẽ tranh"], "remove_skills": ["Python"]},
+    )
+    patch = out["applied_patch"]
+    assert patch["remove_interests"] == ["vẽ tranh"]
+    assert patch["remove_skills"] == ["Python"]
+    assert "job_goal" not in patch
+    assert "education_stage" not in patch
+
+
 def test_retrieve_and_diversify_chain() -> None:
     reg = get_registry()
     ranked = reg.invoke(

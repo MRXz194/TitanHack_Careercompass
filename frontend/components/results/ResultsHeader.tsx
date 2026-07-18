@@ -22,7 +22,7 @@ export default function ResultsHeader({ journeyMode, generatedAt, isMock = true 
       {isMock && (
         <div className="inline-flex items-center gap-2 rounded-lg bg-[var(--cc-accent-soft)] border border-[var(--cc-accent)] px-3.5 py-2 text-xs text-[var(--cc-ink)] font-medium shadow-sm">
           <span className="flex h-2 w-2 rounded-full bg-[var(--cc-accent)] animate-pulse" />
-          <span><b>Chế độ Demo:</b> Hiện đang hiển thị dữ liệu mô phỏng. API thật sẽ kết nối sau khi pipeline hoàn tất.</span>
+          <span><b>Chế độ dự phòng:</b> Dữ liệu và thứ tự bên dưới là mô phỏng cục bộ, không phải kết quả AI live hay snapshot production.</span>
         </div>
       )}
       <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-2">

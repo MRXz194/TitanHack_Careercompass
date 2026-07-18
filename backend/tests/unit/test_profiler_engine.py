@@ -284,3 +284,99 @@ def test_deterministic_no_experience_note() -> None:
     )
     assert out.profile_delta.constraints is not None
     assert "chưa" in (out.profile_delta.constraints.notes or "").lower()
+
+
+def test_unaccented_activity_builds_distinct_repeated_signal() -> None:
+    """Vietnamese users often omit accents; repeated concrete evidence must accumulate."""
+    profile = _profile()
+    corrections = Corrections()
+    for turn, message in enumerate(
+        (
+            "Em hay sua quat va sua do dien trong nha",
+            "Em tu lap rap may moc va han day cho mot mo hinh",
+        ),
+        start=1,
+    ):
+        output = deterministic_turn(
+            journey_mode="explore",
+            phase="abilities",
+            message=message,
+            turn=turn,
+            fallback_index=turn,
+            profile=profile,
+        )
+        profile = merge_delta(profile, output.profile_delta, corrections, turn=turn)
+
+    assert profile.dimensions["ky_thuat"] >= 0.7
+    assert profile.dimensions["sang_tao"] == 0.0
+
+
+def test_common_unrelated_words_do_not_create_dimensions() -> None:
+    """Phone use, 'đây', 'về' and budget wording are not ability evidence."""
+    output = deterministic_turn(
+        journey_mode="explore",
+        phase="constraints",
+        message="Em dùng điện thoại để xem video, đây là chuyện bình thường về em; ngân sách hạn chế.",
+        turn=3,
+        fallback_index=0,
+    )
+    assert output.profile_delta.dimensions == {}
+
+
+def test_negated_python_does_not_hide_positive_sql_or_create_python_skill() -> None:
+    output = deterministic_turn(
+        journey_mode="launch",
+        phase="abilities",
+        message="Em chưa biết Python nhưng đã dùng SQL làm dashboard bán hàng.",
+        turn=3,
+        fallback_index=0,
+        profile=_profile(journey_mode="launch"),
+    )
+    skill_names = {skill.name for skill in output.profile_delta.skills}
+    assert "Python" not in skill_names
+    assert "SQL" in skill_names
+    assert output.profile_delta.dimensions.get("phan_tich", 0.0) > 0
+    assert output.profile_delta.dimensions.get("ky_thuat", 0.0) == 0.0
+
+
+def test_explicit_no_project_never_invents_project_evidence() -> None:
+    output = deterministic_turn(
+        journey_mode="launch",
+        phase="abilities",
+        message="Em chưa có project, chưa từng thực tập và chưa biết Python.",
+        turn=3,
+        fallback_index=0,
+        profile=_profile(journey_mode="launch"),
+    )
+    assert output.profile_delta.experiences == []
+    assert output.profile_delta.skills == []
+    assert output.profile_delta.constraints is not None
+    assert "explicit no experience" in (output.profile_delta.constraints.notes or "")
+
+
+def test_uncertainty_and_school_stage_are_not_saved_as_interests() -> None:
+    for message in ("Em không biết mình thích gì", "Em học lớp 12 ở Đà Nẵng"):
+        output = deterministic_turn(
+            journey_mode="explore",
+            phase="warmup",
+            message=message,
+            turn=1,
+            fallback_index=0,
+        )
+        assert output.profile_delta.interests == []
+
+
+def test_unaccented_verbal_correction_removes_existing_interest() -> None:
+    profile = _profile(interests=["Em thích vẽ tranh"], dimensions={"sang_tao": 0.7})
+    corrections = Corrections()
+    output = deterministic_turn(
+        journey_mode="explore",
+        phase="interests",
+        message="Em khong con thich ve tranh nua",
+        turn=4,
+        fallback_index=0,
+        profile=profile,
+    )
+    profile = merge_delta(profile, output.profile_delta, corrections, turn=4)
+    assert profile.interests == []
+    assert profile.dimensions["sang_tao"] == 0.15

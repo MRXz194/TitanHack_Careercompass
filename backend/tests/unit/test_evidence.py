@@ -116,6 +116,32 @@ def test_template_why_keeps_specific_reason_when_signal_present() -> None:
     assert "Excel" in why.from_you[0].reason
 
 
+def test_template_never_claims_unrelated_first_skill_matches_every_career() -> None:
+    profile = Profile(
+        session_id="specificity",
+        journey_mode="explore",
+        skills=[ProfileSkill(name="Python", source_quote="em dùng Python đọc file")],
+        dimensions={
+            "ky_thuat": 0.5,
+            "phan_tich": 0.7,
+            "sang_tao": 0.1,
+            "xa_hoi": 0.1,
+            "quan_ly": 0.1,
+        },
+    )
+    career = {
+        "career_id": "dieu-duong",
+        "title": "Điều dưỡng viên",
+        "dimensions": {"xa_hoi": 0.9},
+        "seed_market": {},
+    }
+    market = _market(top_skills=["chăm sóc bệnh nhân", "giao tiếp"])
+    why = ev.template_why(profile=profile, career=career, market=market, counterfactual="cf")
+    assert "kỹ năng này xuất hiện" not in why.from_you[0].reason
+    assert "Python" not in why.from_you[0].reason
+    assert "kiểm chứng thêm" in why.from_you[0].reason
+
+
 def test_validate_rejects_ungrounded_number_in_from_you_reason() -> None:
     """3a: from_you.reason must be number-grounded, same as from_market/counterfactual."""
     p = _profile_with_quote()

@@ -248,16 +248,64 @@ def template_why(
 ) -> Why:
     quote = select_quote_for_career(profile, career)
     title = career.get("title") or "nghề này"
-    # PR-10: slightly more specific reason using skills/interests when available
-    skill_hint = next((s.name for s in profile.skills if s.source_quote), None)
-    interest_hint = profile.interests[0] if profile.interests else None
-    if skill_hint:
+    career_skills = [str(item).strip().lower() for item in (market.top_skills or []) if item]
+
+    def related(left: str, right: str) -> bool:
+        a, b = (left or "").strip().lower(), (right or "").strip().lower()
+        if not a or not b:
+            return False
+        return a == b or (min(len(a), len(b)) >= 4 and (a in b or b in a))
+
+    # Only claim a skill/interest match when it actually relates to this career's
+    # observed skills/title. The previous implementation reused the first profile
+    # skill for every career card, producing plausible-sounding but false explanations.
+    matched_skill = next(
+        (
+            skill
+            for skill in profile.skills
+            if skill.source_quote and any(related(skill.name, target) for target in career_skills)
+        ),
+        None,
+    )
+    matched_interest = next(
+        (
+            interest
+            for interest in profile.interests
+            if related(interest, str(title))
+            or any(related(interest, target) for target in career_skills)
+        ),
+        None,
+    )
+    profile_dim = max(profile.dimensions, key=profile.dimensions.get) if profile.dimensions else ""
+    profile_dim_value = float(profile.dimensions.get(profile_dim, 0.0) or 0.0)
+    career_dim_value = float((career.get("dimensions") or {}).get(profile_dim, 0.0) or 0.0)
+
+    if matched_skill:
+        quote = matched_skill.source_quote[:200]
         reason = (
-            f"bạn đã có bằng chứng «{skill_hint}» — tín hiệu này khớp với hướng {title}"
+            f"bạn đã có bằng chứng «{matched_skill.name}» và kỹ năng này xuất hiện trong tín hiệu của hướng {title}"
         )
-    elif interest_hint:
+    elif matched_interest:
         reason = (
-            f"sở thích «{interest_hint}» trong hồ sơ gợi ý bạn có thể hợp với {title}"
+            f"sở thích «{matched_interest}» có liên hệ trực tiếp với hoạt động hoặc kỹ năng của hướng {title}"
+        )
+    elif profile_dim_value >= 0.5 and career_dim_value >= 0.5:
+        dimension_labels = {
+            "ky_thuat": "thực hành–kỹ thuật",
+            "phan_tich": "phân tích–logic",
+            "sang_tao": "sáng tạo",
+            "xa_hoi": "làm việc với con người",
+            "quan_ly": "tổ chức–quản lý",
+        }
+        mapped_quote = next(
+            (item.quote for item in profile.evidence_quotes if item.mapped_to == profile_dim),
+            None,
+        )
+        if mapped_quote:
+            quote = mapped_quote[:200]
+        reason = (
+            f"điều bạn kể tạo tín hiệu {dimension_labels.get(profile_dim, profile_dim)}, "
+            f"một phần quan trọng trong công việc {title}"
         )
     elif signal_strength(profile) < _LOW_SIGNAL_THRESHOLD:
         # Honest framing: don't claim a personal-fit story the profile can't back up yet.
@@ -266,7 +314,10 @@ def template_why(
             "dữ liệu thị trường; trò chuyện thêm để gợi ý cá nhân hoá hơn"
         )
     else:
-        reason = f"phù hợp với hướng {title} dựa trên điều bạn đã chia sẻ trong hồ sơ"
+        reason = (
+            f"hướng {title} được giữ lại từ tổng hợp nhiều tín hiệu yếu trong hồ sơ; "
+            "chưa có một kỹ năng trực tiếp đủ mạnh nên bạn cần kiểm chứng thêm"
+        )
     from_you = [WhyFromYou(quote=quote, reason=reason)]
 
     stats = market_stats_dict(market)

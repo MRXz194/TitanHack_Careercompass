@@ -1,10 +1,12 @@
 """PR-13 — stage mapping, agent enrichment, degradation, no CoT leak."""
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from app.core.config import get_settings
-from app.models.agent_schemas import AgentStage
+from app.models.agent_schemas import AgentPlan, AgentStage
 from app.models.schemas import Profile, ProfileSkill
 from app.services import agent_chat, agent_graph, profiler
 from app.services.session_store import Corrections, SessionState
@@ -166,3 +168,80 @@ def test_deterministic_extract_tools_only() -> None:
     assert delta is not None
     # should capture some signal without requiring LLM
     assert delta.interests or delta.skills or delta.dimensions
+
+
+def test_live_langgraph_planner_can_choose_correction_tool(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AGENT_MODE", "langgraph")
+    monkeypatch.setenv("CHAT_API_KEY", "fake-test-key")
+    get_settings.cache_clear()
+    captured: dict = {}
+
+    def fake_chat_json(system, messages, response_model, max_retries=1):
+        captured["system"] = system
+        captured["messages"] = messages
+        assert response_model is AgentPlan
+        return AgentPlan(
+            intent="revise_profile",
+            next_tool="apply_profile_correction",
+            arguments={
+                "remove_interests": ["vẽ tranh"],
+                "remove_skills": ["SQL"],
+                "add_interests": ["nội dung model tự thêm"],
+                "job_goal": "mục tiêu model tự đặt",
+            },
+            stop_after_tool=False,
+            thought_summary="user correction with unnecessarily long hidden prose",
+        )
+
+    monkeypatch.setattr(agent_chat, "chat_json", fake_chat_json)
+    state = _state(
+        profile=Profile(
+            session_id="ac-1",
+            journey_mode="explore",
+            interests=["vẽ tranh"],
+        )
+    )
+    planner = agent_chat.build_chat_planner(
+        user_message="Em là nữ nhưng không còn thích vẽ tranh nữa",
+        profile=state.profile,
+        phase=state.phase,
+        journey_mode=state.journey_mode,
+        stage=AgentStage.discover,
+        turn=state.turn,
+    )
+    plan = planner({"session_id": state.session_id})
+    assert plan.next_tool == "apply_profile_correction"
+    assert plan.arguments["remove_interests"] == ["vẽ tranh"]
+    assert plan.arguments.get("remove_skills") == []
+    assert "add_interests" not in plan.arguments
+    assert "job_goal" not in plan.arguments
+    assert plan.arguments["session_id_hash"]
+    assert plan.stop_after_tool is True
+    assert len(plan.thought_summary) <= 40
+    planner_payload = captured["messages"][0]["content"].lower()
+    # Whole-word check: the normal Vietnamese word "nữa" must not be mistaken
+    # for a leaked standalone gender label "nữ".
+    assert re.search(r"(?<!\w)nữ(?!\w)", planner_payload) is None
+
+
+def test_live_planner_failure_falls_back_to_safe_extract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("AGENT_MODE", "langgraph")
+    monkeypatch.setenv("CHAT_API_KEY", "fake-test-key")
+    get_settings.cache_clear()
+    monkeypatch.setattr(agent_chat, "chat_json", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("down")))
+    state = _state()
+    planner = agent_chat.build_chat_planner(
+        user_message="Em làm dashboard Excel",
+        profile=state.profile,
+        phase=state.phase,
+        journey_mode=state.journey_mode,
+        stage=AgentStage.discover,
+        turn=state.turn,
+    )
+    plan = planner({"session_id": state.session_id})
+    assert plan.next_tool == "extract_profile_evidence"
+    assert plan.arguments["message"] == "Em làm dashboard Excel"

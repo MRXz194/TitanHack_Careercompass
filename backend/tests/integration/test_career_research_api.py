@@ -13,6 +13,15 @@ def _open_session(client: TestClient, session_id: str) -> None:
         json={"session_id": session_id, "message": None, "journey_mode": "explore"},
     )
     assert response.status_code == 200
+    evidence = client.post(
+        "/api/chat",
+        json={
+            "session_id": session_id,
+            "message": "Em thích phân tích dữ liệu và đã dùng Excel.",
+            "journey_mode": "explore",
+        },
+    )
+    assert evidence.status_code == 200
 
 
 def test_research_rejects_career_outside_session_recommendations(client: TestClient) -> None:
@@ -31,7 +40,11 @@ def test_research_rejects_career_outside_session_recommendations(client: TestCli
 
 def test_research_off_mode_returns_grounded_local_block(client: TestClient) -> None:
     _open_session(client, "research-ok")
-    recs = client.post("/api/recommendations", json={"session_id": "research-ok"}).json()
+    rec_response = client.post(
+        "/api/recommendations", json={"session_id": "research-ok"}
+    )
+    assert rec_response.status_code == 200
+    recs = rec_response.json()
     career_id = recs["recommendations"][0]["career_id"]
     response = client.post(
         "/api/research/careers",

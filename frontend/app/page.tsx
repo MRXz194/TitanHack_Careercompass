@@ -18,7 +18,7 @@ export default function LandingPage() {
 
   const start = (mode: JourneyMode) => {
     localStorage.setItem("cc_journey_mode", mode);
-    router.push("/explore");
+    router.push(`/explore?mode=${mode}&new=1`);
   };
 
   return (

@@ -32,7 +32,7 @@ def _chat_model() -> ChatOpenAI:
         model=s.chat_model,
         base_url=s.chat_api_base,
         api_key=s.chat_api_key,
-        timeout=30,
+        timeout=s.chat_timeout_seconds,
         max_retries=0,  # gateway loop below is the single retry budget owner
         temperature=0.7,
     )

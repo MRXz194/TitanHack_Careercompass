@@ -7,6 +7,12 @@
 > - Branch đặt tên theo task: `feat/PR-03-matching-engine`.
 > - Khi nhờ AI code: paste `CLAUDE.md` (root + của package) + nguyên văn task này vào prompt.
 
+> **Trạng thái release đang hoạt động:** các task 48h bên dưới là baseline lịch sử, không phải
+> bằng chứng release hiện tại. Trước khi mở feature/Day 3, cả team phải hoàn thành lane
+> [Persona & Workflow Hardening](next/PERSONA_WORKFLOW_HARDENING.md) trên branch
+> `codex/persona-workflow-hardening`. Nhãn `DONE` cũ chỉ có nghĩa implementation baseline đã
+> tồn tại; `VERIFIED` cần CI current commit + deploy smoke + handoff theo scorecard.
+
 ## Task card chi tiết theo người
 
 File này là master schedule/dependency. Trước khi làm, mỗi member phải mở task card chi tiết của mình; task card định nghĩa problem, actions, expected artifact, tests, risks/fallback và handoff:
@@ -107,11 +113,14 @@ Workflow dùng AI bắt buộc: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md). Test lay
 | PR-09 | Trang "Cách hệ thống hoạt động" — nội dung dữ liệu, scoring, giới hạn, autonomy | H+35→36 | PR-08 | ≤300 từ; M6 thay copy draft không đổi layout |
 | PR-10 | Tune chất lượng theo feedback test E2E của M1 (câu hỏi lặp, gợi ý nhạt, evidence sai...) | H+34→40 | L-07 | Các bug label `ai-quality` đóng hết |
 | PR-11 | Tổng hợp AI evaluation: profiler, 12 personas, grounding, latency/cost, paired bias; gửi số thật cho M1 | H+35→38 | PR-06,08 | Phần AI trong `EVALUATION_RESULTS.md` có pass/fail + limitations |
-| PR-12 | **LangChain tool layer + LangGraph spike + bounded policy registry:** verify pinned install/gateway, trong 90' compile/invoke StateGraph với fake LangChain structured planner; tạo 10 `@tool` Pydantic contracts, stage allowlist, privacy/provenance/budget; không browser/shell/side effect | H+4→12 | PR-01 | Unit/contract graph/tool tests + policy matrix pass; `AGENT_MODE=deterministic` không compile/invoke graph; invalid tool/args deny/repair |
-| PR-13 | **LangChain/LangGraph chat orchestrator + degradation:** nối custom StateGraph planner → policy → typed tool → composer vào `/api/chat`; recommendation deterministic; tối đa 2 agent-selected tools/turn, deadline 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent integration pass; timeout/model/tool failure không 5xx; deterministic mode cùng contract; không `create_agent`/LangSmith/checkpointer |
+| PR-12 | **LangChain tool layer + LangGraph spike + bounded policy registry:** verify pinned install/gateway, trong 90' compile/invoke StateGraph với fake LangChain structured planner; tạo 11 typed Pydantic tool contracts (gồm research-only), stage allowlist, privacy/provenance/budget; không browser/shell/side effect | H+4→12 | PR-01 | Unit/contract graph/tool tests + policy matrix pass; `AGENT_MODE=deterministic` không compile/invoke graph; invalid tool/args deny/repair |
+| PR-13 | **LangChain/LangGraph chat orchestrator + degradation:** nối custom StateGraph planner → policy → đúng 1 typed tool → composer/fallback vào `/api/chat`; recommendation deterministic; policy hard-cap 2 để chặn loop, deadline 8s, trace sanitize, replay/fallback | H+16→22 | PR-03,12 | Explore/Launch agent integration pass; timeout/model/tool failure không 5xx; deterministic mode cùng contract; không `create_agent`/LangSmith/checkpointer |
 | PR-14 | **Agent evaluation/red-team:** tool-selection fixtures, injection, paired bias, provenance, budget/latency/replay; ghi pass/fail thật | H+31→38 | PR-05,06,08,13 | `EVALUATION_RESULTS.md` có agent metrics + failures/fix; không claim autonomous khi gate fail |
 
-**M4 implementation status (branch `kaguya`, post PR-14):** PR-01…PR-14 **DONE** offline. Scorecard `docs/EVALUATION_RESULTS.md` = `M4_PARTIAL` until M1 release sign-off. Consumer ack checkboxes on handoffs remain open for M5/M1. Detail: `docs/workstreams/M4_PROFILE_RECOMMENDER.md` rollup.
+**M4 release status:** PR-01…PR-14 và persona/workflow hardening hiện **VERIFIED_CI**
+trên Ubuntu (334 unit/contract + 40 integration + 7 E2E). Đây chưa phải final release sign-off:
+Render/Vercel smoke và human usability vẫn do M1 khóa. Detail:
+`docs/workstreams/M4_PROFILE_RECOMMENDER.md` và `docs/next/RELEASE_SCORECARD.md`.
 
 **Handoff nhận:** MI-07. **Handoff giao:** PR-04 → M5/M1; PR-06,07 → M6 (shape dữ liệu render); PR-12…14 → M1/M5 (agent status + claim boundary).
 

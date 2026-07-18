@@ -92,6 +92,15 @@ describe("lỗi mạng + retry (F1-02)", () => {
 });
 
 describe("mode semantics (F1-01)", () => {
+  it("RECEIVE đồng bộ mode đã khóa từ session backend", () => {
+    const responseProfile = profile({ journey_mode: "launch" });
+    const state = chatReducer(initialChatState("explore"), {
+      type: "RECEIVE",
+      res: { reply: "Tiếp tục hồ sơ", phase: "warmup", turn: 2, done: false, profile: responseProfile },
+    });
+    expect(state.mode).toBe("launch");
+  });
+
   it("đổi mode tự do khi user CHƯA trả lời lượt nào", () => {
     expect(canChangeModeFreely(initialChatState("explore"))).toBe(true);
     expect(canChangeModeFreely(opened())).toBe(true); // mới chỉ có lời chào AI

@@ -4,6 +4,8 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+from app.services import session_store
+
 
 pytestmark = pytest.mark.integration
 
@@ -132,3 +134,135 @@ def test_correction_not_overwritten_by_later_chat(client: TestClient) -> None:
     )
     names = [s["name"].lower() for s in r.json()["profile"]["skills"]]
     assert "excel" not in names
+
+
+def test_reopening_existing_session_is_idempotent(client: TestClient) -> None:
+    sid = "resume-without-rewind"
+    client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+    before = client.post(
+        "/api/chat",
+        json={
+            "session_id": sid,
+            "message": "Em thích vẽ tranh và thiết kế poster.",
+            "journey_mode": "explore",
+        },
+    ).json()
+
+    reopened = client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": None, "journey_mode": "explore"},
+    ).json()
+
+    assert reopened["turn"] == before["turn"]
+    assert reopened["phase"] == before["phase"]
+    assert reopened["done"] == before["done"]
+    assert reopened["profile"] == before["profile"]
+    assert "đang làm dở" in reopened["reply"]
+
+    blank = client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": "   ", "journey_mode": "explore"},
+    ).json()
+    assert blank["turn"] == before["turn"]
+    assert blank["profile"] == before["profile"]
+
+
+def test_removed_interest_stays_removed_after_later_chat(client: TestClient) -> None:
+    sid = "remove-interest-durable"
+    client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+    added = client.patch(
+        f"/api/profile/{sid}",
+        json={"add_interests": ["vẽ tranh"]},
+    )
+    assert "vẽ tranh" in added.json()["profile"]["interests"]
+
+    removed = client.patch(
+        f"/api/profile/{sid}",
+        json={"remove_interests": ["vẽ tranh"]},
+    )
+    assert "vẽ tranh" not in removed.json()["profile"]["interests"]
+
+    later = client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": "Em lại nhắc đến vẽ tranh.", "journey_mode": "explore"},
+    )
+    assert not any("vẽ tranh" in interest.lower() for interest in later.json()["profile"]["interests"])
+
+
+def test_two_personas_never_share_profile_state(client: TestClient) -> None:
+    for sid, message in (
+        ("persona-tech", "Em hay sửa quạt, lắp ráp máy móc và hàn dây."),
+        ("persona-creative", "Em thích vẽ tranh, thiết kế poster bằng Figma."),
+    ):
+        client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+        response = client.post(
+            "/api/chat",
+            json={"session_id": sid, "message": message, "journey_mode": "explore"},
+        )
+        assert response.status_code == 200
+
+    tech = client.get("/api/profile/persona-tech").json()["profile"]
+    creative = client.get("/api/profile/persona-creative").json()["profile"]
+    assert tech["session_id"] != creative["session_id"]
+    assert tech["dimensions"]["ky_thuat"] > tech["dimensions"]["sang_tao"]
+    assert creative["dimensions"]["sang_tao"] > creative["dimensions"]["ky_thuat"]
+    assert all(skill["name"] != "Figma" for skill in tech["skills"])
+
+
+def test_uncertainty_outside_constraints_does_not_mark_constraints_declined(
+    client: TestClient,
+) -> None:
+    sid = "uncertainty-not-decline"
+    client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+    client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": "Em chưa biết mình thích nghề gì.", "journey_mode": "explore"},
+    )
+    state = session_store.get_session(sid)
+    assert state is not None
+    assert state.constraint_declined is False
+
+
+def test_chat_redacts_direct_identifiers_before_persistence(client: TestClient) -> None:
+    sid = "privacy-redaction"
+    client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+    response = client.post(
+        "/api/chat",
+        json={
+            "session_id": sid,
+            "message": (
+                "Em là nữ, GPA 3.8, email student@example.com, số 0912 345 678; "
+                "em thích sửa đồ điện."
+            ),
+            "journey_mode": "explore",
+        },
+    )
+    assert response.status_code == 200
+    state = session_store.get_session(sid)
+    assert state is not None
+    persisted = str(state.messages) + state.profile.model_dump_json()
+    assert "student@example.com" not in persisted
+    assert "0912 345 678" not in persisted
+    assert "GPA" not in persisted
+    assert "3.8" not in persisted
+    assert "nữ" not in persisted.lower()
+    assert "sửa đồ điện" in persisted
+
+
+def test_identifier_only_turn_does_not_advance_or_persist_user_text(client: TestClient) -> None:
+    sid = "privacy-only-turn"
+    opened = client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": None, "journey_mode": "explore"},
+    ).json()
+    response = client.post(
+        "/api/chat",
+        json={"session_id": sid, "message": "Em là nữ", "journey_mode": "explore"},
+    ).json()
+    assert response["turn"] == opened["turn"]
+    assert response["phase"] == opened["phase"]
+    assert response["profile"] == opened["profile"]
+    state = session_store.get_session(sid)
+    assert state is not None
+    assert not any(item.get("role") == "user" for item in state.messages)
+    assert "không dùng thông tin nhận dạng" in response["reply"]

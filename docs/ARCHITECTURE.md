@@ -66,7 +66,7 @@ FE POST /api/chat {session_id, message, journey_mode}
  → lock journey_mode on opening turn
  → agent policy xác định stage + allowed tool set (shared phases, mode-specific completeness)
  → planner LLM trả tool-plan JSON; policy validate schema/privacy/budget
- → gọi tối đa 2 typed internal tools (extract/merge/inspect/question), tạo provenance observation
+ → release gọi đúng 1 typed internal tool (policy budget hard-cap 2 chỉ để chặn loop), tạo provenance observation
  → composer LLM hoặc deterministic fallback trả reply; merge validated profile evidence, lưu session
  → trả {reply, profile, phase, done}
 ```

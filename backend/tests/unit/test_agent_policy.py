@@ -61,6 +61,48 @@ def test_strip_gender_and_school_from_args() -> None:
     assert "sửa điện" in cleaned["message"]
 
 
+def test_strip_direct_contact_and_secret_but_keep_vietnam_country_name() -> None:
+    cleaned = pol.strip_privacy_text(
+        "Em ở Việt Nam, email student@example.com, số 0912 345 678 và key sk-abcdefgh123456"
+    )
+    assert "Việt Nam" in cleaned
+    assert "student@example.com" not in cleaned
+    assert "0912 345 678" not in cleaned
+    assert "sk-abcdefgh123456" not in cleaned
+    assert "đã ẩn" in cleaned
+
+
+def test_strip_unaccented_gender_self_label_but_keep_career_signal() -> None:
+    cleaned = pol.strip_privacy_text("Em la nu, em thích thiết kế poster")
+    assert "em la nu" not in cleaned.lower()
+    assert "thiết kế poster" in cleaned
+
+
+def test_strip_explicit_real_name_but_keep_activity() -> None:
+    cleaned = pol.strip_privacy_text("Tên em là Nguyễn Văn An, em thích sửa đồ điện")
+    assert "Nguyễn Văn An" not in cleaned
+    assert "sửa đồ điện" in cleaned
+
+
+def test_strip_gpa_value_and_explicit_address() -> None:
+    cleaned = pol.strip_privacy_text(
+        "GPA 3.8/4, địa chỉ: 123 Đường ABC; em thích phân tích dữ liệu"
+    )
+    assert "3.8" not in cleaned
+    assert "123 Đường ABC" not in cleaned
+    assert "phân tích dữ liệu" in cleaned
+
+
+def test_strip_privacy_args_sanitizes_strings_inside_lists() -> None:
+    cleaned = pol.strip_privacy_args(
+        {"remove_interests": ["Em là nữ", "student@example.com", "vẽ tranh"]}
+    )
+    values = cleaned["remove_interests"]
+    assert "nữ" not in str(values).lower()
+    assert "student@example.com" not in str(values)
+    assert "vẽ tranh" in values
+
+
 def test_market_requires_provenance_post() -> None:
     budget = pol.budget_start()
     d = pol.authorize_observation("get_market_context", {"demand_count_90d": 10}, budget)

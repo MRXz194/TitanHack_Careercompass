@@ -48,6 +48,14 @@ Response:
 
 Xóa phiên server-side (privacy). 404 nếu session không tồn tại. FE nên xóa luôn `localStorage` key `cc_session_id`.
 
+Session semantics bắt buộc:
+
+- `message=null` hoặc chuỗi chỉ có whitespace + `session_id` mới: tạo opening turn.
+- `message` tối đa 2.000 ký tự và `session_id` dài 1–128 ký tự; vượt giới hạn trả error envelope 422. FE phải áp cùng giới hạn 2.000 ký tự tại composer.
+- `message=null` hoặc chuỗi chỉ có whitespace + `session_id` đã có: **resume idempotent**, không reset `turn`, `phase`, profile hay corrections.
+- “Bắt đầu hồ sơ mới” phải sinh UUID mới trước khi gọi chat; xóa UUID cũ là best-effort, không được chặn UI.
+- Đổi Explore ↔ Launch sau khi đã trả lời cũng tạo UUID mới; mode của session cũ luôn khóa theo opening turn.
+
 ### `PATCH /api/profile/{session_id}` — học sinh sửa tay profile (autonomy)
 
 Request (gửi phần muốn sửa):
@@ -56,6 +64,7 @@ Request (gửi phần muốn sửa):
   "dimensions": { "ky_thuat": 0.9 },
   "remove_skills": ["python"],
   "add_interests": ["thiết kế nội thất"],
+  "remove_interests": ["vẽ tranh"],
   "education_stage": "final_year",
   "job_goal": "tìm vai trò dữ liệu entry-level",
   "add_experiences": [
@@ -66,7 +75,7 @@ Request (gửi phần muốn sửa):
 ```
 Response: `{ "profile": Profile }`
 
-PATCH semantics: field bị bỏ qua = giữ nguyên; gửi `education_stage`/`job_goal: null` = xóa giá trị; add/remove experience được áp dụng theo title trong MVP. PR-03 phải lưu correction vào session để không bị LLM ghi đè ở lượt sau.
+PATCH semantics: field bị bỏ qua = giữ nguyên; gửi `education_stage`/`job_goal: null` = xóa giá trị; add/remove interest và experience được áp dụng không phân biệt hoa thường trong MVP. User edit mới nhất có quyền thêm lại interest từng xóa. Mọi removal/correction phải lưu vào session để inference lượt sau không tự phục hồi điều user đã bác bỏ.
 
 ### Schema `Profile`
 
@@ -110,6 +119,7 @@ PATCH semantics: field bị bỏ qua = giữ nguyên; gửi `education_stage`/`j
 Request: `{ "session_id": "…" }`
 
 Trả `404` nếu session không tồn tại; FE phải đưa người dùng về `/explore`, không sinh gợi ý generic rồi gắn nhãn cá nhân hóa.
+Trả `409` nếu session đã mở nhưng profile chưa có personal evidence (skill/interest/experience/job goal hoặc dimension đủ mạnh); FE hiển thị retry + CTA tạo/tiếp tục hồ sơ, không trả market-only ranking dưới nhãn cá nhân hóa.
 
 Response:
 ```json
@@ -297,3 +307,4 @@ không 5xx. DDGS là community adapter miễn phí/không API key, không phải
 - `low_confidence=true` → FE hiện “dữ liệu còn hạn chế” và không dùng trend trong headline. `salary_sample_count < 5` → ba percentile lương phải là null.
 - Mọi text hiển thị cho user do BE trả về là **tiếng Việt**.
 - FE tự sinh `session_id` (uuid v4) lần đầu vào `/explore`, giữ trong localStorage key `cc_session_id`.
+- Trước khi persist hoặc gửi model, backend loại tên thật khai báo trực tiếp, che email/số điện thoại/API key và loại gender/GPA/school-prestige proxy khỏi turn; không commit/log raw transcript chứa các identifier này. Turn sau khi sanitize chỉ còn identifier/marker thì không tăng `turn`, phase hay completeness và được hỏi lại bằng câu an toàn.

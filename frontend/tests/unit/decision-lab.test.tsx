@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import DecisionLab from "@/components/results/DecisionLab";
 import { mockRecommendations } from "@/lib/mock/recommendations";
+import { resetMockChat, setMockProfile } from "@/lib/mock/chat";
+import type { Profile } from "@/types";
 
 const { fetchCareerResearch, previewWhatIfSkill } = vi.hoisted(() => ({
   fetchCareerResearch: vi.fn(),
@@ -15,6 +17,21 @@ describe("DecisionLab", () => {
   beforeEach(() => {
     fetchCareerResearch.mockReset();
     previewWhatIfSkill.mockReset();
+    resetMockChat("explore");
+    const fixture: Profile = {
+      session_id: "decision-lab-fixture",
+      journey_mode: "explore",
+      education_stage: null,
+      job_goal: null,
+      dimensions: { ky_thuat: 0.2, phan_tich: 0.8, sang_tao: 0.2, xa_hoi: 0.2, quan_ly: 0.2 },
+      skills: [{ name: "Excel", level: "đã dùng", source_quote: "em làm dashboard Excel" }],
+      interests: ["phân tích dữ liệu"],
+      constraints: { region_pref: null, study_budget: null, study_duration_pref: null, notes: "" },
+      evidence_quotes: [{ turn: 2, quote: "em làm dashboard Excel", mapped_to: "phan_tich" }],
+      experiences: [],
+      completeness: 0.6,
+    };
+    setMockProfile(fixture);
   });
 
   it("chỉ giữ tối đa hai lựa chọn với trọng lượng thị giác ngang nhau", async () => {
@@ -58,6 +75,25 @@ describe("DecisionLab", () => {
     expect(await screen.findByText("LIVE")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /nguồn nghề nghiệp/i })).toHaveAttribute("href", "https://example.com/source");
     expect(fetchCareerResearch).toHaveBeenCalledWith([first.career_id], "overview", "all");
+  });
+
+  it("gửi đúng khu vực người dùng chọn khi kiểm chứng thị trường địa phương", async () => {
+    const data = await mockRecommendations("explore");
+    const first = data.recommendations[0];
+    fetchCareerResearch.mockResolvedValue({
+      status: "unavailable",
+      generated_at: new Date().toISOString(),
+      intent: "local_market",
+      region: "hcm",
+      disclaimer: "Nguồn chỉ để kiểm chứng.",
+      limitation: "Chưa có nguồn web.",
+      careers: [],
+    });
+    render(<DecisionLab options={[first]} />);
+    await userEvent.selectOptions(screen.getByLabelText(/khu vực/i), "hcm");
+    await userEvent.click(screen.getByRole("button", { name: /thị trường địa phương/i }));
+    await userEvent.click(screen.getByRole("button", { name: /nghiên cứu thêm/i }));
+    expect(fetchCareerResearch).toHaveBeenCalledWith([first.career_id], "local_market", "hcm");
   });
 
   it("what-if là preview có undo và thông báo hồ sơ không đổi", async () => {

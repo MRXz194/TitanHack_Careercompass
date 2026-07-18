@@ -18,6 +18,16 @@ def test_recommendations_without_session_returns_404(client: TestClient) -> None
     assert "error" in body
 
 
+def test_opened_but_blank_session_returns_409_instead_of_fake_personalization(
+    client: TestClient,
+) -> None:
+    sid = "blank-opened-session"
+    client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})
+    response = client.post("/api/recommendations", json={"session_id": sid})
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "409"
+
+
 def test_recommendations_after_chat_reflect_profile(client: TestClient) -> None:
     sid = "rec-chat-1"
     client.post("/api/chat", json={"session_id": sid, "message": None, "journey_mode": "explore"})

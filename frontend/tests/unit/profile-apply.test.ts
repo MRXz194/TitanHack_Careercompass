@@ -35,8 +35,13 @@ describe("applyPatchLocal", () => {
   });
 
   it("add_interests dedup (không thêm trùng)", () => {
-    const p = applyPatchLocal(base, { add_interests: ["phân tích dữ liệu", "trực quan hóa"] });
+    const p = applyPatchLocal(base, { add_interests: ["PHÂN TÍCH DỮ LIỆU", " trực quan hóa "] });
     expect(p.interests).toEqual(["phân tích dữ liệu", "trực quan hóa"]);
+  });
+
+  it("remove_interests xóa không phân biệt hoa thường như backend", () => {
+    const p = applyPatchLocal(base, { remove_interests: ["PHÂN TÍCH DỮ LIỆU"] });
+    expect(p.interests).toEqual([]);
   });
 
   it("education_stage/job_goal chỉ đổi khi key có mặt trong patch (kể cả set null)", () => {

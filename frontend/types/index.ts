@@ -71,6 +71,7 @@ export interface ProfilePatch {
   dimensions?: Record<string, number>;
   remove_skills?: string[];
   add_interests?: string[];
+  remove_interests?: string[];
   education_stage?: EducationStage | null;
   job_goal?: string | null;
   add_experiences?: ExperienceEvidence[];

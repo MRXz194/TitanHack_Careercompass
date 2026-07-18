@@ -10,7 +10,8 @@ Dùng một ecosystem với ranh giới rõ:
 
 - **LangChain Core + `langchain-openai`:** `ChatOpenAI`, messages,
   Pydantic structured output và typed tool schemas.
-- **LangGraph `StateGraph`:** nối các node/conditional edges của bounded ReAct chat.
+- **LangGraph `StateGraph`:** nối `plan → policy → một typed tool → compose/fallback` của
+  single-step bounded ReAct chat; release không chạy open loop/multi-agent.
 - **CareerCompass code:** sở hữu policy, session canonical, profile merge, timeout/budget,
   matching, ethics validators, fallback và API contract.
 
@@ -64,22 +65,26 @@ có budget, validate output rồi persist. `/api/recommendations` vẫn là dete
 ## Vì sao không chỉ dùng LangChain `create_agent`?
 
 Prebuilt agent giúp prototype nhanh nhưng ẩn bớt routing và có authority rộng hơn nhu cầu.
-CareerCompass cần stage allowlist, privacy/provenance gates, tối đa hai tool/lượt và fallback
+CareerCompass cần stage allowlist, privacy/provenance gates, đúng một tool/lượt ở release
+(policy vẫn có hard cap hai để chặn regression loop) và fallback
 được test ở từng edge. Custom `StateGraph` thể hiện những ràng buộc này trực tiếp, đồng thời
 vẫn dùng LangChain cho provider/tool/structured-output plumbing.
 
 ## Nếu graph bị tắt thì dùng gì?
 
 Fallback là **plain Python bounded orchestrator**: `Enum` stage + Pydantic `AgentPlan` + cùng
-LangChain-typed tool registry + policy function + vòng lặp tối đa hai tools. Model calls vẫn đi
-qua LangChain gateway; chỉ bỏ LangGraph routing. Vì vậy `AGENT_MODE=deterministic` không đổi API,
-tool contracts hoặc recommendation core.
+LangChain-typed tool registry + policy function. Release chat dùng một tool/turn; harness plain
+Python vẫn giữ hard cap hai để red-team budget. `AGENT_MODE=deterministic` không gọi planner model,
+không compile graph và không đổi API/tool contract/recommendation core.
 
 ## Spike gate — completed in PR-12
 
-Dependency đã pin và các gate dưới đây đã pass ở baseline `99f463e`; release env dùng `AGENT_MODE=langgraph`:
+Dependency đã pin và các gate dưới đây đã pass ở baseline `99f463e`; target release config dùng
+`AGENT_MODE=langgraph` sau khi current-commit CI/smoke pass (trước đó giữ `deterministic`):
 
 - `StateGraph` compile/invoke với fake structured planner, không network và không đổi API contract.
+- Với key live, `chat-tool-router-v1` gọi LangChain structured output một attempt, code sửa
+  current-turn args, policy vẫn quyết định allow/deny; provider lỗi quay về safe extract.
 - LangChain tool args sinh schema đúng; unknown tool, policy deny, invalid output và timeout đều
   về deterministic fallback.
 - Không log raw transcript/CoT; graph state chỉ chứa dữ liệu JSON-serializable đã sanitize.

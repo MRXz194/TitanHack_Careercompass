@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
+import unicodedata
 from typing import Optional
 
 from app.core.config import get_settings
@@ -29,7 +30,7 @@ from app.prompts.profiler import (
     build_profiler_system,
     get_fallback_question,
 )
-from app.services import session_store
+from app.services import agent_policy, session_store
 from app.services.llm import LLMError, chat_json
 from app.services.session_store import Corrections, SessionState
 
@@ -40,30 +41,119 @@ DIM_KEYS = ("ky_thuat", "phan_tich", "sang_tao", "xa_hoi", "quan_ly")
 
 # Soft keyword → dimension bumps for deterministic offline path (no live LLM).
 _DIM_KEYWORDS: dict[str, tuple[str, ...]] = {
-    "ky_thuat": ("sửa", "điện", "máy", "code", "lập trình", "react", "python", "cơ khí", "hàn"),
-    "phan_tich": ("dữ liệu", "excel", "phân tích", "dashboard", "số liệu", "logic", "toán"),
-    "sang_tao": ("vẽ", "thiết kế", "nhạc", "sáng tạo", "viết", "photoshop", "figma"),
-    "xa_hoi": ("dạy", "giúp", "tình nguyện", "chăm", "tư vấn", "giao tiếp"),
-    # "lịch" alone is ambiguous — it is a word inside "du lịch" (travel) and
-    # "lịch sử" (history); only scheduling phrasings signal quan_ly.
-    "quan_ly": ("tổ chức", "xếp lịch", "lên lịch", "nhóm", "quản lý", "điều phối", "kinh doanh"),
+    # Avoid accent-folding homographs such as "hạn"→"han" (not welding) and
+    # generic nouns such as "điện thoại" (not evidence of technical ability).
+    "ky_thuat": (
+        "sửa", "sửa đồ", "sửa quạt", "sửa xe", "sửa máy", "sửa chữa",
+        "đồ điện", "điện lạnh", "mạch điện", "dây điện",
+        "máy móc", "vận hành máy", "lắp ráp", "lắp đặt", "code", "lập trình",
+        "react", "python", "cơ khí", "hàn dây", "mỏ hàn",
+    ),
+    "phan_tich": (
+        "dữ liệu", "excel", "phân tích", "dashboard", "số liệu", "logic",
+        "bài toán", "toán học", "sql",
+    ),
+    "sang_tao": (
+        "vẽ", "vẽ tranh", "vẽ tay", "vẽ logo", "vẽ minh họa", "thiết kế",
+        "nhạc", "sáng tạo", "viết", "viết bài", "viết truyện", "viết content",
+        "viết lách", "photoshop", "figma", "màu sắc", "quay video", "dựng phim",
+    ),
+    "xa_hoi": (
+        "dạy", "dạy học", "dạy bạn", "dạy trẻ", "dạy tiếng", "giảng dạy",
+        "hướng dẫn", "giúp", "tình nguyện", "chăm sóc", "tư vấn", "giao tiếp",
+    ),
+    # "lịch" alone also appears in "du lịch" and "lịch sử". Scheduling
+    # phrases remain useful evidence without turning travel/history into management.
+    "quan_ly": (
+        "tổ chức", "xếp lịch", "lên lịch", "làm lịch", "nhóm", "quản lý",
+        "điều phối", "kinh doanh",
+    ),
 }
 
-# Keyword hits must be whole words: "hàn" (welding) is a substring of "hàng"
-# (goods — one of the most common Vietnamese words), "lịch" (schedule) of "du
-# lịch" (travel). Plain `in` matching mis-bumped dimensions and made unrelated
-# personas converge on the same career list. \w is Unicode-aware in Python, so
-# Vietnamese diacritic letters count as word characters on both sides.
-_KW_PATTERNS: dict[str, "re.Pattern[str]"] = {}
+
+def _fold_text(text: str) -> str:
+    """Lowercase Vietnamese text and remove accents for resilient keyword matching."""
+    normalized = unicodedata.normalize("NFKD", (text or "").lower().replace("đ", "d"))
+    return "".join(char for char in normalized if not unicodedata.combining(char))
 
 
-def _word_match(keyword: str, text: str) -> bool:
-    pat = _KW_PATTERNS.get(keyword)
-    if pat is None:
-        pat = re.compile(rf"(?<!\w){re.escape(keyword)}(?!\w)")
-        _KW_PATTERNS[keyword] = pat
-    return bool(pat.search(text))
+def _has_vietnamese_marks(text: str) -> bool:
+    raw = (text or "").lower()
+    return "đ" in raw or any(
+        unicodedata.combining(char)
+        for char in unicodedata.normalize("NFKD", raw)
+    )
 
+
+def _contains_phrase(text: str, phrase: str) -> bool:
+    escaped = re.escape(phrase.strip()).replace(r"\ ", r"\s+")
+    return bool(re.search(rf"(?<!\w){escaped}(?!\w)", text))
+
+
+def _contains_keyword(text: str, keyword: str) -> bool:
+    """Match whole Vietnamese phrases and support fully unaccented user input.
+
+    We first compare the original text. Accent folding is only used when the user's
+    input itself has no Vietnamese marks; this avoids treating words such as "hạn"
+    and "hàn" as equivalent in normal accented Vietnamese.
+    """
+    raw = (text or "").lower()
+    key = (keyword or "").lower()
+    if _contains_phrase(raw, key):
+        return True
+    if _has_vietnamese_marks(raw):
+        return False
+    # These one-word forms collapse into common unrelated Vietnamese words when
+    # accents are removed (vẽ→ve/về, dạy→day/đây, sửa→sua/sữa). Their explicit
+    # multi-word variants remain available in `_DIM_KEYWORDS` for no-accent input.
+    if _fold_text(key) in {"ve", "day", "sua", "viet"}:
+        return False
+    return _contains_phrase(_fold_text(raw), _fold_text(key))
+
+
+_UNCERTAIN_INTEREST_CUES = (
+    "không biết",
+    "chưa biết",
+    "không rõ",
+    "chưa rõ",
+    "không có gì",
+    "tùy",
+    "bình thường",
+)
+
+
+_NEGATED_SKILL_PREFIXES = (
+    "không biết",
+    "chưa biết",
+    "không dùng",
+    "chưa dùng",
+    "không giỏi",
+    "chưa giỏi",
+    "không có kinh nghiệm",
+)
+
+
+def _all_mentions_locally_negated(
+    text: str, keyword: str, prefixes: tuple[str, ...]
+) -> bool:
+    folded = _fold_text(text)
+    key = _fold_text(keyword)
+    matches = list(re.finditer(rf"(?<!\w){re.escape(key)}(?!\w)", folded))
+    if not matches:
+        return False
+    for match in matches:
+        context = folded[max(0, match.start() - 64) : match.start()]
+        # A contrast/conjunction starts a new local claim: "chưa biết Python nhưng
+        # đã dùng SQL" must not accidentally negate SQL as well.
+        context = re.split(r"[,.!?;]|\b(?:nhung|tuy nhien|con|song)\b", context)[-1]
+        if not any(_fold_text(prefix) in context for prefix in prefixes):
+            return False
+    return True
+
+
+def _is_negated_skill_mention(text: str, keyword: str) -> bool:
+    """True only when every mention says the user does not have that skill."""
+    return _all_mentions_locally_negated(text, keyword, _NEGATED_SKILL_PREFIXES)
 
 # Cues that a user is retracting/contradicting something said earlier in the
 # conversation — never additive. Profile is visible/editable, so a correction must
@@ -85,6 +175,15 @@ _NEGATION_CUES: tuple[str, ...] = (
 )
 
 
+def _is_negated_signal_mention(text: str, keyword: str) -> bool:
+    """Do not turn a rejected activity into a positive profile dimension."""
+    return _all_mentions_locally_negated(
+        text,
+        keyword,
+        _NEGATION_CUES + _NEGATED_SKILL_PREFIXES,
+    )
+
+
 # Filler words to strip before comparing an interest label against a correction
 # message — interest labels are often a whole clause ("em thích vẽ"), not a compact
 # token like a skill name, so exact/full-string containment would almost never match
@@ -99,11 +198,20 @@ _INTEREST_STOPWORDS = frozenset(
 
 
 def _interest_content_words(text: str) -> list[str]:
+    folded_stopwords = {_fold_text(word) for word in _INTEREST_STOPWORDS}
     return [
         w
-        for w in re.findall(r"[^\W\d_]+", (text or "").lower(), flags=re.UNICODE)
-        if w not in _INTEREST_STOPWORDS and len(w) >= 2
+        for w in re.findall(r"[a-z]+", _fold_text(text))
+        if w not in folded_stopwords and len(w) >= 2
     ]
+
+
+def _interest_matches_removed(candidate: str, removed: str) -> bool:
+    candidate_words = set(_interest_content_words(candidate))
+    removed_words = set(_interest_content_words(removed))
+    if not removed_words:
+        return _fold_text(candidate).strip() == _fold_text(removed).strip()
+    return removed_words.issubset(candidate_words)
 
 
 def _detect_corrections(text: str, profile: Optional[Profile]) -> Optional["CorrectionsDelta"]:
@@ -111,24 +219,30 @@ def _detect_corrections(text: str, profile: Optional[Profile]) -> Optional["Corr
     already present in this message. Never additive — only ever removes/resets."""
     from app.models.profiler_io import CorrectionsDelta
 
-    lower = text.lower()
-    if not any(cue in lower for cue in _NEGATION_CUES):
+    folded = _fold_text(text)
+    if not any(_fold_text(cue) in folded for cue in _NEGATION_CUES):
         return None
 
     remove_skills: list[str] = []
     remove_interests: list[str] = []
     if profile is not None:
         for skill in profile.skills:
-            if skill.name and _word_match(skill.name.lower(), lower):
+            if skill.name and _contains_phrase(folded, _fold_text(skill.name)):
                 remove_skills.append(skill.name)
         for interest in profile.interests:
             words = _interest_content_words(interest)
-            if words and any(_word_match(w, lower) for w in words):
+            if words and any(_contains_phrase(folded, word) for word in words):
                 remove_interests.append(interest)
 
     reset_dims: list[str] = []
     for dim, kws in _DIM_KEYWORDS.items():
-        if any(_word_match(k, lower) for k in kws):
+        # A first-time "chưa biết Python" is absence of evidence, not a weak
+        # technical score. Reset only a signal that was actually present before.
+        if (
+            profile is not None
+            and float(profile.dimensions.get(dim, 0.0) or 0.0) > 0.0
+            and any(_contains_keyword(text, k) for k in kws)
+        ):
             reset_dims.append(dim)
 
     if not (remove_skills or remove_interests or reset_dims):
@@ -194,6 +308,10 @@ def merge_delta(
             text
             and text.lower() not in seen_i
             and text.lower() not in removed_i
+            and not any(
+                _interest_matches_removed(text, removed)
+                for removed in corrections.removed_interests
+            )
             and not _looks_like_injection(text)
         ):
             profile.interests.append(text)
@@ -280,19 +398,17 @@ def merge_delta(
     if not corrections.locked_job_goal and delta.job_goal is not None:
         profile.job_goal = delta.job_goal
 
-    # Evidence quotes — the deterministic path already guards this at the call site (line
-    # ~559 below); an LLM-produced delta needs the same guard here since nothing else re-checks it.
-    # Dedupe by (turn, quote): handle_turn merges the agent-extracted delta AND the classic
-    # delta for the same message, which used to append every quote twice per turn.
-    seen_q = {(q.turn, q.quote) for q in profile.evidence_quotes}
+    # Both the agent extractor and classic deterministic path can describe the same
+    # user turn. Keep one transparent evidence item per (turn, quote).
+    seen_quotes = {(item.turn, item.quote) for item in profile.evidence_quotes}
     for eq in delta.evidence_quotes or []:
         quote = (eq.quote or "").strip()
         if not quote or _looks_like_injection(quote):
             continue
         key = (eq.turn or turn, quote[:500])
-        if key in seen_q:
+        if key in seen_quotes:
             continue
-        seen_q.add(key)
+        seen_quotes.add(key)
         profile.evidence_quotes.append(
             EvidenceQuote(turn=eq.turn or turn, quote=quote[:500], mapped_to=eq.mapped_to or "")
         )
@@ -321,6 +437,19 @@ def apply_patch(profile: Profile, patch: ProfilePatch, corrections: Corrections)
             if t and t.lower() not in seen:
                 profile.interests.append(t)
                 seen.add(t.lower())
+            # A direct user edit is newer and higher-authority than an old removal.
+            corrections.removed_interests = {
+                removed
+                for removed in corrections.removed_interests
+                if not _interest_matches_removed(t, removed)
+            }
+
+    if patch.remove_interests:
+        remove_interests = {item.strip().lower() for item in patch.remove_interests if item.strip()}
+        corrections.removed_interests.update(patch.remove_interests)
+        profile.interests = [
+            interest for interest in profile.interests if interest.lower() not in remove_interests
+        ]
 
     if "education_stage" in patch.model_fields_set:
         profile.education_stage = patch.education_stage
@@ -484,22 +613,18 @@ def _user_declines_constraint(message: str) -> bool:
 
 
 def _wants_results(message: str) -> bool:
-    """Explicit mid-flow request to see suggestions — unlike _wants_done's loose
-    confirmation words ("ok", "được"), these phrases are unambiguous intent."""
-    m = message.lower()
+    """An explicit request to stop profiling and inspect suggestions."""
+    folded = _fold_text(message)
     return any(
-        p in m
-        for p in (
-            "xem gợi ý",
+        phrase in folded
+        for phrase in (
             "xem goi y",
-            "xem hướng",
             "xem huong",
-            "xem kết quả",
             "xem ket qua",
-            "xem nghề",
-            "gợi ý nghề",
+            "xem nghe",
+            "goi y nghe",
             "cho em xem",
-            "cho mình xem",
+            "cho minh xem",
         )
     )
 
@@ -527,44 +652,14 @@ def _wants_done(message: str) -> bool:
 # ---------- deterministic LLM-free turn ----------
 
 
-# Messages that are meta-statements — constraints, confirmations, education
-# facts — not interests. Storing them as interests polluted both the visible
-# profile ("ĐIỀU BẠN THÍCH: em học lớp 12") and the matching text.
-_NON_INTEREST_MARKERS = (
-    "em ở ",
-    "mình ở ",
-    "gia đình",
-    "ngân sách",
-    "không có nhiều tiền",
-    "học phí",
-    "cho em xem",
-    "cho mình xem",
-    "xem gợi ý",
-    "xem hướng",
-    "xem kết quả",
-    "sẵn sàng",
-    "đúng rồi",
-    "không rõ",
-    "chưa biết",
-)
-
-_EDUCATION_ONLY_RE = re.compile(
-    r"^(em|mình|tôi)?\s*(đang)?\s*(học|là)?\s*(lớp\s*\d+|cấp\s*\d|học sinh|sinh viên(\s*năm\s*\w+)?)\s*$"
-)
-
-
 def _compact_interest_label(text: str) -> str | None:
     """PR-10: avoid dumping the full utterance as an interest (noise)."""
     raw = re.sub(r"\s+", " ", (text or "").strip())
     if len(raw) < 8 or _looks_like_injection(raw):
         return None
-    lower = raw.lower()
-    # Prefer activity-like phrases
-    # Avoid false positives like "điện thoại"
-    if "điện thoại" in lower and "sửa" not in lower and "hàn" not in lower:
-        lower_for_activity = lower.replace("điện thoại", " ")
-    else:
-        lower_for_activity = lower
+    folded = _fold_text(raw)
+    # Prefer explicit activities; generic device mentions such as "điện thoại"
+    # are not in this allowlist and therefore cannot create technical evidence.
     activity_keys = (
         "sửa",
         "vẽ",
@@ -584,48 +679,80 @@ def _compact_interest_label(text: str) -> str | None:
         "viết",
         "quay video",
         "edit",
+        "đọc sách",
+        "thể thao",
+        "bóng đá",
+        "làm vườn",
+        "bán hàng",
+        "tổ chức",
+        "giúp",
+        "tình nguyện",
     )
-    interest_cues = ("thích", "mê ", "đam mê", "yêu thích", "hay ", "hứng thú")
-    has_activity = any(_word_match(k, lower_for_activity) for k in activity_keys)
-    if has_activity or any(c in lower for c in interest_cues):
-        # Pick the clause that actually carries the interest signal — the FIRST
-        # clause is often a meta lead-in ("em học lớp 12, em thích vẽ" → the
-        # old first-clause split stored "em học lớp 12" as an interest).
-        clauses = [c.strip() for c in re.split(r"[.!?,;]", raw) if c.strip()]
-        best: str | None = None
-        for clause in clauses:
-            cl = clause.lower()
-            if any(m in cl for m in _NON_INTEREST_MARKERS) or _EDUCATION_ONLY_RE.match(cl):
-                continue
-            scored_activity = any(_word_match(k, cl) for k in activity_keys)
-            scored_cue = any(c in cl for c in interest_cues)
-            if scored_activity or scored_cue:
-                best = clause
-                if scored_activity:
-                    break  # activity clause wins outright
-        if best is None:
-            return None
-        label = best
-        if len(label) > 40:
-            label = label[:37] + "…"
-        return label
-    # Meta statements are never interests, however short.
-    if any(m in lower for m in _NON_INTEREST_MARKERS) or _EDUCATION_ONLY_RE.match(lower):
+
+    interest_cues = (
+        "thích", "mê", "đam mê", "yêu thích", "hứng thú", "muốn thử",
+        "hay làm", "quên cả thời gian",
+    )
+    non_interest_markers = (
+        "em o ", "minh o ", "gia dinh", "ngan sach", "khong co nhieu tien",
+        "hoc phi", "cho em xem", "cho minh xem", "xem goi y", "xem huong",
+        "xem ket qua", "san sang", "dung roi",
+    )
+    education_only = re.compile(
+        r"^(?:em|minh|toi)?\s*(?:dang)?\s*(?:hoc|la)?\s*"
+        r"(?:lop\s*\d+|cap\s*\d|hoc sinh|sinh vien(?:\s*nam\s*\w+)?)\s*$"
+    )
+
+    # Pick the clause carrying the activity, not a demographic lead-in such as
+    # "em học lớp 12, em thích vẽ". Activity evidence wins over a generic cue.
+    best: str | None = None
+    best_has_activity = False
+    for clause in (part.strip() for part in re.split(r"[.!?,;]", raw)):
+        if not clause:
+            continue
+        clause_folded = _fold_text(clause)
+        if education_only.match(clause_folded):
+            continue
+        if any(marker in clause_folded for marker in non_interest_markers):
+            continue
+        has_activity = any(_contains_keyword(clause, key) for key in activity_keys)
+        has_cue = any(_contains_keyword(clause, cue) for cue in interest_cues)
+        if not (has_activity or has_cue):
+            continue
+        if best is None or (has_activity and not best_has_activity):
+            best = clause
+            best_has_activity = has_activity
+        if has_activity:
+            break
+
+    if best is None:
         return None
-    # Generic long answers: do not invent a fake interest from whole sentence
-    if len(raw) > 60:
+    if any(_fold_text(cue) in folded for cue in _UNCERTAIN_INTEREST_CUES) and not best_has_activity:
         return None
-    if len(raw) > 40:
-        return raw[:37] + "…"
-    return raw
+    return best if len(best) <= 40 else best[:37] + "…"
+
+
+_REDACTION_MARKER_RE = re.compile(
+    r"\[(?:email|số điện thoại|khóa bí mật) đã ẩn\]",
+    flags=re.IGNORECASE,
+)
+
+
+def _has_meaningful_profile_text(text: str) -> bool:
+    """Privacy-only/contact-only turns must not advance profiling progress."""
+    without_markers = _REDACTION_MARKER_RE.sub(" ", text or "")
+    return bool(re.search(r"[\wÀ-ỹ]", without_markers, flags=re.UNICODE))
 
 
 def _extract_job_goal(text: str, phase: Phase) -> str | None:
     """Only set job_goal on clear intent (not every message containing 'việc')."""
-    lower = text.lower()
+    folded = _fold_text(text)
     if phase not in ("warmup", "interests", "constraints", "wrapup"):
         # abilities turns usually describe tools, not goals
-        if not any(k in lower for k in ("muốn làm", "tìm việc", "ứng tuyển", "entry", "fresher")):
+        if not any(
+            _contains_phrase(folded, _fold_text(k))
+            for k in ("muốn làm", "tìm việc", "ứng tuyển", "entry", "fresher")
+        ):
             return None
     goal_markers = (
         "muốn làm",
@@ -642,14 +769,14 @@ def _extract_job_goal(text: str, phase: Phase) -> str | None:
         "kế toán",
         "thiết kế",
     )
-    if not any(k in lower for k in goal_markers):
+    if not any(_contains_phrase(folded, _fold_text(k)) for k in goal_markers):
         return None
     # Prefer short canned goals when keywords match
-    if "data" in lower or "dữ liệu" in lower or "excel" in lower or "dashboard" in lower:
+    if any(_contains_phrase(folded, _fold_text(k)) for k in ("data", "dữ liệu", "excel", "dashboard")):
         return "việc dữ liệu / phân tích entry-level"
-    if any(k in lower for k in ("lập trình", "react", "python", "web", "code")):
+    if any(_contains_phrase(folded, _fold_text(k)) for k in ("lập trình", "react", "python", "web", "code")):
         return "việc lập trình / web entry-level"
-    if "marketing" in lower:
+    if _contains_phrase(folded, "marketing"):
         return "việc digital marketing entry-level"
     # fallback: first 80 chars if short enough intent phrase
     cleaned = re.sub(r"\s+", " ", text).strip()
@@ -670,32 +797,44 @@ def deterministic_turn(
     text = (message or "").strip()
     delta = ProfileDelta()
     lower = text.lower()
+    folded = _fold_text(text)
 
     corrections_delta = _detect_corrections(text, profile)
     if corrections_delta is not None:
         delta.corrections = corrections_delta
 
     if journey_mode == "launch":
-        if any(k in lower for k in ("năm cuối", "nam cuoi", "final year")):
+        if any(_contains_phrase(folded, _fold_text(k)) for k in ("năm cuối", "final year")):
             delta.education_stage = "final_year"
-        if any(k in lower for k in ("mới tốt nghiệp", "moi tot nghiep", "tốt nghiệp")):
+        if any(_contains_phrase(folded, _fold_text(k)) for k in ("mới tốt nghiệp", "tốt nghiệp")):
             delta.education_stage = "recent_graduate"
         goal = _extract_job_goal(text, phase)
         if goal:
             delta.job_goal = goal
-        if any(k in lower for k in ("chưa có thực tập", "chưa có project", "chưa có kinh nghiệm", "không có project")):
+        explicit_no_experience = any(
+            _contains_phrase(folded, _fold_text(k))
+            for k in (
+                "chưa có thực tập", "chưa có project", "chưa có kinh nghiệm",
+                "không có project", "không có thực tập", "chưa từng thực tập",
+            )
+        )
+        if explicit_no_experience:
             from app.models.profiler_io import ConstraintsDelta
 
             delta.constraints = ConstraintsDelta(notes="chưa có thực tập/project — explicit no experience")
-        if any(k in lower for k in ("project", "dashboard", "app ", "thực tập", "internship")):
+        experience_mentioned = any(
+            _contains_phrase(folded, _fold_text(k))
+            for k in ("project", "dashboard", "ứng dụng", "app", "thực tập", "internship")
+        )
+        if experience_mentioned and not explicit_no_experience:
             title = "Project từ hội thoại"
-            if "dashboard" in lower:
+            if _contains_phrase(folded, "dashboard"):
                 title = "Dashboard"
-            elif "todo" in lower or "react" in lower:
+            elif _contains_phrase(folded, "todo") or _contains_phrase(folded, "react"):
                 title = "App todo"
             skills: list[str] = []
             for token in ("excel", "react", "python", "sql", "figma", "powerpoint", "word"):
-                if token in lower:
+                if _contains_phrase(folded, token) and not _is_negated_skill_mention(text, token):
                     skills.append(
                         token.upper()
                         if token == "sql"
@@ -704,7 +843,9 @@ def deterministic_turn(
             delta.experiences = [
                 ExperienceEvidence(
                     title=title,
-                    kind="internship" if "thực tập" in lower or "internship" in lower else "project",
+                    kind="internship"
+                    if _contains_phrase(folded, _fold_text("thực tập")) or _contains_phrase(folded, "internship")
+                    else "project",
                     description=text[:200],
                     skills=skills,
                     source_quote=text[:240],
@@ -715,7 +856,10 @@ def deterministic_turn(
                     ProfileSkill(name=s, level="đã đề cập", source_quote=text[:240])
                 )
     else:
-        if any(k in lower for k in ("lớp 12", "lớp 11", "cấp 3", "học sinh")):
+        if any(
+            _contains_phrase(folded, _fold_text(k))
+            for k in ("lớp 12", "lớp 11", "cấp 3", "học sinh")
+        ):
             delta.education_stage = "high_school"
 
     # Interests: compact labels only (PR-10); skip pure ability/tool turns.
@@ -727,7 +871,8 @@ def deterministic_turn(
             if label:
                 delta.interests = [label]
         elif phase == "abilities" and not any(
-            k in lower for k in ("excel", "python", "react", "khen", "giỏi", "làm tốt")
+            _contains_keyword(text, k)
+            for k in ("excel", "python", "react", "khen", "giỏi", "làm tốt")
         ):
             label = _compact_interest_label(text)
             if label:
@@ -744,15 +889,17 @@ def deterministic_turn(
         for dim, kws in _DIM_KEYWORDS.items():
             if dim in reset_now:
                 continue
-            if any(_word_match(k, lower) for k in kws):
-                # New evidence in a later turn deepens an already-seen dimension
-                # instead of flatlining at 0.55 forever (which clustered every
-                # profile's match scores around the same ~40%).
-                current = float((profile.dimensions if profile else {}).get(dim, 0.0))
-                if current >= 0.55:
-                    dims[dim] = min(0.8, round(current + 0.1, 2))
-                else:
-                    dims[dim] = 0.55
+            if any(
+                _contains_keyword(text, k)
+                and not _is_negated_signal_mention(text, k)
+                for k in kws
+            ):
+                current = float((profile.dimensions if profile else {}).get(dim, 0.0) or 0.0)
+                # Repeated concrete evidence should strengthen a signal instead of every
+                # persona collapsing to the same binary 0.55 dimension vector.
+                # Keyword-only inference remains intentionally conservative; richer
+                # confidence must come from stronger/validated evidence, not repetition.
+                dims[dim] = min(0.8, max(0.55, current + 0.15))
     delta.dimensions = dims
 
     # Skills from tool keywords if not already added
@@ -767,7 +914,12 @@ def deterministic_turn(
     }
     existing = {s.name.lower() for s in delta.skills}
     for key, name in tool_map.items():
-        if _word_match(key, lower) and name.lower() not in existing and not _looks_like_injection(name):
+        if (
+            _contains_keyword(text, key)
+            and name.lower() not in existing
+            and not _looks_like_injection(name)
+            and not _is_negated_skill_mention(text, key)
+        ):
             delta.skills.append(
                 ProfileSkill(name=name, level="đã đề cập", source_quote=text[:240] or name)
             )
@@ -779,12 +931,15 @@ def deterministic_turn(
         ]
 
     # Soft constraints
-    if any(k in lower for k in ("hà nội", "hanoi", "hcm", "sài gòn", "đà nẵng", "danang")):
+    if any(
+        _contains_phrase(folded, _fold_text(k))
+        for k in ("hà nội", "hanoi", "hcm", "sài gòn", "đà nẵng", "danang")
+    ):
         from app.models.profiler_io import ConstraintsDelta
 
-        region = "hanoi" if "hà nội" in lower or "hanoi" in lower else (
-            "hcm" if "hcm" in lower or "sài gòn" in lower else (
-                "danang" if "đà nẵng" in lower or "danang" in lower else None
+        region = "hanoi" if any(_contains_phrase(folded, k) for k in ("ha noi", "hanoi")) else (
+            "hcm" if any(_contains_phrase(folded, k) for k in ("hcm", "sai gon")) else (
+                "danang" if any(_contains_phrase(folded, k) for k in ("da nang", "danang")) else None
             )
         )
         if region:
@@ -793,7 +948,10 @@ def deterministic_turn(
             else:
                 delta.constraints.region_pref = region
 
-    if any(k in lower for k in ("hạn chế", "eo hẹp", "không có nhiều tiền", "ngân sách thấp")):
+    if any(
+        _contains_phrase(folded, _fold_text(k))
+        for k in ("hạn chế", "eo hẹp", "không có nhiều tiền", "ngân sách thấp")
+    ):
         from app.models.profiler_io import ConstraintsDelta
 
         if delta.constraints is None:
@@ -816,6 +974,7 @@ def handle_turn(
     journey_mode: JourneyMode = "explore",
 ) -> ChatResponse:
     state = session_store.get_session(session_id)
+    is_new_session = state is None
     if state is None:
         state = session_store.create_session(session_id, journey_mode)
     else:
@@ -829,8 +988,26 @@ def handle_turn(
             if m.get("role") == "assistant" and m.get("content")
         ][-4:]
 
-    # Opening turn (no user message yet)
-    if message is None or (isinstance(message, str) and message.strip() == "" and state.turn == 0):
+    opening_request = message is None or (
+        isinstance(message, str) and message.strip() == ""
+    )
+
+    # Opening turn (no user message yet). Reopening an existing session must be
+    # idempotent: never rewind its phase/turn while retaining the old profile.
+    if opening_request and not is_new_session and state.turn > 0:
+        if state.done:
+            reply = "Hồ sơ này đã sẵn sàng. Bạn có thể xem lại hồ sơ hoặc mở phần gợi ý bên dưới."
+        else:
+            reply = "Mình đã mở lại hồ sơ đang làm dở. Bạn tiếp tục từ chỗ trước nhé."
+        return ChatResponse(
+            reply=reply,
+            phase=state.phase,
+            turn=state.turn,
+            done=state.done,
+            profile=state.profile,
+        )
+
+    if opening_request and state.turn == 0:
         state.turn = 1
         state.phase = "warmup"
         state.turns_in_phase = 0
@@ -854,12 +1031,31 @@ def handle_turn(
             profile=state.profile,
         )
 
-    user_text = (message or "").strip()
+    # Persist and send to model only a privacy-sanitized turn. This removes direct
+    # contact identifiers, secrets, gender/self-label and prestige/GPA proxies while
+    # preserving career evidence such as tools, activities and regions.
+    raw_user_text = (message or "").strip()
+    user_text = agent_policy.strip_privacy_text(raw_user_text)
+    if raw_user_text and not _has_meaningful_profile_text(user_text):
+        reply = (
+            "Mình không dùng thông tin nhận dạng đó để định hướng. "
+            "Bạn hãy kể một hoạt động, kỹ năng hoặc điều kiện học tập liên quan nhé."
+        )
+        state.messages.append({"role": "assistant", "content": reply})
+        state.messages = state.messages[-16:]
+        session_store.save_session(state)
+        return ChatResponse(
+            reply=reply,
+            phase=state.phase,
+            turn=state.turn,
+            done=state.done,
+            profile=state.profile,
+        )
     state.messages.append({"role": "user", "content": user_text})
     state.turn += 1
     state.turns_in_phase += 1
 
-    if _user_declines_constraint(user_text):
+    if state.phase == "constraints" and _user_declines_constraint(user_text):
         state.constraint_declined = True
 
     # PR-13: optional agent path for discover/confirm (langgraph mode only).
@@ -906,20 +1102,17 @@ def handle_turn(
     )
 
     force_done = state.phase == "wrapup" and _wants_done(user_text)
-    # Respect explicit autonomy: a student with a reasonably complete profile who
-    # asks outright to see suggestions must not be dragged through more canned
-    # questions ("cho em xem gợi ý đi" used to be ignored — and even stored as an
-    # interest — until the phase machine felt like wrapping up).
     if (
         not force_done
         and state.phase not in ("warmup", "wrapup")
         and _wants_results(user_text)
         and state.profile.completeness >= 0.5
     ):
+        # Respect autonomy when the profile has enough evidence: stop asking
+        # canned questions and acknowledge that suggestions are ready.
         force_done = True
         state.phase = "wrapup"
         state.turns_in_phase = 0
-        # Reply must acknowledge the jump, not ask yet another canned question.
         turn_out.reply = get_fallback_question(
             state.journey_mode,
             "wrapup",
