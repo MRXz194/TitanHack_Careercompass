@@ -35,7 +35,7 @@ export function ProfilePanel({
   profile: Profile | null;
   diff: ProfileDiff | null;
   onRemoveSkill: (name: string) => void;
-  /** Contract hiện chưa có remove_interests — không truyền thì nút xóa interest bị ẩn. */
+  /** Optional for read-only contexts; Explore wires this to the autonomy PATCH. */
   onRemoveInterest?: (name: string) => void;
   onRemoveExperience: (title: string) => void;
 }) {
@@ -69,6 +69,9 @@ export function ProfilePanel({
 
       {/* 5 chiều năng lực-sở thích */}
       <section aria-label="Chiều năng lực và sở thích" className="space-y-2.5">
+        <p className="text-[10px] text-[var(--cc-muted)]">
+          Tín hiệu tương đối từ điều bạn đã kể, không phải điểm kiểm tra cố định.
+        </p>
         {Object.entries(profile.dimensions).map(([key, value]) => {
           const highlighted = diff?.changedDimensions.includes(key) ?? false;
           return (

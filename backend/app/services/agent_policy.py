@@ -58,10 +58,27 @@ ALL_REGISTERED_TOOLS = frozenset(set().union(*AGENT_SELECTABLE.values()) | DETER
 
 _PRIVACY_RE = re.compile(
     r"(?i)\b("
-    r"giới\s*tính|con\s+trai|con\s+gái|\bnữ\b|\bnam\b|"
+    r"giới\s*tính|con\s+trai|con\s+gái|nam\s+giới|nữ\s+giới|"
+    r"(?:em|tôi|toi|mình|minh|cháu|chau)\s+(?:là|la)\s+(?:nam|nữ|nu)|"
     r"GPA|ĐH\s+Bách\s+Khoa|Bách\s+Khoa|NEU|FTU|RMIT|"
     r"trường\s+top|trường\s+nổi\s+tiếng"
     r")\b"
+)
+_EMAIL_RE = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
+_PHONE_RE = re.compile(r"(?<!\d)(?:\+?84|0)(?:[\s.\-]?\d){8,10}(?!\d)")
+_SECRET_RE = re.compile(r"(?i)\bsk-[A-Z0-9_-]{8,}\b")
+_GPA_VALUE_RE = re.compile(
+    r"(?i)\b(?:GPA|điểm\s+trung\s+bình|diem\s+trung\s+binh)"
+    r"\s*[:=]?\s*\d+(?:[.,]\d+)?(?:\s*/\s*\d+(?:[.,]\d+)?)?"
+)
+_ADDRESS_RE = re.compile(
+    r"(?i)\b(?:địa\s*chỉ|dia\s*chi)\s*[:=\-]?\s*[^\n,;.!?]{1,120}"
+)
+_NAME_RE = re.compile(
+    r"(?i)\b(?:"
+    r"(?:tên|ten)\s+(?:em|tôi|toi|mình|minh|cháu|chau)|"
+    r"(?:em|tôi|toi|mình|minh|cháu|chau)\s+(?:tên|ten)"
+    r")\s+(?:là|la)\s+[^\n,;.!?]{1,80}"
 )
 
 
@@ -70,7 +87,13 @@ def session_id_hash(session_id: str) -> str:
 
 
 def strip_privacy_text(text: str) -> str:
-    cleaned = _PRIVACY_RE.sub(" ", text or "")
+    cleaned = _EMAIL_RE.sub("[email đã ẩn]", text or "")
+    cleaned = _PHONE_RE.sub("[số điện thoại đã ẩn]", cleaned)
+    cleaned = _SECRET_RE.sub("[khóa bí mật đã ẩn]", cleaned)
+    cleaned = _GPA_VALUE_RE.sub(" ", cleaned)
+    cleaned = _ADDRESS_RE.sub(" ", cleaned)
+    cleaned = _NAME_RE.sub(" ", cleaned)
+    cleaned = _PRIVACY_RE.sub(" ", cleaned)
     return re.sub(r"\s+", " ", cleaned).strip()
 
 
@@ -83,6 +106,15 @@ def strip_privacy_args(args: dict[str, Any]) -> dict[str, Any]:
             out[k] = strip_privacy_text(v)
         elif isinstance(v, dict):
             out[k] = strip_privacy_args(v)
+        elif isinstance(v, list):
+            out[k] = [
+                strip_privacy_text(item)
+                if isinstance(item, str)
+                else strip_privacy_args(item)
+                if isinstance(item, dict)
+                else item
+                for item in v
+            ]
         else:
             out[k] = v
     return out

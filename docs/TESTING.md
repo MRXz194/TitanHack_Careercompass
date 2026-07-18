@@ -39,8 +39,9 @@ Frontend test folders chỉ được thêm khi F1/F2 có component behavior cầ
 `frontend/tests/unit`, `frontend/tests/contract`, `frontend/tests/e2e`. Không thêm test
 framework FE trong lúc P0 đang đỏ; TypeScript + build + backend contract fixtures là gate nền.
 
-**Cập nhật (F1):** `frontend/tests/unit` đã có 64 test thật (Vitest + Testing Library) bảo
-vệ chat state machine, profile diff/patch, và các component chat/profile — chạy bằng
+**Cập nhật (persona hardening):** `frontend/tests/unit` có test thật (Vitest + Testing Library) bảo
+vệ chat state machine, request-race khi đổi journey, profile diff/patch, mock persona, privacy,
+Decision Lab theo vùng và các component chat/profile — chạy bằng
 `npm run test` trong `frontend/`, đã lên CI (`.github/workflows/ci.yml`) như một gate bắt buộc.
 `transparency-copy.test.ts` (M6/PR-09) là ngoại lệ: script `assert` chạy qua `npx tsx`, không
 phải Vitest suite — bị exclude khỏi `vitest.config.ts`, không chạy trong bước `npm run test`.
@@ -52,7 +53,7 @@ phải Vitest suite — bị exclude khỏi `vitest.config.ts`, không chạy tr
 | `unit` | model, parser, policy, scorer, merge | HTTP, DB thật, model provider | mỗi PR |
 | `contract` | Pydantic/OpenAPI/fixture parity | business flow dài | mỗi PR |
 | `integration` | TestClient, seed, temp SQLite, gateway fake | internet/model live | mỗi PR |
-| `e2e` | fictional persona/replay full journey | PII, secret, mặc định model live | release gate |
+| `e2e` | fictional persona/replay full journey + distinctness/immutability | PII, secret, mặc định model live | release gate |
 
 Mọi model/tool call trong test mặc định phải fake ở ranh giới `services/llm.py`. Live tests
 nếu thật sự cần phải có marker riêng trong PR task, explicit env opt-in, budget owner và
@@ -88,8 +89,8 @@ python -m pytest -q tests/integration/test_api_smoke.py
 | D-04 normalize | salary/date/region/dedupe edge cases | fixture hai source cùng schema | M2 |
 | MI-02/03 extraction | alias/negation/normalization | golden set + cache/resume | M3 |
 | MI-04 stats | percentile/null/confidence/trend | snapshot hash + API values | M3 |
-| PR-03 profiler | completeness/merge/correction precedence | 10 turns hai mode + delete/restart | M4 |
-| PR-05 matching | weights/cap/diversity/stretch | persona + region invariants | M4 |
+| PR-03 profiler | completeness/merge/correction precedence/no-accent/negation/PII | 10 turns hai mode + resume/delete/restart/no-leak | M4 |
+| PR-05 matching | weights/cap/diversity/stretch/blank-profile gate | 5 persona distinctness + region invariants | M4 |
 | PR-12 policy/tools | stage allowlist, args, privacy, budget | LangChain tool schema + graph compile/invoke | M4 |
 | PR-13 graph | node routing/deadline/fallback | `/api/chat` deterministic/agent parity | M4/M1 |
 | PR-14 red-team | tool-selection fixtures, injection, 12 personas, provenance, budget/replay | scorecard writeback `EVALUATION_RESULTS.md` | M4 |
@@ -124,7 +125,9 @@ compile → unit → contract → integration → route invariant → FE typeche
 ```
 
 - PR không được merge nếu unit/contract/integration hoặc FE build đỏ.
-- E2E thật nằm ở `tests/e2e/test_journeys.py`, dùng TestClient + SQLite local và cấm network/provider.
+- Dừng `next dev` trước `next build`: hai process dùng chung `.next`; build khi dev đang chạy có
+  thể làm dev thiếu chunk và trả 500 giả. Sau build phải restart dev rồi smoke lại 6 routes.
+- E2E thật nằm ở `tests/e2e/test_journeys.py` và `tests/e2e/test_persona_workflows.py`, dùng TestClient + SQLite local và cấm network/provider.
 - Test flaky được coi là fail: fix clock/random/network dependency, không rerun đến xanh rồi bỏ qua.
 - Không giảm threshold trong `EVALUATION.md` để hợp kết quả.
 - Mọi handoff ghi command, output PASS/FAIL/NOT_RUN, commit và limitation. `NOT_RUN` không phải DONE.
@@ -145,4 +148,31 @@ Fixture agent/data có metadata khi liên quan:
 
 Không commit transcript học sinh thật, raw profile, API key hoặc chain-of-thought. Replay chỉ lưu
 input/output public đã sanitize, tool name, policy reason code, latency giả lập/version hashes.
+
+## 9. Persona workflow release matrix
+
+Đây là gate chống lỗi “mọi học sinh ra cùng kết quả”. Không thay bằng kiểm tra snapshot UI đơn thuần.
+
+| Nhóm | Input trọng tâm | Kỳ vọng bắt buộc |
+|---|---|---|
+| Explore kỹ thuật | sửa đồ/lắp ráp/hàn dây | dominant `ky_thuat`; top-3 chạm family kỹ thuật |
+| Explore phân tích | data/Excel/SQL/logic | dominant `phan_tich`; top-3 chạm data/accounting/QA |
+| Explore sáng tạo | vẽ/thiết kế/content/video | dominant `sang_tao`; top-3 chạm design/content/media |
+| Explore xã hội | dạy/chăm sóc/tư vấn | dominant `xa_hoi`; top-3 chạm care/teaching/advising |
+| Explore tổ chức | tổ chức/điều phối/kinh doanh | dominant `quan_ly`; top-3 chạm operations/admin/logistics |
+| Launch có project | stage + goal + tool + output | experience có quote; readiness/actions có deliverable |
+| Launch chưa experience | phủ định project/intern/Python | không bịa project/skill; band không hứa tuyển dụng |
+| Launch discoverability | card đang đóng | readiness summary có trong DOM; một click mở đúng tab + 30-day deliverable |
+| Correction | “không còn thích/chưa biết” có/không dấu | remove bền vững; không re-add bằng wording khác |
+| Privacy | tên/email/phone/key/gender/GPA + privacy-only turn | identifier không tồn tại trong session/profile/model payload; turn/phase không tăng giả |
+| Session | resume/reset/đổi mode/race response | resume idempotent; UUID mới; không cross-persona leak |
+| Decision tools | research(region) → what-if | profile byte-stable; core ranking không đổi sau research |
+
+Acceptance tối thiểu cho 5 Explore persona: ít nhất 4 top-1 khác nhau, 5 top-3 tuple khác nhau,
+mọi result có 5 ID duy nhất + stretch ngoài top-5 + ít nhất một route ngoài đại học. Đây là
+ngưỡng regression của KB hiện tại, không phải claim khoa học về độ chính xác hướng nghiệp.
+
+Edge cases bắt buộc ở unit/integration: tiếng Việt không dấu; từ đồng âm sau bỏ dấu
+(`về/vẽ`, `đây/dạy`, `hạn/hàn`); “điện thoại” không phải skill kỹ thuật; “chưa có project”
+không tạo experience; “chưa biết Python nhưng đã dùng SQL” chỉ ghi SQL; profile trống trả 409.
 

@@ -1,6 +1,9 @@
 # NEXT — Extra 24-hour plan
 
-Implementation branch: `codex/day3-opportunity-plan`. M1 ghi baseline/release commit vào scorecard; task branch chỉ merge vào branch này theo dependency graph, không merge thẳng `main` trước Day 3 go/no-go.
+Core hardening branch đang hoạt động: `codex/persona-workflow-hardening`. Branch này phải qua
+current-commit CI, deploy smoke và handoff trước khi mở rộng Day 3. Implementation branch Day 3
+vẫn là `codex/day3-opportunity-plan`; task branch chỉ merge vào branch đó theo dependency graph,
+không merge thẳng `main` trước go/no-go.
 
 Thư mục này chỉ được mở khi MVP hiện tại đã qua **Expansion Gate**. Mục tiêu của 24 giờ dư không phải tăng số lượng màn hình, mà tăng bằng chứng rằng CareerCompass giải quyết đúng đề: tín hiệu tuyển dụng có chất lượng, gợi ý cá nhân hóa có thể giải thích, mở rộng cơ hội và hữu ích trong một buổi tư vấn thật.
 
@@ -42,6 +45,7 @@ Chi tiết:
 - [DATA_RESEARCH_ARCHITECTURE.md](DATA_RESEARCH_ARCHITECTURE.md) — crawler/data quality workflow, bounded web-research agent, structured insight UI và scale path.
 - [DATA_SNAPSHOT_AUDIT.md](DATA_SNAPSHOT_AUDIT.md) — kết quả crawl 3.914 records, hashes, raw-field diagnostics, blockers và handoff M2/M3.
 - [RELEASE_SCORECARD.md](RELEASE_SCORECARD.md) — trạng thái triển khai thật, test evidence, DDG gate và các bước manual còn chặn release.
+- [PERSONA_WORKFLOW_HARDENING.md](PERSONA_WORKFLOW_HARDENING.md) — P0/P1 active gate cho persona, chat, session, privacy, recommendation và UX trước mọi feature mới.
 
 ## Thứ tự triển khai bắt buộc
 
@@ -57,7 +61,7 @@ Trước khi nhận task Day 3, mỗi người/AI phải đọc theo thứ tự:
 
 1. `CLAUDE.md` và `frontend/CLAUDE.md` hoặc `backend/CLAUDE.md` theo phạm vi sửa.
 2. `docs/API_CONTRACT.md`, `docs/ARCHITECTURE.md`, `docs/AGENTIC_RUNTIME.md`, `docs/TESTING.md`, `docs/TEAM_RULES.md`.
-3. Bốn tài liệu trong thư mục `docs/next`, sau đó chỉ task ID mình nhận trong `TASKS.md` và dependency trực tiếp của task đó.
+3. `PERSONA_WORKFLOW_HARDENING.md` + `RELEASE_SCORECARD.md` trước; chỉ khi Expansion Gate pass mới đọc task Day 3 mình nhận trong `TASKS.md` và dependency trực tiếp.
 4. Kiểm tra `git status`, baseline commit/snapshot và handoff mới nhất trước khi code; không sửa hoặc stage file của lane khác.
 
 Prompt handoff tối thiểu cho AI:

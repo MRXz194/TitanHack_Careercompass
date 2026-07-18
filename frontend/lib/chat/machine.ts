@@ -60,6 +60,9 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "RECEIVE":
       return {
         ...state,
+        // Backend owns a session's locked journey mode. Sync defensively so the UI
+        // can never claim Launch while the active server session is Explore.
+        mode: action.res.profile.journey_mode,
         messages: [...state.messages, { role: "ai", text: action.res.reply }],
         profile: action.res.profile,
         phase: action.res.phase,

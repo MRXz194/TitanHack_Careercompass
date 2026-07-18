@@ -26,18 +26,18 @@ export function ModeSelector({
   };
 
   return (
-    <div>
-      <div role="group" aria-label="Chọn hành trình" className="flex gap-2">
+    <div className="w-full min-w-0 sm:w-auto">
+      <div role="group" aria-label="Chọn hành trình" className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto">
         {MODES.map((m) => (
           <button
             key={m.value}
             aria-pressed={m.value === mode}
             onClick={() => pick(m.value)}
             title={m.hint}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            className={`min-w-0 rounded-[2px] px-2 py-1.5 font-mono text-[10px] font-medium uppercase tracking-wide transition sm:px-4 sm:text-[11px] ${
               m.value === mode
-                ? "bg-[var(--cc-primary)] text-white shadow"
-                : "border border-slate-300 bg-white hover:border-[var(--cc-primary)]"
+                ? "bg-[var(--cc-primary)] text-white"
+                : "border border-[var(--cc-border)] bg-transparent hover:border-[var(--cc-primary)]"
             }`}
           >
             {m.label}
@@ -46,18 +46,18 @@ export function ModeSelector({
       </div>
 
       {confirming && (
-        <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm">
+        <div className="mt-2 rounded-[2px] border border-amber-300 bg-amber-50 p-3 text-sm">
           <p>Đổi chế độ sẽ <b>bắt đầu lại</b> cuộc trò chuyện từ đầu. Bạn chắc chứ?</p>
           <div className="mt-2 flex gap-2">
             <button
               onClick={() => { const next = confirming; setConfirming(null); onSelect(next); }}
-              className="rounded-lg bg-[var(--cc-primary)] px-3 py-1.5 text-xs font-semibold text-white"
+              className="rounded-[2px] bg-[var(--cc-primary)] px-3 py-1.5 font-mono text-xs font-medium uppercase text-white"
             >
               Đổi và bắt đầu lại
             </button>
             <button
               onClick={() => setConfirming(null)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium"
+              className="rounded-[2px] border border-[var(--cc-border)] bg-transparent px-3 py-1.5 font-mono text-xs font-medium uppercase"
             >
               Ở lại
             </button>

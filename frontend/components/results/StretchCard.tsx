@@ -58,7 +58,7 @@ export default function StretchCard({ rec }: StretchCardProps) {
 
         {/* Khung giải thích tính chất "Stretch" */}
         <p className="text-xs text-[var(--cc-ink)] leading-relaxed italic font-serif bg-white/50 border border-[var(--cc-border)]/40 p-4 rounded-xl shadow-inner">
-          <b>Ý nghĩa gợi ý:</b> Hướng đi này nằm ngoài vùng sở thích cốt lõi hiện tại của em, nhưng dựa trên các liên kết kĩ năng hoặc sở thích phụ, hệ thống đề xuất nhằm giúp em mở rộng thêm góc nhìn, tránh việc bị giới hạn lựa chọn (Anti-bias by design).
+          <b>Ý nghĩa gợi ý:</b> Hướng đi này khác nhóm tín hiệu nổi trội hiện tại. Hệ thống đưa nó vào để em có thêm một lựa chọn đáng kiểm chứng, không phải để kết luận em hợp hay không hợp.
         </p>
 
         {/* Tổng quan thị trường */}

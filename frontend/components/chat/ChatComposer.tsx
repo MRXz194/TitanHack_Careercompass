@@ -20,7 +20,7 @@ export function ChatComposer({
   };
 
   return (
-    <div className="flex items-end gap-2 border-t border-slate-200 p-3">
+    <div className="flex min-w-0 items-end gap-2 border-t border-slate-200 p-3">
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -32,14 +32,16 @@ export function ChatComposer({
         }}
         disabled={disabled}
         placeholder={placeholder}
+        maxLength={2000}
         rows={1}
         aria-label="Tin nhắn của bạn"
-        className="max-h-32 flex-1 resize-none rounded-xl border border-slate-300 px-4 py-2 outline-none focus:border-[var(--cc-primary)] disabled:bg-slate-50"
+        title="Tối đa 2.000 ký tự"
+        className="max-h-32 min-w-0 flex-1 resize-none rounded-[2px] border border-[var(--cc-border)] bg-[var(--cc-paper)] px-4 py-2 outline-none focus:border-[var(--cc-primary)] disabled:bg-[var(--cc-fog)]"
       />
       <button
         onClick={submit}
         disabled={disabled || !text.trim()}
-        className="rounded-xl bg-[var(--cc-primary)] px-5 py-2 font-medium text-white transition disabled:opacity-50"
+        className="shrink-0 rounded-[2px] bg-[var(--cc-primary)] px-4 py-2 font-mono text-xs font-medium uppercase text-white transition disabled:opacity-50"
       >
         Gửi
       </button>

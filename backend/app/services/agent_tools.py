@@ -54,6 +54,7 @@ class ApplyCorrectionInput(BaseModel):
     session_id_hash: str = ""
     remove_skills: list[str] = Field(default_factory=list)
     add_interests: list[str] = Field(default_factory=list)
+    remove_interests: list[str] = Field(default_factory=list)
     job_goal: Optional[str] = None
     education_stage: Optional[str] = None
 
@@ -183,7 +184,6 @@ def _extract_profile_evidence(
     )
     return {
         "session_id_hash": session_id_hash,
-        "reply_hint": out.reply,
         "profile_delta": out.profile_delta.model_dump(),
         "phase_done": out.phase_done,
     }
@@ -193,18 +193,28 @@ def _apply_profile_correction(
     session_id_hash: str = "",
     remove_skills: list[str] | None = None,
     add_interests: list[str] | None = None,
+    remove_interests: list[str] | None = None,
     job_goal: Optional[str] = None,
     education_stage: Optional[str] = None,
 ) -> dict:
-    patch = ProfilePatch(
-        remove_skills=remove_skills or [],
-        add_interests=[strip_privacy_text(x) for x in (add_interests or [])],
-        job_goal=strip_privacy_text(job_goal) if job_goal else None,
-        education_stage=education_stage,  # type: ignore[arg-type]
-    )
+    # Keep unset different from an explicit null. Profiler.apply_patch uses
+    # model_fields_set as correction authority; serialising optional fields as null
+    # would otherwise erase and lock education_stage/job_goal while removing a skill.
+    patch_data: dict[str, Any] = {}
+    if remove_skills is not None:
+        patch_data["remove_skills"] = [strip_privacy_text(x) for x in remove_skills]
+    if add_interests is not None:
+        patch_data["add_interests"] = [strip_privacy_text(x) for x in add_interests]
+    if remove_interests is not None:
+        patch_data["remove_interests"] = [strip_privacy_text(x) for x in remove_interests]
+    if job_goal is not None:
+        patch_data["job_goal"] = strip_privacy_text(job_goal)
+    if education_stage is not None:
+        patch_data["education_stage"] = education_stage
+    patch = ProfilePatch(**patch_data)
     return {
         "session_id_hash": session_id_hash,
-        "applied_patch": patch.model_dump(),
+        "applied_patch": patch.model_dump(exclude_unset=True),
         "note": "caller must merge via profiler.apply_patch with correction precedence",
     }
 

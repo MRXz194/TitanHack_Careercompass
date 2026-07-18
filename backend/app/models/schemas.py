@@ -71,8 +71,8 @@ class Profile(BaseModel):
 # ---------- Chat ----------
 
 class ChatRequest(BaseModel):
-    session_id: str
-    message: Optional[str] = None  # None = opening turn
+    session_id: str = Field(min_length=1, max_length=128)
+    message: Optional[str] = Field(default=None, max_length=2000)  # None = opening turn
     journey_mode: JourneyMode = "explore"
 
 
@@ -88,6 +88,7 @@ class ProfilePatch(BaseModel):
     dimensions: dict[str, float] = {}
     remove_skills: list[str] = []
     add_interests: list[str] = []
+    remove_interests: list[str] = []
     education_stage: Optional[EducationStage] = None
     job_goal: Optional[str] = None
     add_experiences: list[ExperienceEvidence] = Field(default_factory=list)

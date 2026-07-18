@@ -17,6 +17,14 @@ const INTENTS: { value: ResearchIntent; label: string }[] = [
   { value: "local_market", label: "Thị trường địa phương" },
 ];
 
+const REGIONS: { value: Region; label: string }[] = [
+  { value: "all", label: "Toàn quốc" },
+  { value: "hanoi", label: "Hà Nội" },
+  { value: "hcm", label: "TP.HCM" },
+  { value: "danang", label: "Đà Nẵng" },
+  { value: "other", label: "Khu vực khác" },
+];
+
 const STATUS_LABEL: Record<CareerResearchResponse["status"], string> = {
   live: "LIVE",
   cached: "CACHE",
@@ -31,7 +39,7 @@ function formatSalary(value: number | null): string {
 export default function DecisionLab({ options }: { options: Recommendation[] }) {
   const [selected, setSelected] = useState<string[]>(options.slice(0, 2).map((item) => item.career_id));
   const [intent, setIntent] = useState<ResearchIntent>("overview");
-  const [region] = useState<Region>("all");
+  const [region, setRegion] = useState<Region>("all");
   const [research, setResearch] = useState<CareerResearchResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +88,7 @@ export default function DecisionLab({ options }: { options: Recommendation[] }) 
   };
 
   return (
-    <section className="cc-lab" aria-labelledby="decision-lab-title">
+    <section id="decision-lab" className="cc-lab scroll-mt-6" aria-labelledby="decision-lab-title">
       <div className="cc-section-heading">
         <p className="cc-kicker">DECISION LAB / COMPARE + VERIFY</p>
         <h2 id="decision-lab-title">Đặt các lựa chọn cạnh nhau, rồi tự kiểm chứng.</h2>
@@ -130,17 +138,32 @@ export default function DecisionLab({ options }: { options: Recommendation[] }) 
       )}
 
       <div className="cc-research-toolbar">
-        <div className="cc-segment" aria-label="Mục đích nghiên cứu">
-          {INTENTS.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              aria-pressed={intent === item.value}
-              onClick={() => setIntent(item.value)}
+        <div className="cc-research-controls">
+          <div className="cc-segment" aria-label="Mục đích nghiên cứu">
+            {INTENTS.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                aria-pressed={intent === item.value}
+                onClick={() => setIntent(item.value)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <label className="cc-region-field" htmlFor="research-region">
+            KHU VỰC
+            <select
+              id="research-region"
+              value={region}
+              onChange={(event) => {
+                setRegion(event.target.value as Region);
+                setResearch(null);
+              }}
             >
-              {item.label}
-            </button>
-          ))}
+              {REGIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
+          </label>
         </div>
         <button type="button" className="cc-button-dark" disabled={loading || selected.length === 0} onClick={runResearch}>
           {loading ? "ĐANG KIỂM CHỨNG…" : "NGHIÊN CỨU THÊM"}

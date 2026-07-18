@@ -29,6 +29,22 @@ def test_validation_error_uses_error_contract(client: TestClient) -> None:
     }
 
 
+def test_chat_rejects_message_over_2000_characters(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "session_id": "message-too-long",
+            "message": "x" * 2001,
+            "journey_mode": "explore",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "error": {"code": "422", "message": "Dữ liệu gửi lên không hợp lệ"}
+    }
+
+
 def test_career_detail_matches_contract(client: TestClient) -> None:
     response = client.get("/api/market/careers/data-analyst")
     assert response.status_code == 200

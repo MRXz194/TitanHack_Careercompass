@@ -8,6 +8,38 @@ Nhánh đề xuất: `feat/<TASK-ID>-slug`. Prefix task ngày dư: `N1`…`N6` t
 
 Mỗi người chỉ giữ tối đa một task `IN_PROGRESS`. Board dùng trạng thái `READY → IN_PROGRESS → IN_REVIEW → VERIFIED → DONE`; owner không tự chuyển từ `IN_REVIEW` sang `VERIFIED`. Handoff phải ghi commit, files/API/artifact đã đổi, command đã chạy, kết quả, env/fixture, risk/limitation và tên consumer đã xác nhận.
 
+## 0A. Active core-hardening lane — bắt buộc trước N1…N6
+
+Canonical cards: [PERSONA_WORKFLOW_HARDENING.md](PERSONA_WORKFLOW_HARDENING.md). Branch:
+`codex/persona-workflow-hardening`. Tất cả N1…N6 đang **BLOCKED_BY_CORE_GATE** cho tới khi
+PH-M1-01 current-commit CI xanh và PH-M1-02 deploy smoke có evidence thật.
+
+| Owner | Task | Vấn đề phải xử lý | Expected / verify | Trạng thái |
+|---|---|---|---|---|
+| M1 | PH-M1-01 | Baseline xanh không chứng minh hardening mới xanh | Backend compile/unit/contract/integration/e2e + 79 FE tests/typecheck/build; SHA + CI URL + secret/diff check | FE PASS; BE CI_REQUIRED |
+| M1 | PH-M1-02 | Vercel đang redirect login; Render URL chưa xác minh | Incognito 6 routes, health/CORS/cold-start, replay/live kill switch, rollback ID | BLOCKED_EXTERNAL |
+| M1 | PH-M1-03 | Chưa có evidence người dùng/counselor | 2 Explore + 2 Launch + 1 counselor, denominators và ≥1 observed fix | NOT_RUN |
+| M2 | PH-M2-01 | Persona output chưa được trace về snapshot | 15-row top-3 audit; source/hash/count/confidence; null/suppression đúng | READY_AFTER_CI |
+| M3 | PH-M3-01 | Cần chứng minh ranking khác nhau vì evidence, không vì hardcode/tune cảm giác | 5 persona score-component report; ≥4 unique top-1; 5 unique top-3; paired region/bias | TEST_ADDED / CI_REQUIRED |
+| M4 | PH-M4-01 | Negation/no-accent/agent correction có thể tạo hoặc xóa evidence sai | Single-tool planner; code-owned correction args; no null-field erase; provider fallback; persona E2E | IMPLEMENTED / CI_REQUIRED |
+| M4 | PH-M4-02 | Explanation từng dùng skill đầu tiên cho nghề không liên quan | Relation-specific evidence, grounded digits, blank profile 409, route invariant | IMPLEMENTED / CI_REQUIRED |
+| M5 | PH-M5-01 | Session cũ, mock cố định/reload và stale response làm persona trộn nhau | New UUID/resume/restart/mode/race/mock parity; mobile 390px; reset error retry | FE VERIFIED_LOCAL |
+| M6 | PH-M6-01 | Compare/research/what-if khó thấy, region bị hardcode, Launch readiness bị chôn sau hai click | Compare-first, jump nav, region selector, readiness summary + one-click 30-day plan, retry/new profile, source/confidence/null/error states | FE VERIFIED_LOCAL |
+
+Handoff bắt buộc cho lane này:
+
+```text
+Task/owner:
+Current commit:
+Problem reproduced with persona:
+Files/contracts changed:
+Targeted test + result:
+Required layer test + result:
+What was NOT_RUN and why:
+Consumer/reviewer acknowledgement:
+Known risk / rollback:
+```
+
 ## Capacity map và thứ tự ưu tiên
 
 | Owner | P0 critical lane | P1 chỉ mở sau H+17 | Reviewer chính | Budget định hướng |

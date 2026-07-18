@@ -31,7 +31,8 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 ### Frontend → Vercel
 1. [ ] Vercel dashboard → Add New → Project → import repo, **Root Directory = `frontend`**.
 2. [ ] Env vars: `NEXT_PUBLIC_API_BASE` = URL backend Render ở trên; `NEXT_PUBLIC_USE_MOCK` = `0` cho bản live (giữ `1` cho preview an toàn nếu BE chưa sẵn sàng).
-3. [ ] Deploy → verify trang chào mở được ở URL Vercel công khai, thử trên trình duyệt ẩn danh + 1 thiết bị mobile.
+3. [ ] Settings → Deployment Protection: Production phải **public** (tắt Vercel Authentication/Protection cho production hoặc gắn public custom domain). HTTP 200 sau redirect tới `vercel.com/login` là **FAIL**, không phải route smoke pass.
+4. [ ] Deploy → verify URL bằng cửa sổ ẩn danh chưa đăng nhập Vercel + 1 thiết bị mobile; URL cuối cùng phải vẫn là domain app, không phải trang login.
 
 ### Sau khi có cả hai URL
 1. [ ] Quay lại Render → env var `CORS_ORIGINS` → set đúng bằng URL Vercel thật (không dùng `*`, xem `backend/app/main.py` CORS middleware đọc `settings.cors_origins`).
@@ -48,6 +49,7 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 | `DEMO_MODE` | `off` | `off` cho live demo; `replay` là fallback bấm tay nếu mạng/LLM chết (L-08) |
 | `AGENT_MODE` | `langgraph` (release path) | `langgraph`; đổi `deterministic` là kill switch nếu graph lỗi |
 | `WEB_RESEARCH_MODE` | `off`/`replay`; `ddg` khi test live | `replay` cho demo an toàn; `ddg` chỉ sau 10-query gate, không cần API key |
+| `CHAT_TIMEOUT_SECONDS` | `12` | `12`; planner chỉ 1 attempt, profiler tối đa 1 repair |
 
 ## Smoke test sau deploy (bắt buộc, ~3 phút — chạy lại sau MỌI redeploy)
 
@@ -63,7 +65,9 @@ Artefact đã có sẵn trong repo: `.github/CODEOWNERS`, `.github/ISSUE_TEMPLAT
 
 - Main/CI: `d283b40`; [workflow 29639845313](https://github.com/MRXz194/TitanHack_Careercompass/actions/runs/29639845313) — backend + frontend PASS trên Ubuntu.
 - Backend URL: `UNVERIFIED` — Render dashboard owner cần bàn giao URL thật; URL suy từ service name đã timeout và không được ghi là production evidence.
-- Frontend URL: `https://titan-hack-careercompass-rg81hcrn5-mrxz194s-projects.vercel.app`
-- Production deployment: `success`, ngày `2026-07-18`, commit `d283b40`.
-- Route smoke: `/`, `/explore`, `/explore?mode=launch`, `/market`, `/results`, `/how-it-works` đều HTTP 200.
-- Known limitations: chưa smoke `/api/health`, CORS và live FE→BE vì thiếu Render URL thật; student/counselor test vẫn chưa chạy; `WEB_RESEARCH_MODE` phải giữ `replay` do DDG gate chỉ đạt 7/10.
+- Frontend deployment URL được ghi trước đây: `https://titan-hack-careercompass-rg81hcrn5-mrxz194s-projects.vercel.app`.
+- **Public access: FAIL/BLOCKED (recheck 2026-07-18).** URL trên và deployment mới đều redirect sang Vercel login/SSO. Trạng thái build/deploy có thể success nhưng chưa thể gọi là website công khai.
+- Route smoke public: **NOT RUN/INVALIDATED** — kết quả HTTP 200 cũ là HTML login sau redirect, không chứng minh các route app render.
+- Backend URL: vẫn `UNVERIFIED`; vì vậy `/api/health`, CORS và live FE→BE chưa có evidence.
+- Human validation: student/counselor vẫn `NOT RUN`; `WEB_RESEARCH_MODE` giữ `replay` do DDG gate chỉ đạt 7/10.
+- Owner action trước release: tắt Deployment Protection cho production, mở ẩn danh, chạy lại toàn bộ smoke checklist và ghi final URL + commit + timestamp. Không đổi scorecard sang PASS trước bước này.

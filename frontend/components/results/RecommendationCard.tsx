@@ -12,6 +12,12 @@ const ROUTE_BADGE: Record<string, string> = {
   certificate: "Chứng chỉ",
 };
 
+const READINESS_LABEL = {
+  ready_now: "Có thể bắt đầu ứng tuyển thử",
+  near_ready: "Gần sẵn sàng — còn khoảng trống",
+  build_foundation: "Cần xây thêm nền tảng",
+} as const;
+
 interface RecommendationCardProps {
   rec: Recommendation;
   rank?: number;
@@ -71,7 +77,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
         <div className="flex flex-col sm:items-end shrink-0">
           <span className="rounded-full bg-[var(--cc-primary-soft)] border border-[var(--cc-primary)]/10 px-4 py-1.5 text-xs sm:text-sm font-bold text-[var(--cc-primary)] shadow-sm font-serif">
             <Tooltip content={TOOLTIPS.match_score.text}>
-              {Math.round(rec.match_score * 100)}% mức tương thích tham khảo
+              {Math.round(rec.match_score * 100)}% điểm tín hiệu tham khảo
             </Tooltip>
           </span>
         </div>
@@ -108,6 +114,32 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
         )}
       </div>
 
+      {job_readiness && (
+        <div className="mt-4 grid gap-3 border-l-[3px] border-[var(--cc-primary)] bg-[var(--cc-fog)] p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="min-w-0">
+            <p className="cc-kicker">GRADUATE LAUNCH / READINESS</p>
+            <p className="mt-1 text-sm font-medium text-[var(--cc-ink)]">
+              {READINESS_LABEL[job_readiness.band]}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--cc-muted)]">
+              {job_readiness.matched_skills.length} kỹ năng có minh chứng · {job_readiness.missing_skills.length} khoảng trống cần kiểm chứng
+            </p>
+          </div>
+          <button
+            type="button"
+            className="cc-button-dark"
+            aria-expanded={open && activeTab === "readiness"}
+            aria-controls={`recommendation-detail-${rec.career_id}`}
+            onClick={() => {
+              setOpen(true);
+              setActiveTab("readiness");
+            }}
+          >
+            XEM KHOẢNG TRỐNG & KẾ HOẠCH 30 NGÀY
+          </button>
+        </div>
+      )}
+
       <div className="mt-4 flex justify-between items-center flex-wrap gap-2">
         <span className="text-[10px] text-[var(--cc-muted)] italic font-serif">
           <Tooltip content={TOOLTIPS.source_note.text}>
@@ -115,6 +147,9 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
           </Tooltip>
         </span>
         <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={`recommendation-detail-${rec.career_id}`}
           onClick={() => {
             setOpen(!open);
             // Reset về tab đầu khi đóng/mở
@@ -127,12 +162,15 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
       </div>
 
       {open && (
-        <div className="mt-5 border-t border-[var(--cc-border)] pt-5 animate-fadeIn">
+        <div id={`recommendation-detail-${rec.career_id}`} className="mt-5 border-t border-[var(--cc-border)] pt-5 animate-fadeIn">
           {/* Hệ thống TAB phong cách vintage */}
-          <div className="flex border-b border-[var(--cc-border)] overflow-x-auto gap-1 pb-px scrollbar-none">
+          <div className="flex border-b border-[var(--cc-border)] overflow-x-auto gap-1 pb-px scrollbar-none" role="tablist" aria-label={`Chi tiết ${rec.title}`}>
             {tabs.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2.5 text-xs font-bold font-serif border-t border-x rounded-t-xl transition-all whitespace-nowrap cursor-pointer ${
                   activeTab === tab.id
@@ -312,7 +350,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                       )}
                     </div>
                     <div className="space-y-1">
-                      <p className="font-bold text-[var(--cc-danger)]">Kỹ năng thị trường cần nhưng thiếu:</p>
+                      <p className="font-bold text-[var(--cc-danger)]">Thường xuất hiện nhưng hồ sơ chưa có minh chứng:</p>
                       {job_readiness.missing_skills.length > 0 ? (
                         <div className="flex flex-wrap gap-1.5">
                           {job_readiness.missing_skills.map((s, idx) => (
@@ -322,7 +360,7 @@ export default function RecommendationCard({ rec, rank }: RecommendationCardProp
                           ))}
                         </div>
                       ) : (
-                        <p className="italic text-[var(--cc-muted)] font-serif">Đã đầy đủ các kỹ năng cốt lõi!</p>
+                        <p className="italic text-[var(--cc-muted)] font-serif">Chưa thấy khoảng trống trong danh sách tín hiệu hiện tại.</p>
                       )}
                     </div>
                   </div>

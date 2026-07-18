@@ -50,4 +50,9 @@ describe("ChatComposer", () => {
     await userEvent.type(screen.getByRole("textbox"), "em thích vẽ 🎨 và điện tử{Enter}");
     expect(onSend).toHaveBeenCalledWith("em thích vẽ 🎨 và điện tử");
   });
+
+  it("giới hạn input ở 2.000 ký tự để khớp API", () => {
+    render(<ChatComposer disabled={false} onSend={vi.fn()} />);
+    expect(screen.getByRole("textbox")).toHaveAttribute("maxLength", "2000");
+  });
 });
