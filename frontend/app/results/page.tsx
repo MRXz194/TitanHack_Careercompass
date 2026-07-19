@@ -26,9 +26,11 @@ export default function ResultsPage() {
       setData(res);
       // Nếu đề xuất đầu tiên có job_readiness, session backend đang ở Launch mode.
       if (res.recommendations?.[0]?.job_readiness) setJourneyMode("launch");
-    } catch {
+    } catch (err) {
+      console.error(err);
+      const detail = err instanceof Error && err.message ? ` (${err.message})` : "";
       setData(null);
-      setError("Không thể tải kết quả định hướng. Phiên có thể đã hết hạn hoặc kết nối backend đang gián đoạn.");
+      setError(`Không thể tải kết quả định hướng. Phiên có thể đã hết hạn hoặc kết nối backend đang gián đoạn.${detail}`);
     } finally {
       setLoading(false);
     }

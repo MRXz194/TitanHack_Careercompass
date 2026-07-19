@@ -23,6 +23,7 @@ from __future__ import annotations
 import logging
 import math
 import re
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Optional
 
 from app.core.config import get_settings
@@ -402,9 +403,21 @@ def recommend(profile: Profile) -> tuple[list[Recommendation], Recommendation]:
         )
     top5_ids = {cid for cid, _, _ in top5_raw}
     stretch_id, stretch_score = pick_stretch(ranked, profile, top5_ids)
-    top5 = [
-        build_recommendation(profile, cid, sc, is_stretch=False)
-        for cid, sc, _ in top5_raw[:5]
-    ]
-    stretch = build_recommendation(profile, stretch_id, stretch_score, is_stretch=True)
+
+    # 6 evidence builds each make a blocking LLM call (evidence.py::_try_llm_why).
+    # Run them concurrently instead of sequentially -- 6x sequential calls easily
+    # exceed the hosting proxy's request timeout (observed: production 502 after
+    # ~20-30s). Each build_recommendation call is pure (no shared mutable state),
+    # so thread-level concurrency is safe.
+    jobs: list[tuple[str, float, bool]] = [(cid, sc, False) for cid, sc, _ in top5_raw[:5]]
+    jobs.append((stretch_id, stretch_score, True))
+    with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+        futures = [
+            pool.submit(build_recommendation, profile, cid, sc, is_stretch=is_stretch)
+            for cid, sc, is_stretch in jobs
+        ]
+        results = [f.result() for f in futures]
+
+    top5 = results[:-1]
+    stretch = results[-1]
     return top5, stretch
